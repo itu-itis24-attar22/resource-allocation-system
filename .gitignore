@@ -1,0 +1,9 @@
+*.exe
+*.o
+*.out
+*.obj
+*.log
+*.aux
+*.toc
+*.pdfsync
+*.synctex.gz
