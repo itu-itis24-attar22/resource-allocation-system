@@ -17,7 +17,7 @@ bool AllocationService::processRequest(OneTimeRequest& request) {
         Allocation newAllocation(
             nextAllocationId++,
             request.getId(),
-            request.getRequestedClassroom(),
+            request.getRequestedSpace(),
             request.getRequestedTimeSlot()
         );
 
@@ -34,7 +34,8 @@ void AllocationService::printAllocations() const {
 
     for (const auto& allocation : allocations) {
         std::cout << "Allocation ID: " << allocation.getId()
-                  << ", Classroom: " << allocation.getClassroom().getName()
+                  << ", Type: " << allocation.getSpace()->getType()
+                  << ", Space: " << allocation.getSpace()->getName()
                   << ", Time: " << allocation.getTimeSlot().getStartHour()
                   << ":00 - " << allocation.getTimeSlot().getEndHour()
                   << ":00\n";

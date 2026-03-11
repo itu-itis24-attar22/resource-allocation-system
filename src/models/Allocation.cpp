@@ -1,9 +1,9 @@
 #include "Allocation.h"
 
-Allocation::Allocation(int id, int requestId, const Classroom& classroom, const TimeSlot& timeSlot)
+Allocation::Allocation(int id, int requestId, const Space* space, const TimeSlot& timeSlot)
     : id(id),
       requestId(requestId),
-      classroom(classroom),
+      space(space),
       timeSlot(timeSlot),
       status(AllocationStatus::Active) {}
 
@@ -15,8 +15,8 @@ int Allocation::getRequestId() const {
     return requestId;
 }
 
-const Classroom& Allocation::getClassroom() const {
-    return classroom;
+const Space* Allocation::getSpace() const {
+    return space;
 }
 
 const TimeSlot& Allocation::getTimeSlot() const {

@@ -2,6 +2,7 @@
 #include <string>
 #include "models/User.h"
 #include "models/Classroom.h"
+#include "models/Laboratory.h"
 #include "models/TimeSlot.h"
 #include "models/OneTimeRequest.h"
 #include "models/Allocation.h"
@@ -24,6 +25,8 @@ void printRequestResult(
     const std::string& explanation
 ) {
     std::cout << label << "\n";
+    std::cout << "Requested type: " << request.getRequestedSpace()->getType() << "\n";
+    std::cout << "Requested space: " << request.getRequestedSpace()->getName() << "\n";
     std::cout << "Status: " << requestStatusToString(request.getStatus()) << "\n";
     std::cout << "Participants: " << request.getParticipantCount() << "\n";
     std::cout << "Requested time: "
@@ -36,53 +39,34 @@ void printRequestResult(
 
 int main() {
     User user1(1, "Najib", "Student");
-    Classroom roomA(101, "B201", 40);
+
+    Classroom classroomA(101, "B201", 40);
+    Laboratory labA(201, "L101", 25);
 
     AllocationService allocationService;
 
-    // Existing allocation: classroom already booked from 10:00 to 12:00
-    Allocation existingAllocation(100, 999, roomA, TimeSlot(10, 12));
-    allocationService.addExistingAllocation(existingAllocation);
+    Allocation existingClassroomAllocation(100, 999, &classroomA, TimeSlot(10, 12));
+    allocationService.addExistingAllocation(existingClassroomAllocation);
 
-    // Case 1: Availability passes, Capacity passes -> Approved
-    OneTimeRequest request1(1, user1, roomA, TimeSlot(13, 15), 30);
+    // Case 1: Classroom approved
+    OneTimeRequest request1(1, user1, &classroomA, TimeSlot(13, 15), 30);
     bool result1 = allocationService.processRequest(request1);
-    printRequestResult(
-        "Request 1",
-        request1,
-        result1,
-        "Availability accepted, Capacity accepted"
-    );
+    printRequestResult("Request 1", request1, result1, "Classroom approved");
 
-    // Case 2: Availability passes, Capacity fails -> Rejected
-    OneTimeRequest request2(2, user1, roomA, TimeSlot(15, 17), 50);
+    // Case 2: Laboratory approved
+    OneTimeRequest request2(2, user1, &labA, TimeSlot(10, 12), 20);
     bool result2 = allocationService.processRequest(request2);
-    printRequestResult(
-        "Request 2",
-        request2,
-        result2,
-        "Availability accepted, Capacity rejected"
-    );
+    printRequestResult("Request 2", request2, result2, "Laboratory approved");
 
-    // Case 3: Availability fails, Capacity passes -> Rejected
-    OneTimeRequest request3(3, user1, roomA, TimeSlot(11, 13), 20);
+    // Case 3: Laboratory rejected by capacity
+    OneTimeRequest request3(3, user1, &labA, TimeSlot(13, 15), 30);
     bool result3 = allocationService.processRequest(request3);
-    printRequestResult(
-        "Request 3",
-        request3,
-        result3,
-        "Availability rejected, Capacity accepted"
-    );
+    printRequestResult("Request 3", request3, result3, "Laboratory rejected by capacity");
 
-    // Case 4: Availability fails, Capacity fails -> Rejected
-    OneTimeRequest request4(4, user1, roomA, TimeSlot(11, 12), 60);
+    // Case 4: Classroom rejected by availability
+    OneTimeRequest request4(4, user1, &classroomA, TimeSlot(11, 13), 20);
     bool result4 = allocationService.processRequest(request4);
-    printRequestResult(
-        "Request 4",
-        request4,
-        result4,
-        "Availability rejected, Capacity rejected"
-    );
+    printRequestResult("Request 4", request4, result4, "Classroom rejected by availability");
 
     allocationService.printAllocations();
 

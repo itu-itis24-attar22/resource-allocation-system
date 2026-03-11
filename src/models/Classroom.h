@@ -1,20 +1,12 @@
 #ifndef CLASSROOM_H
 #define CLASSROOM_H
 
-#include <string>
+#include "Space.h"
 
-class Classroom {
-private:
-    int id;
-    std::string name;
-    int capacity;
-
+class Classroom : public Space {
 public:
     Classroom(int id, const std::string& name, int capacity);
-
-    int getId() const;
-    std::string getName() const;
-    int getCapacity() const;
+    std::string getType() const override;
 };
 
 #endif
