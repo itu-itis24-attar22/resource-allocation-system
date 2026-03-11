@@ -2,8 +2,8 @@
 #define AVAILABILITYRULE_H
 
 #include <vector>
-#include "OneTimeRequest.h"
-#include "Allocation.h"
+#include "../models/OneTimeRequest.h"
+#include "../models/Allocation.h"
 
 class AvailabilityRule {
 public:

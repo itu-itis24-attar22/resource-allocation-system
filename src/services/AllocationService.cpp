@@ -8,9 +8,10 @@ void AllocationService::addExistingAllocation(const Allocation& allocation) {
 }
 
 bool AllocationService::processRequest(OneTimeRequest& request) {
-    bool available = rule.check(request, allocations);
+    bool isAvailable = availabilityRule.check(request, allocations);
+    bool hasEnoughCapacity = capacityRule.check(request);
 
-    if (available) {
+    if (isAvailable && hasEnoughCapacity) {
         request.markApproved();
 
         Allocation newAllocation(

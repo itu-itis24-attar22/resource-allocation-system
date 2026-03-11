@@ -12,15 +12,17 @@ private:
     User requester;
     Classroom requestedClassroom;
     TimeSlot requestedTimeSlot;
+    int participantCount;
     RequestStatus status;
 
 public:
-    OneTimeRequest(int id, const User& requester, const Classroom& classroom, const TimeSlot& timeSlot);
+    OneTimeRequest(int id, const User& requester, const Classroom& classroom, const TimeSlot& timeSlot, int participantCount);
 
     int getId() const;
     const User& getRequester() const;
     const Classroom& getRequestedClassroom() const;
     const TimeSlot& getRequestedTimeSlot() const;
+    int getParticipantCount() const;
     RequestStatus getStatus() const;
 
     void markApproved();

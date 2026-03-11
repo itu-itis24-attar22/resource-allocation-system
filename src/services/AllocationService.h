@@ -2,14 +2,16 @@
 #define ALLOCATIONSERVICE_H
 
 #include <vector>
-#include "Allocation.h"
-#include "AvailabilityRule.h"
-#include "OneTimeRequest.h"
+#include "../models/Allocation.h"
+#include "../rules/AvailabilityRule.h"
+#include "../rules/CapacityRule.h"
+#include "../models/OneTimeRequest.h"
 
 class AllocationService {
 private:
     std::vector<Allocation> allocations;
-    AvailabilityRule rule;
+    AvailabilityRule availabilityRule;
+    CapacityRule capacityRule;
     int nextAllocationId;
 
 public:
