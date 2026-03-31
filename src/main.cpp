@@ -11,6 +11,7 @@
 #include "models/Allocation.h"
 #include "services/AllocationService.h"
 #include "models/Status.h"
+#include "data/DataLoader.h"
 
 std::string requestStatusToString(RequestStatus status) {
     switch (status) {
@@ -112,50 +113,61 @@ void printRecurringResult(
 }
 
 int main() {
-    User user1(1, "Najib", "Student");
+    std::vector<User> users = DataLoader::loadUsers("data/users.csv");
+    std::vector<Space*> spaces = DataLoader::loadSpaces("data/spaces.csv");
 
-    Classroom classroomA(101, "B201", 40, true, true, false, true, "Engineering");
-    Laboratory labA(201, "L101", 25, false, true, true, false, "LabBuilding");
-    MeetingRoom meetingRoomA(301, "M301", 12, true, true, false, true, "AdminBuilding");
+    if (users.empty() || spaces.size() < 3) {
+        std::cout << "Error: Failed to load initial data.\n";
+        return 1;
+    }
+
+    User user1 = users[0];
+    Space* classroomA = spaces[0];
+    Space* labA = spaces[1];
+    Space* meetingRoomA = spaces[2];
 
     AllocationService allocationService;
 
-    Allocation existingClassroomAllocation(100, 999, &classroomA, TimeSlot(1, 10, 12));
+    Allocation existingClassroomAllocation(100, 999, classroomA, TimeSlot(1, 10, 12));
     allocationService.addExistingAllocation(existingClassroomAllocation);
 
-    OneTimeRequest request1(1, user1, &classroomA, TimeSlot(2, 13, 15), 30, "Projector", "Engineering");
+    OneTimeRequest request1(1, user1, classroomA, TimeSlot(2, 13, 15), 30, "Projector", "Engineering");
     bool result1 = allocationService.processRequest(request1);
-    printOneTimeResult("Request 1", request1, result1, "One-time classroom approved because the required building matches");
+    printOneTimeResult("Request 1", request1, result1, "One-time classroom approved using data loaded from file");
 
-    OneTimeRequest request2(2, user1, &meetingRoomA, TimeSlot(3, 10, 12), 8, "Projector", "Engineering");
+    OneTimeRequest request2(2, user1, meetingRoomA, TimeSlot(3, 10, 12), 8, "Projector", "Engineering");
     bool result2 = allocationService.processRequest(request2);
-    printOneTimeResult("Request 2", request2, result2, "One-time meeting room rejected because the required building does not match");
+    printOneTimeResult("Request 2", request2, result2, "One-time meeting room rejected because the building does not match");
 
     RecurringRequest request3(
-        3, user1, &meetingRoomA,
+        3, user1, meetingRoomA,
         std::vector<TimeSlot>{TimeSlot(2, 9, 10), TimeSlot(4, 9, 10)},
         8,
         "Projector",
         "AdminBuilding"
     );
     bool result3 = allocationService.processRequest(request3);
-    printRecurringResult("Request 3", request3, result3, "Recurring meeting room approved because the required building matches");
+    printRecurringResult("Request 3", request3, result3, "Recurring meeting room approved using data loaded from file");
 
     RecurringRequest request4(
-        4, user1, &classroomA,
+        4, user1, classroomA,
         std::vector<TimeSlot>{TimeSlot(2, 9, 10), TimeSlot(4, 9, 10)},
         20,
         "Whiteboard",
         "LabBuilding"
     );
     bool result4 = allocationService.processRequest(request4);
-    printRecurringResult("Request 4", request4, result4, "Recurring classroom rejected because the required building does not match");
+    printRecurringResult("Request 4", request4, result4, "Recurring classroom rejected because the building does not match");
 
-    OneTimeRequest request5(5, user1, &labA, TimeSlot(3, 14, 15), 20, "Computers", "LabBuilding");
+    OneTimeRequest request5(5, user1, labA, TimeSlot(3, 14, 15), 20, "Computers", "LabBuilding");
     bool result5 = allocationService.processRequest(request5);
     printOneTimeResult("Request 5", request5, result5, "One-time laboratory rejected because the space is under maintenance");
 
     allocationService.printAllocations();
+
+    for (Space* space : spaces) {
+        delete space;
+    }
 
     return 0;
 }
