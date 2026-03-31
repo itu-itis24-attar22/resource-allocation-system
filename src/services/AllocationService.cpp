@@ -20,22 +20,22 @@ void AllocationService::addExistingAllocation(const Allocation& allocation) {
 
 bool AllocationService::processRequest(OneTimeRequest& request) {
     if (!capacityRule.check(request)) {
-        request.markRejected();
+        request.markRejected("Capacity insufficient");
         return false;
     }
 
     if (!featureRule.check(request)) {
-        request.markRejected();
+        request.markRejected("Required feature missing");
         return false;
     }
 
     if (!statusRule.check(request)) {
-        request.markRejected();
+        request.markRejected("Space under maintenance");
         return false;
     }
 
     if (!availabilityRule.check(request, allocations)) {
-        request.markRejected();
+        request.markRejected("Time slot unavailable");
         return false;
     }
 
@@ -52,22 +52,22 @@ bool AllocationService::processRequest(OneTimeRequest& request) {
 
 bool AllocationService::processRequest(RecurringRequest& request) {
     if (!capacityRule.check(request)) {
-        request.markRejected();
+        request.markRejected("Capacity insufficient");
         return false;
     }
 
     if (!featureRule.check(request)) {
-        request.markRejected();
+        request.markRejected("Required feature missing");
         return false;
     }
 
     if (!statusRule.check(request)) {
-        request.markRejected();
+        request.markRejected("Space under maintenance");
         return false;
     }
 
     if (!availabilityRule.check(request, allocations)) {
-        request.markRejected();
+        request.markRejected("Time slot unavailable");
         return false;
     }
 

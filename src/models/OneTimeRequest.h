@@ -16,6 +16,7 @@ private:
     int participantCount;
     RequestStatus status;
     std::string requiredFeature;
+    std::string rejectionReason;
 
 public:
     OneTimeRequest(int requestId, const User& requester, Space* requestedSpace,
@@ -29,9 +30,10 @@ public:
     int getParticipantCount() const;
     RequestStatus getStatus() const;
     std::string getRequiredFeature() const;
+    std::string getRejectionReason() const;
 
     void markApproved();
-    void markRejected();
+    void markRejected(const std::string& reason);
 };
 
 #endif

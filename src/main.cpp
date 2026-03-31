@@ -57,7 +57,14 @@ void printOneTimeResult(
               << dayToString(request.getRequestedTimeSlot().getDay()) << ", "
               << request.getRequestedTimeSlot().getStartHour() << ":00 - "
               << request.getRequestedTimeSlot().getEndHour() << ":00\n";
-    std::cout << (result ? "Allocation created.\n" : "Request rejected.\n");
+
+    if (result) {
+        std::cout << "Allocation created.\n";
+    } else {
+        std::cout << "Request rejected.\n";
+        std::cout << "Rejection reason: " << request.getRejectionReason() << "\n";
+    }
+
     std::cout << "Case: " << explanation << "\n";
     std::cout << "-----------------------------------\n";
 }

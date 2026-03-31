@@ -9,7 +9,8 @@ OneTimeRequest::OneTimeRequest(int requestId, const User& requester, Space* requ
       requestedTimeSlot(requestedTimeSlot),
       participantCount(participantCount),
       status(RequestStatus::Pending),
-      requiredFeature(requiredFeature) {}
+      requiredFeature(requiredFeature),
+      rejectionReason("") {}
 
 int OneTimeRequest::getId() const {
     return requestId;
@@ -39,10 +40,16 @@ std::string OneTimeRequest::getRequiredFeature() const {
     return requiredFeature;
 }
 
-void OneTimeRequest::markApproved() {
-    status = RequestStatus::Approved;
+std::string OneTimeRequest::getRejectionReason() const {
+    return rejectionReason;
 }
 
-void OneTimeRequest::markRejected() {
+void OneTimeRequest::markApproved() {
+    status = RequestStatus::Approved;
+    rejectionReason = "";
+}
+
+void OneTimeRequest::markRejected(const std::string& reason) {
     status = RequestStatus::Rejected;
+    rejectionReason = reason;
 }

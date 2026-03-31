@@ -10,7 +10,8 @@ RecurringRequest::RecurringRequest(int requestId, const User& requester, Space* 
       requestedTimeSlots(requestedTimeSlots),
       participantCount(participantCount),
       status(RequestStatus::Pending),
-      requiredFeature(requiredFeature) {}
+      requiredFeature(requiredFeature),
+      rejectionReason("") {}
 
 int RecurringRequest::getId() const {
     return requestId;
@@ -40,10 +41,16 @@ std::string RecurringRequest::getRequiredFeature() const {
     return requiredFeature;
 }
 
-void RecurringRequest::markApproved() {
-    status = RequestStatus::Approved;
+std::string RecurringRequest::getRejectionReason() const {
+    return rejectionReason;
 }
 
-void RecurringRequest::markRejected() {
+void RecurringRequest::markApproved() {
+    status = RequestStatus::Approved;
+    rejectionReason = "";
+}
+
+void RecurringRequest::markRejected(const std::string& reason) {
     status = RequestStatus::Rejected;
+    rejectionReason = reason;
 }
