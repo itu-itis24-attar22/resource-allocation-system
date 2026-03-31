@@ -3,6 +3,7 @@
 #include "models/User.h"
 #include "models/Classroom.h"
 #include "models/Laboratory.h"
+#include "models/MeetingRoom.h"
 #include "models/TimeSlot.h"
 #include "models/OneTimeRequest.h"
 #include "models/Allocation.h"
@@ -42,6 +43,7 @@ int main() {
 
     Classroom classroomA(101, "B201", 40);
     Laboratory labA(201, "L101", 25);
+    MeetingRoom meetingRoomA(301, "M301", 12);
 
     AllocationService allocationService;
 
@@ -58,15 +60,20 @@ int main() {
     bool result2 = allocationService.processRequest(request2);
     printRequestResult("Request 2", request2, result2, "Laboratory approved");
 
-    // Case 3: Laboratory rejected by capacity
-    OneTimeRequest request3(3, user1, &labA, TimeSlot(13, 15), 30);
+    // Case 3: MeetingRoom approved
+    OneTimeRequest request3(3, user1, &meetingRoomA, TimeSlot(9, 10), 8);
     bool result3 = allocationService.processRequest(request3);
-    printRequestResult("Request 3", request3, result3, "Laboratory rejected by capacity");
+    printRequestResult("Request 3", request3, result3, "MeetingRoom approved");
 
-    // Case 4: Classroom rejected by availability
-    OneTimeRequest request4(4, user1, &classroomA, TimeSlot(11, 13), 20);
+    // Case 4: MeetingRoom rejected by capacity
+    OneTimeRequest request4(4, user1, &meetingRoomA, TimeSlot(10, 11), 20);
     bool result4 = allocationService.processRequest(request4);
-    printRequestResult("Request 4", request4, result4, "Classroom rejected by availability");
+    printRequestResult("Request 4", request4, result4, "MeetingRoom rejected by capacity");
+
+    // Case 5: Classroom rejected by availability
+    OneTimeRequest request5(5, user1, &classroomA, TimeSlot(11, 13), 20);
+    bool result5 = allocationService.processRequest(request5);
+    printRequestResult("Request 5", request5, result5, "Classroom rejected by availability");
 
     allocationService.printAllocations();
 
