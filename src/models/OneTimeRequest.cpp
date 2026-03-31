@@ -1,32 +1,29 @@
 #include "OneTimeRequest.h"
 
-OneTimeRequest::OneTimeRequest(
-    int id,
-    const User& requester,
-    const Space* space,
-    const TimeSlot& timeSlot,
-    int participantCount
-)
-    : id(id),
+OneTimeRequest::OneTimeRequest(int requestId, const User& requester, Space* requestedSpace,
+                               const TimeSlot& requestedTimeSlot, int participantCount,
+                               const std::string& requiredFeature)
+    : requestId(requestId),
       requester(requester),
-      requestedSpace(space),
-      requestedTimeSlot(timeSlot),
+      requestedSpace(requestedSpace),
+      requestedTimeSlot(requestedTimeSlot),
       participantCount(participantCount),
-      status(RequestStatus::Pending) {}
+      status(RequestStatus::Pending),
+      requiredFeature(requiredFeature) {}
 
 int OneTimeRequest::getId() const {
-    return id;
+    return requestId;
 }
 
-const User& OneTimeRequest::getRequester() const {
+User OneTimeRequest::getRequester() const {
     return requester;
 }
 
-const Space* OneTimeRequest::getRequestedSpace() const {
+Space* OneTimeRequest::getRequestedSpace() const {
     return requestedSpace;
 }
 
-const TimeSlot& OneTimeRequest::getRequestedTimeSlot() const {
+TimeSlot OneTimeRequest::getRequestedTimeSlot() const {
     return requestedTimeSlot;
 }
 
@@ -36,6 +33,10 @@ int OneTimeRequest::getParticipantCount() const {
 
 RequestStatus OneTimeRequest::getStatus() const {
     return status;
+}
+
+std::string OneTimeRequest::getRequiredFeature() const {
+    return requiredFeature;
 }
 
 void OneTimeRequest::markApproved() {

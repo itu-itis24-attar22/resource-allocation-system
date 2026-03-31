@@ -2,6 +2,7 @@
 #define RECURRINGREQUEST_H
 
 #include <vector>
+#include <string>
 #include "User.h"
 #include "Space.h"
 #include "TimeSlot.h"
@@ -9,28 +10,27 @@
 
 class RecurringRequest {
 private:
-    int id;
+    int requestId;
     User requester;
-    const Space* requestedSpace;
+    Space* requestedSpace;
     std::vector<TimeSlot> requestedTimeSlots;
     int participantCount;
     RequestStatus status;
+    std::string requiredFeature;
 
 public:
-    RecurringRequest(
-        int id,
-        const User& requester,
-        const Space* space,
-        const std::vector<TimeSlot>& timeSlots,
-        int participantCount
-    );
+    RecurringRequest(int requestId, const User& requester, Space* requestedSpace,
+                     const std::vector<TimeSlot>& requestedTimeSlots,
+                     int participantCount,
+                     const std::string& requiredFeature = "");
 
     int getId() const;
-    const User& getRequester() const;
-    const Space* getRequestedSpace() const;
+    User getRequester() const;
+    Space* getRequestedSpace() const;
     const std::vector<TimeSlot>& getRequestedTimeSlots() const;
     int getParticipantCount() const;
     RequestStatus getStatus() const;
+    std::string getRequiredFeature() const;
 
     void markApproved();
     void markRejected();

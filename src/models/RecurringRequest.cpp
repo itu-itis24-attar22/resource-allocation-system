@@ -1,28 +1,26 @@
 #include "RecurringRequest.h"
 
-RecurringRequest::RecurringRequest(
-    int id,
-    const User& requester,
-    const Space* space,
-    const std::vector<TimeSlot>& timeSlots,
-    int participantCount
-)
-    : id(id),
+RecurringRequest::RecurringRequest(int requestId, const User& requester, Space* requestedSpace,
+                                   const std::vector<TimeSlot>& requestedTimeSlots,
+                                   int participantCount,
+                                   const std::string& requiredFeature)
+    : requestId(requestId),
       requester(requester),
-      requestedSpace(space),
-      requestedTimeSlots(timeSlots),
+      requestedSpace(requestedSpace),
+      requestedTimeSlots(requestedTimeSlots),
       participantCount(participantCount),
-      status(RequestStatus::Pending) {}
+      status(RequestStatus::Pending),
+      requiredFeature(requiredFeature) {}
 
 int RecurringRequest::getId() const {
-    return id;
+    return requestId;
 }
 
-const User& RecurringRequest::getRequester() const {
+User RecurringRequest::getRequester() const {
     return requester;
 }
 
-const Space* RecurringRequest::getRequestedSpace() const {
+Space* RecurringRequest::getRequestedSpace() const {
     return requestedSpace;
 }
 
@@ -36,6 +34,10 @@ int RecurringRequest::getParticipantCount() const {
 
 RequestStatus RecurringRequest::getStatus() const {
     return status;
+}
+
+std::string RecurringRequest::getRequiredFeature() const {
+    return requiredFeature;
 }
 
 void RecurringRequest::markApproved() {

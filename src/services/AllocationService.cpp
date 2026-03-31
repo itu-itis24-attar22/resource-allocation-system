@@ -1,57 +1,6 @@
 #include <iostream>
 #include "AllocationService.h"
 
-AllocationService::AllocationService() : nextAllocationId(1) {}
-
-void AllocationService::addExistingAllocation(const Allocation& allocation) {
-    allocations.push_back(allocation);
-}
-
-bool AllocationService::processRequest(OneTimeRequest& request) {
-    bool isAvailable = availabilityRule.check(request, allocations);
-    bool hasEnoughCapacity = capacityRule.check(request);
-
-    if (isAvailable && hasEnoughCapacity) {
-        request.markApproved();
-
-        Allocation newAllocation(
-            nextAllocationId++,
-            request.getId(),
-            request.getRequestedSpace(),
-            request.getRequestedTimeSlot()
-        );
-
-        allocations.push_back(newAllocation);
-        return true;
-    } else {
-        request.markRejected();
-        return false;
-    }
-}
-
-bool AllocationService::processRequest(RecurringRequest& request) {
-    bool isAvailable = availabilityRule.check(request, allocations);
-    bool hasEnoughCapacity = capacityRule.check(request);
-
-    if (isAvailable && hasEnoughCapacity) {
-        request.markApproved();
-
-        for (const auto& slot : request.getRequestedTimeSlots()) {
-            Allocation newAllocation(
-                nextAllocationId++,
-                request.getId(),
-                request.getRequestedSpace(),
-                slot
-            );
-            allocations.push_back(newAllocation);
-        }
-        return true;
-    } else {
-        request.markRejected();
-        return false;
-    }
-}
-
 static std::string dayToString(int day) {
     switch (day) {
         case 1: return "Monday";
@@ -61,8 +10,68 @@ static std::string dayToString(int day) {
         case 5: return "Friday";
         case 6: return "Saturday";
         case 7: return "Sunday";
-        default: return "Unknown Day";
+        default: return "Unknown";
     }
+}
+
+void AllocationService::addExistingAllocation(const Allocation& allocation) {
+    allocations.push_back(allocation);
+}
+
+bool AllocationService::processRequest(OneTimeRequest& request) {
+    if (!capacityRule.check(request)) {
+        request.markRejected();
+        return false;
+    }
+
+    if (!featureRule.check(request)) {
+        request.markRejected();
+        return false;
+    }
+
+    if (!availabilityRule.check(request, allocations)) {
+        request.markRejected();
+        return false;
+    }
+
+    request.markApproved();
+
+    int allocationId = static_cast<int>(allocations.size()) + 1;
+    Allocation allocation(allocationId, request.getId(),
+                          request.getRequestedSpace(),
+                          request.getRequestedTimeSlot());
+    allocations.push_back(allocation);
+
+    return true;
+}
+
+bool AllocationService::processRequest(RecurringRequest& request) {
+    if (!capacityRule.check(request)) {
+        request.markRejected();
+        return false;
+    }
+
+    if (!featureRule.check(request)) {
+        request.markRejected();
+        return false;
+    }
+
+    if (!availabilityRule.check(request, allocations)) {
+        request.markRejected();
+        return false;
+    }
+
+    request.markApproved();
+
+    const std::vector<TimeSlot>& slots = request.getRequestedTimeSlots();
+    for (const TimeSlot& slot : slots) {
+        int allocationId = static_cast<int>(allocations.size()) + 1;
+        Allocation allocation(allocationId, request.getId(),
+                              request.getRequestedSpace(), slot);
+        allocations.push_back(allocation);
+    }
+
+    return true;
 }
 
 void AllocationService::printAllocations() const {

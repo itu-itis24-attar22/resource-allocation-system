@@ -7,17 +7,16 @@
 #include "../models/RecurringRequest.h"
 #include "../rules/AvailabilityRule.h"
 #include "../rules/CapacityRule.h"
+#include "../rules/FeatureRule.h"
 
 class AllocationService {
 private:
     std::vector<Allocation> allocations;
     AvailabilityRule availabilityRule;
     CapacityRule capacityRule;
-    int nextAllocationId;
+    FeatureRule featureRule;
 
 public:
-    AllocationService();
-
     void addExistingAllocation(const Allocation& allocation);
     bool processRequest(OneTimeRequest& request);
     bool processRequest(RecurringRequest& request);

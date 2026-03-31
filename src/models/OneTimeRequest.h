@@ -1,6 +1,7 @@
 #ifndef ONETIMEREQUEST_H
 #define ONETIMEREQUEST_H
 
+#include <string>
 #include "User.h"
 #include "Space.h"
 #include "TimeSlot.h"
@@ -8,28 +9,26 @@
 
 class OneTimeRequest {
 private:
-    int id;
+    int requestId;
     User requester;
-    const Space* requestedSpace;
+    Space* requestedSpace;
     TimeSlot requestedTimeSlot;
     int participantCount;
     RequestStatus status;
+    std::string requiredFeature;
 
 public:
-    OneTimeRequest(
-        int id,
-        const User& requester,
-        const Space* space,
-        const TimeSlot& timeSlot,
-        int participantCount
-    );
+    OneTimeRequest(int requestId, const User& requester, Space* requestedSpace,
+                   const TimeSlot& requestedTimeSlot, int participantCount,
+                   const std::string& requiredFeature = "");
 
     int getId() const;
-    const User& getRequester() const;
-    const Space* getRequestedSpace() const;
-    const TimeSlot& getRequestedTimeSlot() const;
+    User getRequester() const;
+    Space* getRequestedSpace() const;
+    TimeSlot getRequestedTimeSlot() const;
     int getParticipantCount() const;
     RequestStatus getStatus() const;
+    std::string getRequiredFeature() const;
 
     void markApproved();
     void markRejected();
