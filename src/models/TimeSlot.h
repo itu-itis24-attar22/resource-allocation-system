@@ -3,12 +3,14 @@
 
 class TimeSlot {
 private:
+    int day;        // 1 = Monday, ..., 7 = Sunday
     int startHour;
     int endHour;
 
 public:
-    TimeSlot(int startHour, int endHour);
+    TimeSlot(int day, int startHour, int endHour);
 
+    int getDay() const;
     int getStartHour() const;
     int getEndHour() const;
 

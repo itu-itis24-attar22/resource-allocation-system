@@ -21,6 +21,19 @@ std::string requestStatusToString(RequestStatus status) {
     }
 }
 
+std::string dayToString(int day) {
+    switch (day) {
+        case 1: return "Monday";
+        case 2: return "Tuesday";
+        case 3: return "Wednesday";
+        case 4: return "Thursday";
+        case 5: return "Friday";
+        case 6: return "Saturday";
+        case 7: return "Sunday";
+        default: return "Unknown Day";
+    }
+}
+
 void printOneTimeResult(
     const std::string& label,
     const OneTimeRequest& request,
@@ -34,6 +47,7 @@ void printOneTimeResult(
     std::cout << "Status: " << requestStatusToString(request.getStatus()) << "\n";
     std::cout << "Participants: " << request.getParticipantCount() << "\n";
     std::cout << "Requested time: "
+              << dayToString(request.getRequestedTimeSlot().getDay()) << ", "
               << request.getRequestedTimeSlot().getStartHour() << ":00 - "
               << request.getRequestedTimeSlot().getEndHour() << ":00\n";
     std::cout << (result ? "Allocation created.\n" : "Request rejected.\n");
@@ -54,6 +68,15 @@ void printRecurringResult(
     std::cout << "Status: " << requestStatusToString(request.getStatus()) << "\n";
     std::cout << "Participants: " << request.getParticipantCount() << "\n";
     std::cout << "Occurrences: " << request.getRequestedTimeSlots().size() << "\n";
+
+    const std::vector<TimeSlot>& slots = request.getRequestedTimeSlots();
+    for (size_t i = 0; i < slots.size(); i++) {
+        std::cout << "  Occurrence " << i + 1 << ": "
+                  << dayToString(slots[i].getDay()) << ", "
+                  << slots[i].getStartHour() << ":00 - "
+                  << slots[i].getEndHour() << ":00\n";
+    }
+
     std::cout << (result ? "Allocations created for all occurrences.\n" : "Recurring request rejected.\n");
     std::cout << "Case: " << explanation << "\n";
     std::cout << "-----------------------------------\n";
@@ -68,20 +91,20 @@ int main() {
 
     AllocationService allocationService;
 
-    Allocation existingClassroomAllocation(100, 999, &classroomA, TimeSlot(10, 12));
-    Allocation existingLabAllocation(101, 998, &labA, TimeSlot(14, 16));
+    Allocation existingClassroomAllocation(100, 999, &classroomA, TimeSlot(1, 10, 12)); // Monday
+    Allocation existingLabAllocation(101, 998, &labA, TimeSlot(3, 14, 16));              // Wednesday
     allocationService.addExistingAllocation(existingClassroomAllocation);
     allocationService.addExistingAllocation(existingLabAllocation);
 
     // Case 1: One-time classroom approved
-    OneTimeRequest request1(1, user1, &classroomA, TimeSlot(13, 15), 30);
+    OneTimeRequest request1(1, user1, &classroomA, TimeSlot(2, 13, 15), 30); // Tuesday
     bool result1 = allocationService.processRequest(request1);
     printOneTimeResult("Request 1", request1, result1, "One-time classroom approved");
 
     // Case 2: Recurring meeting room approved
     RecurringRequest request2(
         2, user1, &meetingRoomA,
-        std::vector<TimeSlot>{TimeSlot(9, 10), TimeSlot(10, 11), TimeSlot(11, 12)},
+        std::vector<TimeSlot>{TimeSlot(1, 9, 10), TimeSlot(3, 10, 11), TimeSlot(5, 11, 12)},
         8
     );
     bool result2 = allocationService.processRequest(request2);
@@ -90,7 +113,7 @@ int main() {
     // Case 3: Recurring laboratory rejected by availability
     RecurringRequest request3(
         3, user1, &labA,
-        std::vector<TimeSlot>{TimeSlot(13, 14), TimeSlot(14, 15), TimeSlot(15, 16)},
+        std::vector<TimeSlot>{TimeSlot(3, 13, 14), TimeSlot(3, 14, 15), TimeSlot(3, 15, 16)},
         20
     );
     bool result3 = allocationService.processRequest(request3);
@@ -99,14 +122,14 @@ int main() {
     // Case 4: Recurring meeting room rejected by capacity
     RecurringRequest request4(
         4, user1, &meetingRoomA,
-        std::vector<TimeSlot>{TimeSlot(12, 13), TimeSlot(13, 14)},
+        std::vector<TimeSlot>{TimeSlot(2, 12, 13), TimeSlot(4, 13, 14)},
         20
     );
     bool result4 = allocationService.processRequest(request4);
     printRecurringResult("Request 4", request4, result4, "Recurring meeting room rejected by capacity");
 
     // Case 5: One-time classroom rejected by availability
-    OneTimeRequest request5(5, user1, &classroomA, TimeSlot(11, 13), 20);
+    OneTimeRequest request5(5, user1, &classroomA, TimeSlot(1, 11, 13), 20); // Monday
     bool result5 = allocationService.processRequest(request5);
     printOneTimeResult("Request 5", request5, result5, "One-time classroom rejected by availability");
 
