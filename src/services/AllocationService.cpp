@@ -29,6 +29,29 @@ bool AllocationService::processRequest(OneTimeRequest& request) {
     }
 }
 
+bool AllocationService::processRequest(RecurringRequest& request) {
+    bool isAvailable = availabilityRule.check(request, allocations);
+    bool hasEnoughCapacity = capacityRule.check(request);
+
+    if (isAvailable && hasEnoughCapacity) {
+        request.markApproved();
+
+        for (const auto& slot : request.getRequestedTimeSlots()) {
+            Allocation newAllocation(
+                nextAllocationId++,
+                request.getId(),
+                request.getRequestedSpace(),
+                slot
+            );
+            allocations.push_back(newAllocation);
+        }
+        return true;
+    } else {
+        request.markRejected();
+        return false;
+    }
+}
+
 void AllocationService::printAllocations() const {
     std::cout << "\nCurrent Allocations:\n";
 

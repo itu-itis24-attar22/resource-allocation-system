@@ -3,9 +3,10 @@
 
 #include <vector>
 #include "../models/Allocation.h"
+#include "../models/OneTimeRequest.h"
+#include "../models/RecurringRequest.h"
 #include "../rules/AvailabilityRule.h"
 #include "../rules/CapacityRule.h"
-#include "../models/OneTimeRequest.h"
 
 class AllocationService {
 private:
@@ -19,6 +20,7 @@ public:
 
     void addExistingAllocation(const Allocation& allocation);
     bool processRequest(OneTimeRequest& request);
+    bool processRequest(RecurringRequest& request);
     void printAllocations() const;
 };
 
