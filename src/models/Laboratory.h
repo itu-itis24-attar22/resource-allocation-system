@@ -9,7 +9,8 @@ public:
                bool hasProjector = false,
                bool hasWhiteboard = false,
                bool hasComputers = false,
-               bool isAvailable = true);
+               bool isAvailable = true,
+               const std::string& building = "");
 
     std::string getType() const override;
 };

@@ -17,13 +17,15 @@ private:
     int participantCount;
     RequestStatus status;
     std::string requiredFeature;
+    std::string requiredBuilding;
     std::string rejectionReason;
 
 public:
     RecurringRequest(int requestId, const User& requester, Space* requestedSpace,
                      const std::vector<TimeSlot>& requestedTimeSlots,
                      int participantCount,
-                     const std::string& requiredFeature = "");
+                     const std::string& requiredFeature = "",
+                     const std::string& requiredBuilding = "");
 
     int getId() const;
     User getRequester() const;
@@ -32,6 +34,7 @@ public:
     int getParticipantCount() const;
     RequestStatus getStatus() const;
     std::string getRequiredFeature() const;
+    std::string getRequiredBuilding() const;
     std::string getRejectionReason() const;
 
     void markApproved();

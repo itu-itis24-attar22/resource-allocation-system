@@ -2,7 +2,8 @@
 
 OneTimeRequest::OneTimeRequest(int requestId, const User& requester, Space* requestedSpace,
                                const TimeSlot& requestedTimeSlot, int participantCount,
-                               const std::string& requiredFeature)
+                               const std::string& requiredFeature,
+                               const std::string& requiredBuilding)
     : requestId(requestId),
       requester(requester),
       requestedSpace(requestedSpace),
@@ -10,6 +11,7 @@ OneTimeRequest::OneTimeRequest(int requestId, const User& requester, Space* requ
       participantCount(participantCount),
       status(RequestStatus::Pending),
       requiredFeature(requiredFeature),
+      requiredBuilding(requiredBuilding),
       rejectionReason("") {}
 
 int OneTimeRequest::getId() const {
@@ -38,6 +40,10 @@ RequestStatus OneTimeRequest::getStatus() const {
 
 std::string OneTimeRequest::getRequiredFeature() const {
     return requiredFeature;
+}
+
+std::string OneTimeRequest::getRequiredBuilding() const {
+    return requiredBuilding;
 }
 
 std::string OneTimeRequest::getRejectionReason() const {

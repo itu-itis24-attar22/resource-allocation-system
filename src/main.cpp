@@ -48,6 +48,9 @@ void printOneTimeResult(
     std::cout << "Request type: OneTimeRequest\n";
     std::cout << "Requested type: " << request.getRequestedSpace()->getType() << "\n";
     std::cout << "Requested space: " << request.getRequestedSpace()->getName() << "\n";
+    std::cout << "Space building: " << request.getRequestedSpace()->getBuilding() << "\n";
+    std::cout << "Required building: "
+              << (request.getRequiredBuilding().empty() ? "None" : request.getRequiredBuilding()) << "\n";
     std::cout << "Space status: " << availabilityToString(request.getRequestedSpace()->getIsAvailable()) << "\n";
     std::cout << "Required feature: "
               << (request.getRequiredFeature().empty() ? "None" : request.getRequiredFeature()) << "\n";
@@ -79,6 +82,9 @@ void printRecurringResult(
     std::cout << "Request type: RecurringRequest\n";
     std::cout << "Requested type: " << request.getRequestedSpace()->getType() << "\n";
     std::cout << "Requested space: " << request.getRequestedSpace()->getName() << "\n";
+    std::cout << "Space building: " << request.getRequestedSpace()->getBuilding() << "\n";
+    std::cout << "Required building: "
+              << (request.getRequiredBuilding().empty() ? "None" : request.getRequiredBuilding()) << "\n";
     std::cout << "Space status: " << availabilityToString(request.getRequestedSpace()->getIsAvailable()) << "\n";
     std::cout << "Required feature: "
               << (request.getRequiredFeature().empty() ? "None" : request.getRequiredFeature()) << "\n";
@@ -94,7 +100,13 @@ void printRecurringResult(
                   << slots[i].getEndHour() << ":00\n";
     }
 
-    std::cout << (result ? "Allocations created for all occurrences.\n" : "Recurring request rejected.\n");
+    if (result) {
+        std::cout << "Allocations created for all occurrences.\n";
+    } else {
+        std::cout << "Recurring request rejected.\n";
+        std::cout << "Rejection reason: " << request.getRejectionReason() << "\n";
+    }
+
     std::cout << "Case: " << explanation << "\n";
     std::cout << "-----------------------------------\n";
 }
@@ -102,44 +114,46 @@ void printRecurringResult(
 int main() {
     User user1(1, "Najib", "Student");
 
-    Classroom classroomA(101, "B201", 40, true, true, false, true);
-    Laboratory labA(201, "L101", 25, false, true, true, false);
-    MeetingRoom meetingRoomA(301, "M301", 12, true, true, false, true);
+    Classroom classroomA(101, "B201", 40, true, true, false, true, "Engineering");
+    Laboratory labA(201, "L101", 25, false, true, true, false, "LabBuilding");
+    MeetingRoom meetingRoomA(301, "M301", 12, true, true, false, true, "AdminBuilding");
 
     AllocationService allocationService;
 
     Allocation existingClassroomAllocation(100, 999, &classroomA, TimeSlot(1, 10, 12));
     allocationService.addExistingAllocation(existingClassroomAllocation);
 
-    OneTimeRequest request1(1, user1, &classroomA, TimeSlot(2, 13, 15), 30, "Projector");
+    OneTimeRequest request1(1, user1, &classroomA, TimeSlot(2, 13, 15), 30, "Projector", "Engineering");
     bool result1 = allocationService.processRequest(request1);
-    printOneTimeResult("Request 1", request1, result1, "One-time classroom approved because the space is available and satisfies all rules");
+    printOneTimeResult("Request 1", request1, result1, "One-time classroom approved because the required building matches");
 
-    OneTimeRequest request2(2, user1, &labA, TimeSlot(3, 10, 12), 20, "Computers");
+    OneTimeRequest request2(2, user1, &meetingRoomA, TimeSlot(3, 10, 12), 8, "Projector", "Engineering");
     bool result2 = allocationService.processRequest(request2);
-    printOneTimeResult("Request 2", request2, result2, "One-time laboratory rejected because the space is under maintenance");
+    printOneTimeResult("Request 2", request2, result2, "One-time meeting room rejected because the required building does not match");
 
     RecurringRequest request3(
         3, user1, &meetingRoomA,
         std::vector<TimeSlot>{TimeSlot(2, 9, 10), TimeSlot(4, 9, 10)},
         8,
-        "Projector"
+        "Projector",
+        "AdminBuilding"
     );
     bool result3 = allocationService.processRequest(request3);
-    printRecurringResult("Request 3", request3, result3, "Recurring meeting room approved because the space is available and all occurrences satisfy the rules");
+    printRecurringResult("Request 3", request3, result3, "Recurring meeting room approved because the required building matches");
 
     RecurringRequest request4(
-        4, user1, &labA,
-        std::vector<TimeSlot>{TimeSlot(1, 11, 12), TimeSlot(5, 11, 12)},
-        15,
-        "Whiteboard"
+        4, user1, &classroomA,
+        std::vector<TimeSlot>{TimeSlot(2, 9, 10), TimeSlot(4, 9, 10)},
+        20,
+        "Whiteboard",
+        "LabBuilding"
     );
     bool result4 = allocationService.processRequest(request4);
-    printRecurringResult("Request 4", request4, result4, "Recurring laboratory rejected because the space is under maintenance");
+    printRecurringResult("Request 4", request4, result4, "Recurring classroom rejected because the required building does not match");
 
-    OneTimeRequest request5(5, user1, &classroomA, TimeSlot(1, 11, 13), 20, "Whiteboard");
+    OneTimeRequest request5(5, user1, &labA, TimeSlot(3, 14, 15), 20, "Computers", "LabBuilding");
     bool result5 = allocationService.processRequest(request5);
-    printOneTimeResult("Request 5", request5, result5, "One-time classroom rejected because the requested time overlaps with an existing allocation");
+    printOneTimeResult("Request 5", request5, result5, "One-time laboratory rejected because the space is under maintenance");
 
     allocationService.printAllocations();
 

@@ -34,6 +34,11 @@ bool AllocationService::processRequest(OneTimeRequest& request) {
         return false;
     }
 
+    if (!locationRule.check(request)) {
+        request.markRejected("Required building mismatch");
+        return false;
+    }
+
     if (!availabilityRule.check(request, allocations)) {
         request.markRejected("Time slot unavailable");
         return false;
@@ -66,6 +71,11 @@ bool AllocationService::processRequest(RecurringRequest& request) {
         return false;
     }
 
+    if (!locationRule.check(request)) {
+        request.markRejected("Required building mismatch");
+        return false;
+    }
+
     if (!availabilityRule.check(request, allocations)) {
         request.markRejected("Time slot unavailable");
         return false;
@@ -92,6 +102,7 @@ void AllocationService::printAllocations() const {
         std::cout << "Allocation ID: " << allocation.getId() << "\n";
         std::cout << "Space: " << allocation.getSpace()->getName()
                   << " (" << allocation.getSpace()->getType() << ")\n";
+        std::cout << "Building: " << allocation.getSpace()->getBuilding() << "\n";
         std::cout << "Request ID: " << allocation.getRequestId() << "\n";
         std::cout << "Time: "
                   << dayToString(allocation.getTimeSlot().getDay()) << ", "

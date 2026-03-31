@@ -9,6 +9,7 @@
 #include "../rules/CapacityRule.h"
 #include "../rules/FeatureRule.h"
 #include "../rules/StatusRule.h"
+#include "../rules/LocationRule.h"
 
 class AllocationService {
 private:
@@ -17,6 +18,7 @@ private:
     CapacityRule capacityRule;
     FeatureRule featureRule;
     StatusRule statusRule;
+    LocationRule locationRule;
 
 public:
     void addExistingAllocation(const Allocation& allocation);

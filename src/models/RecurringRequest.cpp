@@ -3,7 +3,8 @@
 RecurringRequest::RecurringRequest(int requestId, const User& requester, Space* requestedSpace,
                                    const std::vector<TimeSlot>& requestedTimeSlots,
                                    int participantCount,
-                                   const std::string& requiredFeature)
+                                   const std::string& requiredFeature,
+                                   const std::string& requiredBuilding)
     : requestId(requestId),
       requester(requester),
       requestedSpace(requestedSpace),
@@ -11,6 +12,7 @@ RecurringRequest::RecurringRequest(int requestId, const User& requester, Space* 
       participantCount(participantCount),
       status(RequestStatus::Pending),
       requiredFeature(requiredFeature),
+      requiredBuilding(requiredBuilding),
       rejectionReason("") {}
 
 int RecurringRequest::getId() const {
@@ -39,6 +41,10 @@ RequestStatus RecurringRequest::getStatus() const {
 
 std::string RecurringRequest::getRequiredFeature() const {
     return requiredFeature;
+}
+
+std::string RecurringRequest::getRequiredBuilding() const {
+    return requiredBuilding;
 }
 
 std::string RecurringRequest::getRejectionReason() const {

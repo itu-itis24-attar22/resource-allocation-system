@@ -2,14 +2,15 @@
 
 Space::Space(int id, const std::string& name, int capacity,
              bool hasProjector, bool hasWhiteboard, bool hasComputers,
-             bool isAvailable)
+             bool isAvailable, const std::string& building)
     : id(id),
       name(name),
       capacity(capacity),
       hasProjector(hasProjector),
       hasWhiteboard(hasWhiteboard),
       hasComputers(hasComputers),
-      isAvailable(isAvailable) {}
+      isAvailable(isAvailable),
+      building(building) {}
 
 int Space::getId() const {
     return id;
@@ -41,6 +42,10 @@ bool Space::getIsAvailable() const {
 
 void Space::setAvailability(bool availability) {
     isAvailable = availability;
+}
+
+std::string Space::getBuilding() const {
+    return building;
 }
 
 bool Space::hasFeature(const std::string& feature) const {
