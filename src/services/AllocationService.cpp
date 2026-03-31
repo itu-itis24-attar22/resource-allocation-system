@@ -29,6 +29,11 @@ bool AllocationService::processRequest(OneTimeRequest& request) {
         return false;
     }
 
+    if (!statusRule.check(request)) {
+        request.markRejected();
+        return false;
+    }
+
     if (!availabilityRule.check(request, allocations)) {
         request.markRejected();
         return false;
@@ -52,6 +57,11 @@ bool AllocationService::processRequest(RecurringRequest& request) {
     }
 
     if (!featureRule.check(request)) {
+        request.markRejected();
+        return false;
+    }
+
+    if (!statusRule.check(request)) {
         request.markRejected();
         return false;
     }

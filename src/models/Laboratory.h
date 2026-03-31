@@ -8,7 +8,8 @@ public:
     Laboratory(int id, const std::string& name, int capacity,
                bool hasProjector = false,
                bool hasWhiteboard = false,
-               bool hasComputers = false);
+               bool hasComputers = false,
+               bool isAvailable = true);
 
     std::string getType() const override;
 };

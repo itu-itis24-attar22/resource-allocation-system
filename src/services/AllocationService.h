@@ -8,6 +8,7 @@
 #include "../rules/AvailabilityRule.h"
 #include "../rules/CapacityRule.h"
 #include "../rules/FeatureRule.h"
+#include "../rules/StatusRule.h"
 
 class AllocationService {
 private:
@@ -15,6 +16,7 @@ private:
     AvailabilityRule availabilityRule;
     CapacityRule capacityRule;
     FeatureRule featureRule;
+    StatusRule statusRule;
 
 public:
     void addExistingAllocation(const Allocation& allocation);

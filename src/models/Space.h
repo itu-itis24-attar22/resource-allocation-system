@@ -11,12 +11,14 @@ protected:
     bool hasProjector;
     bool hasWhiteboard;
     bool hasComputers;
+    bool isAvailable;
 
 public:
     Space(int id, const std::string& name, int capacity,
           bool hasProjector = false,
           bool hasWhiteboard = false,
-          bool hasComputers = false);
+          bool hasComputers = false,
+          bool isAvailable = true);
 
     int getId() const;
     std::string getName() const;
@@ -25,6 +27,9 @@ public:
     bool getHasProjector() const;
     bool getHasWhiteboard() const;
     bool getHasComputers() const;
+
+    bool getIsAvailable() const;
+    void setAvailability(bool availability);
 
     bool hasFeature(const std::string& feature) const;
 

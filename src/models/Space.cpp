@@ -1,13 +1,15 @@
 #include "Space.h"
 
 Space::Space(int id, const std::string& name, int capacity,
-             bool hasProjector, bool hasWhiteboard, bool hasComputers)
+             bool hasProjector, bool hasWhiteboard, bool hasComputers,
+             bool isAvailable)
     : id(id),
       name(name),
       capacity(capacity),
       hasProjector(hasProjector),
       hasWhiteboard(hasWhiteboard),
-      hasComputers(hasComputers) {}
+      hasComputers(hasComputers),
+      isAvailable(isAvailable) {}
 
 int Space::getId() const {
     return id;
@@ -31,6 +33,14 @@ bool Space::getHasWhiteboard() const {
 
 bool Space::getHasComputers() const {
     return hasComputers;
+}
+
+bool Space::getIsAvailable() const {
+    return isAvailable;
+}
+
+void Space::setAvailability(bool availability) {
+    isAvailable = availability;
 }
 
 bool Space::hasFeature(const std::string& feature) const {
