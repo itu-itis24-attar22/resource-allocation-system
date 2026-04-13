@@ -4,58 +4,13 @@ OneTimeRequest::OneTimeRequest(int requestId, const User& requester, Space* requ
                                const TimeSlot& requestedTimeSlot, int participantCount,
                                const std::string& requiredFeature,
                                const std::string& requiredBuilding)
-    : requestId(requestId),
-      requester(requester),
-      requestedSpace(requestedSpace),
-      requestedTimeSlot(requestedTimeSlot),
-      participantCount(participantCount),
-      status(RequestStatus::Pending),
-      requiredFeature(requiredFeature),
-      requiredBuilding(requiredBuilding),
-      rejectionReason("") {}
-
-int OneTimeRequest::getId() const {
-    return requestId;
-}
-
-User OneTimeRequest::getRequester() const {
-    return requester;
-}
-
-Space* OneTimeRequest::getRequestedSpace() const {
-    return requestedSpace;
-}
+    : Request(requestId, requester, requestedSpace, participantCount, requiredFeature, requiredBuilding),
+      requestedTimeSlot(requestedTimeSlot) {}
 
 TimeSlot OneTimeRequest::getRequestedTimeSlot() const {
     return requestedTimeSlot;
 }
 
-int OneTimeRequest::getParticipantCount() const {
-    return participantCount;
-}
-
-RequestStatus OneTimeRequest::getStatus() const {
-    return status;
-}
-
-std::string OneTimeRequest::getRequiredFeature() const {
-    return requiredFeature;
-}
-
-std::string OneTimeRequest::getRequiredBuilding() const {
-    return requiredBuilding;
-}
-
-std::string OneTimeRequest::getRejectionReason() const {
-    return rejectionReason;
-}
-
-void OneTimeRequest::markApproved() {
-    status = RequestStatus::Approved;
-    rejectionReason = "";
-}
-
-void OneTimeRequest::markRejected(const std::string& reason) {
-    status = RequestStatus::Rejected;
-    rejectionReason = reason;
+bool OneTimeRequest::isRecurring() const {
+    return false;
 }

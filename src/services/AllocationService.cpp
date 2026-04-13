@@ -1,6 +1,10 @@
 #include <iostream>
 #include "AllocationService.h"
 
+const std::vector<Allocation>& AllocationService::getAllocations() const {
+    return allocations;
+}
+
 static std::string dayToString(int day) {
     switch (day) {
         case 1: return "Monday";
@@ -18,7 +22,7 @@ void AllocationService::addExistingAllocation(const Allocation& allocation) {
     allocations.push_back(allocation);
 }
 
-bool AllocationService::processRequest(OneTimeRequest& request) {
+bool AllocationService::evaluateCommonRules(Request& request) {
     if (!capacityRule.check(request)) {
         request.markRejected("Capacity insufficient");
         return false;
@@ -36,6 +40,14 @@ bool AllocationService::processRequest(OneTimeRequest& request) {
 
     if (!locationRule.check(request)) {
         request.markRejected("Required building mismatch");
+        return false;
+    }
+
+    return true;
+}
+
+bool AllocationService::processRequest(OneTimeRequest& request) {
+    if (!evaluateCommonRules(request)) {
         return false;
     }
 
@@ -56,23 +68,7 @@ bool AllocationService::processRequest(OneTimeRequest& request) {
 }
 
 bool AllocationService::processRequest(RecurringRequest& request) {
-    if (!capacityRule.check(request)) {
-        request.markRejected("Capacity insufficient");
-        return false;
-    }
-
-    if (!featureRule.check(request)) {
-        request.markRejected("Required feature missing");
-        return false;
-    }
-
-    if (!statusRule.check(request)) {
-        request.markRejected("Space under maintenance");
-        return false;
-    }
-
-    if (!locationRule.check(request)) {
-        request.markRejected("Required building mismatch");
+    if (!evaluateCommonRules(request)) {
         return false;
     }
 

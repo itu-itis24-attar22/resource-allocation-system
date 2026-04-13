@@ -1,13 +1,11 @@
 #ifndef CAPACITYRULE_H
 #define CAPACITYRULE_H
 
-#include "../models/OneTimeRequest.h"
-#include "../models/RecurringRequest.h"
+#include "../models/Request.h"
 
 class CapacityRule {
 public:
-    bool check(const OneTimeRequest& request) const;
-    bool check(const RecurringRequest& request) const;
+    bool check(const Request& request) const;
 };
 
 #endif

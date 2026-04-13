@@ -1,23 +1,12 @@
 #ifndef ONETIMEREQUEST_H
 #define ONETIMEREQUEST_H
 
-#include <string>
-#include "User.h"
-#include "Space.h"
+#include "Request.h"
 #include "TimeSlot.h"
-#include "Status.h"
 
-class OneTimeRequest {
+class OneTimeRequest : public Request {
 private:
-    int requestId;
-    User requester;
-    Space* requestedSpace;
     TimeSlot requestedTimeSlot;
-    int participantCount;
-    RequestStatus status;
-    std::string requiredFeature;
-    std::string requiredBuilding;
-    std::string rejectionReason;
 
 public:
     OneTimeRequest(int requestId, const User& requester, Space* requestedSpace,
@@ -25,18 +14,9 @@ public:
                    const std::string& requiredFeature = "",
                    const std::string& requiredBuilding = "");
 
-    int getId() const;
-    User getRequester() const;
-    Space* getRequestedSpace() const;
     TimeSlot getRequestedTimeSlot() const;
-    int getParticipantCount() const;
-    RequestStatus getStatus() const;
-    std::string getRequiredFeature() const;
-    std::string getRequiredBuilding() const;
-    std::string getRejectionReason() const;
 
-    void markApproved();
-    void markRejected(const std::string& reason);
+    bool isRecurring() const override;
 };
 
 #endif

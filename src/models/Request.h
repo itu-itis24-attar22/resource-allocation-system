@@ -1,0 +1,43 @@
+#ifndef REQUEST_H
+#define REQUEST_H
+
+#include <string>
+#include "User.h"
+#include "Space.h"
+#include "Status.h"
+
+class Request {
+protected:
+    int requestId;
+    User requester;
+    Space* requestedSpace;
+    int participantCount;
+    RequestStatus status;
+    std::string requiredFeature;
+    std::string requiredBuilding;
+    std::string rejectionReason;
+
+public:
+    Request(int requestId, const User& requester, Space* requestedSpace,
+            int participantCount,
+            const std::string& requiredFeature = "",
+            const std::string& requiredBuilding = "");
+
+    virtual ~Request() = default;
+
+    int getId() const;
+    User getRequester() const;
+    Space* getRequestedSpace() const;
+    int getParticipantCount() const;
+    RequestStatus getStatus() const;
+    std::string getRequiredFeature() const;
+    std::string getRequiredBuilding() const;
+    std::string getRejectionReason() const;
+
+    virtual void markApproved();
+    virtual void markRejected(const std::string& reason);
+
+    virtual bool isRecurring() const = 0;
+};
+
+#endif

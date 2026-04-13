@@ -1,13 +1,11 @@
 #ifndef FEATURERULE_H
 #define FEATURERULE_H
 
-#include "../models/OneTimeRequest.h"
-#include "../models/RecurringRequest.h"
+#include "../models/Request.h"
 
 class FeatureRule {
 public:
-    bool check(const OneTimeRequest& request) const;
-    bool check(const RecurringRequest& request) const;
+    bool check(const Request& request) const;
 };
 
 #endif
