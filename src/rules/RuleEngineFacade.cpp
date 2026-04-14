@@ -2,11 +2,11 @@
 
 RuleEngineFacade::RuleEngineFacade()
     : ruleEngine(std::vector<const IRequestRule*>{
+          &userRoleRule,
           &capacityRule,
           &featureRule,
           &statusRule,
-          &locationRule,
-          &userRoleRule
+          &locationRule
       }) {}
 
 RuleEvaluationResult RuleEngineFacade::evaluateRequest(OneTimeRequest& request,
