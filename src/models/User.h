@@ -2,19 +2,20 @@
 #define USER_H
 
 #include <string>
+#include "UserRole.h"
 
 class User {
 private:
-    int id;
+    int userId;
     std::string name;
-    std::string role;
+    UserRole role;
 
 public:
-    User(int id, const std::string& name, const std::string& role);
+    User(int userId, const std::string& name, UserRole role);
 
     int getId() const;
     std::string getName() const;
-    std::string getRole() const;
+    UserRole getRole() const;
 };
 
 #endif

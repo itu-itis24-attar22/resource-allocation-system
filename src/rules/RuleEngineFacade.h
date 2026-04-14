@@ -6,6 +6,7 @@
 #include "FeatureRule.h"
 #include "StatusRule.h"
 #include "LocationRule.h"
+#include "UserRoleRule.h"
 
 class RuleEngineFacade {
 private:
@@ -13,6 +14,7 @@ private:
     FeatureRule featureRule;
     StatusRule statusRule;
     LocationRule locationRule;
+    UserRoleRule userRoleRule;
     RuleEngine ruleEngine;
 
 public:

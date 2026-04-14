@@ -5,6 +5,7 @@
 #include "../models/Classroom.h"
 #include "../models/Laboratory.h"
 #include "../models/MeetingRoom.h"
+#include "../models/UserRole.h"
 
 std::vector<User> DataLoader::loadUsers(const std::string& filename) {
     std::vector<User> users;
@@ -24,15 +25,15 @@ std::vector<User> DataLoader::loadUsers(const std::string& filename) {
 
         int id;
         std::string name;
-        std::string role;
+        std::string roleString;
 
         std::getline(ss, token, ',');
         id = std::stoi(token);
 
         std::getline(ss, name, ',');
-        std::getline(ss, role, ',');
+        std::getline(ss, roleString, ',');
 
-        users.emplace_back(id, name, role);
+        users.emplace_back(id, name, stringToUserRole(roleString));
     }
 
     return users;

@@ -5,7 +5,8 @@ RuleEngineFacade::RuleEngineFacade()
           &capacityRule,
           &featureRule,
           &statusRule,
-          &locationRule
+          &locationRule,
+          &userRoleRule
       }) {}
 
 RuleEvaluationResult RuleEngineFacade::evaluateRequest(OneTimeRequest& request,
