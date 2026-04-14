@@ -1,9 +1,38 @@
+# Compiled binaries
 *.exe
-*.o
 *.out
+*.o
 *.obj
+*.a
+*.lib
+*.dll
+
+# Build folders
+build/
+bin/
+cmake-build-debug/
+cmake-build-release/
+
+# VS Code
+.vscode/
+
+# Visual Studio / Windows
+*.pdb
+*.ilk
+*.idb
+
+# Temporary/editor files
+*.tmp
 *.log
-*.aux
-*.toc
-*.pdfsync
-*.synctex.gz
+*.swp
+*.swo
+*~
+
+# Generated images or exports if you do not want to track them
+# Uncomment if needed
+# *.png
+# *.pdf
+
+# Keep CSV input data tracked, but ignore generated allocation export if desired
+# Uncomment only if allocations.csv is generated and should not be committed
+# data/allocations.csv
