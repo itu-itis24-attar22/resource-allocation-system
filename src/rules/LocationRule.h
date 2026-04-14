@@ -1,11 +1,11 @@
 #ifndef LOCATIONRULE_H
 #define LOCATIONRULE_H
 
-#include "../models/Request.h"
+#include "IRequestRule.h"
 
-class LocationRule {
+class LocationRule : public IRequestRule {
 public:
-    bool check(const Request& request) const;
+    RuleEvaluationResult evaluate(Request& request) const override;
 };
 
 #endif

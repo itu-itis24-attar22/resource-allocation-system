@@ -1,5 +1,9 @@
 #include "CapacityRule.h"
 
-bool CapacityRule::check(const Request& request) const {
-    return request.getRequestedSpace()->getCapacity() >= request.getParticipantCount();
+RuleEvaluationResult CapacityRule::evaluate(Request& request) const {
+    if (request.getRequestedSpace()->getCapacity() >= request.getParticipantCount()) {
+        return RuleEvaluationResult(true, "");
+    }
+
+    return RuleEvaluationResult(false, "Capacity insufficient");
 }

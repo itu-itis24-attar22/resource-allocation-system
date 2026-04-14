@@ -1,11 +1,11 @@
 #ifndef STATUSRULE_H
 #define STATUSRULE_H
 
-#include "../models/Request.h"
+#include "IRequestRule.h"
 
-class StatusRule {
+class StatusRule : public IRequestRule {
 public:
-    bool check(const Request& request) const;
+    RuleEvaluationResult evaluate(Request& request) const override;
 };
 
 #endif

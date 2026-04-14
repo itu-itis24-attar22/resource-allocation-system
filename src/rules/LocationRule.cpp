@@ -1,8 +1,13 @@
 #include "LocationRule.h"
 
-bool LocationRule::check(const Request& request) const {
+RuleEvaluationResult LocationRule::evaluate(Request& request) const {
     if (request.getRequiredBuilding().empty()) {
-        return true;
+        return RuleEvaluationResult(true, "");
     }
-    return request.getRequestedSpace()->getBuilding() == request.getRequiredBuilding();
+
+    if (request.getRequestedSpace()->getBuilding() == request.getRequiredBuilding()) {
+        return RuleEvaluationResult(true, "");
+    }
+
+    return RuleEvaluationResult(false, "Required building mismatch");
 }

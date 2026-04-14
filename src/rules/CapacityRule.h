@@ -1,11 +1,11 @@
 #ifndef CAPACITYRULE_H
 #define CAPACITYRULE_H
 
-#include "../models/Request.h"
+#include "IRequestRule.h"
 
-class CapacityRule {
+class CapacityRule : public IRequestRule {
 public:
-    bool check(const Request& request) const;
+    RuleEvaluationResult evaluate(Request& request) const override;
 };
 
 #endif

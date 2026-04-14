@@ -3,25 +3,14 @@
 
 #include <vector>
 #include "../models/Allocation.h"
-#include "../models/Request.h"
 #include "../models/OneTimeRequest.h"
 #include "../models/RecurringRequest.h"
-#include "../rules/AvailabilityRule.h"
-#include "../rules/CapacityRule.h"
-#include "../rules/FeatureRule.h"
-#include "../rules/StatusRule.h"
-#include "../rules/LocationRule.h"
+#include "../rules/RuleEngineFacade.h"
 
 class AllocationService {
 private:
     std::vector<Allocation> allocations;
-    AvailabilityRule availabilityRule;
-    CapacityRule capacityRule;
-    FeatureRule featureRule;
-    StatusRule statusRule;
-    LocationRule locationRule;
-
-    bool evaluateCommonRules(Request& request);
+    RuleEngineFacade ruleEngineFacade;
 
 public:
     const std::vector<Allocation>& getAllocations() const;

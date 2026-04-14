@@ -1,11 +1,11 @@
 #ifndef FEATURERULE_H
 #define FEATURERULE_H
 
-#include "../models/Request.h"
+#include "IRequestRule.h"
 
-class FeatureRule {
+class FeatureRule : public IRequestRule {
 public:
-    bool check(const Request& request) const;
+    RuleEvaluationResult evaluate(Request& request) const override;
 };
 
 #endif

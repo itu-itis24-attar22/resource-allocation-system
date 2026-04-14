@@ -1,5 +1,9 @@
 #include "StatusRule.h"
 
-bool StatusRule::check(const Request& request) const {
-    return request.getRequestedSpace()->getIsAvailable();
+RuleEvaluationResult StatusRule::evaluate(Request& request) const {
+    if (request.getRequestedSpace()->getIsAvailable()) {
+        return RuleEvaluationResult(true, "");
+    }
+
+    return RuleEvaluationResult(false, "Space under maintenance");
 }

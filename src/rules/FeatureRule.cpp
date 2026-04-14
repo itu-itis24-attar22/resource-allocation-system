@@ -1,5 +1,9 @@
 #include "FeatureRule.h"
 
-bool FeatureRule::check(const Request& request) const {
-    return request.getRequestedSpace()->hasFeature(request.getRequiredFeature());
+RuleEvaluationResult FeatureRule::evaluate(Request& request) const {
+    if (request.getRequestedSpace()->hasFeature(request.getRequiredFeature())) {
+        return RuleEvaluationResult(true, "");
+    }
+
+    return RuleEvaluationResult(false, "Required feature missing");
 }

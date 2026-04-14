@@ -22,37 +22,11 @@ void AllocationService::addExistingAllocation(const Allocation& allocation) {
     allocations.push_back(allocation);
 }
 
-bool AllocationService::evaluateCommonRules(Request& request) {
-    if (!capacityRule.check(request)) {
-        request.markRejected("Capacity insufficient");
-        return false;
-    }
-
-    if (!featureRule.check(request)) {
-        request.markRejected("Required feature missing");
-        return false;
-    }
-
-    if (!statusRule.check(request)) {
-        request.markRejected("Space under maintenance");
-        return false;
-    }
-
-    if (!locationRule.check(request)) {
-        request.markRejected("Required building mismatch");
-        return false;
-    }
-
-    return true;
-}
-
 bool AllocationService::processRequest(OneTimeRequest& request) {
-    if (!evaluateCommonRules(request)) {
-        return false;
-    }
+    RuleEvaluationResult result = ruleEngineFacade.evaluateRequest(request, allocations);
 
-    if (!availabilityRule.check(request, allocations)) {
-        request.markRejected("Time slot unavailable");
+    if (!result.isPassed()) {
+        request.markRejected(result.getFailureReason());
         return false;
     }
 
@@ -68,12 +42,10 @@ bool AllocationService::processRequest(OneTimeRequest& request) {
 }
 
 bool AllocationService::processRequest(RecurringRequest& request) {
-    if (!evaluateCommonRules(request)) {
-        return false;
-    }
+    RuleEvaluationResult result = ruleEngineFacade.evaluateRequest(request, allocations);
 
-    if (!availabilityRule.check(request, allocations)) {
-        request.markRejected("Time slot unavailable");
+    if (!result.isPassed()) {
+        request.markRejected(result.getFailureReason());
         return false;
     }
 
