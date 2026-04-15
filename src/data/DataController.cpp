@@ -6,6 +6,8 @@
 #include "AllocationWriter.h"
 #include "../models/OneTimeRequest.h"
 #include "../models/RecurringRequest.h"
+#include "DataController.h"
+#include "RequestResultWriter.h"
 
 namespace {
     std::string normalizeOptionalField(const std::string& value) {
@@ -167,4 +169,9 @@ void DataController::cleanupData(SystemData& data) const {
         delete space;
     }
     data.spaces.clear();
+}
+
+void DataController::exportRequestResults(const std::string& resultsFile,
+                                          const std::vector<Request*>& requests) const {
+    RequestResultWriter::writeRequestResults(resultsFile, requests);
 }

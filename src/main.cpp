@@ -55,6 +55,9 @@ int main() {
     dataController.exportAllocations("data/allocations.csv", allocationService.getAllocations());
     std::cout << "\nAllocations exported to data/allocations.csv\n";
 
+    dataController.exportRequestResults("data/request_results.csv", data.requests);
+    std::cout << "Request results exported to data/request_results.csv\n";
+
     dataController.cleanupData(data);
     return 0;
 }

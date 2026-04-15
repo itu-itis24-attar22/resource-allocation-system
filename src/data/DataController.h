@@ -23,6 +23,9 @@ public:
     void exportAllocations(const std::string& allocationsFile,
                            const std::vector<Allocation>& allocations) const;
 
+    void exportRequestResults(const std::string& resultsFile,
+                              const std::vector<Request*>& requests) const;
+
     void cleanupData(SystemData& data) const;
 };
 
