@@ -65,7 +65,7 @@ The prototype currently uses CSV files in the `data/` folder:
 Example compilation command:
 
 ```bash
-g++ -std=c++17 src/main.cpp src/utils/ConsolePrinter.cpp src/data/DataLoader.cpp src/models/User.cpp src/models/Space.cpp src/models/Classroom.cpp src/models/Laboratory.cpp src/models/MeetingRoom.cpp src/models/TimeSlot.cpp src/models/Request.cpp src/models/OneTimeRequest.cpp src/models/RecurringRequest.cpp src/models/Allocation.cpp src/rules/AvailabilityRule.cpp src/rules/CapacityRule.cpp src/rules/FeatureRule.cpp src/rules/StatusRule.cpp src/rules/LocationRule.cpp src/rules/UserRoleRule.cpp src/rules/RuleEvaluationResult.cpp src/rules/RuleEngine.cpp src/rules/RuleEngineFacade.cpp src/services/AllocationService.cpp -o allocation_system
+g++ -std=c++17 src/main.cpp src/utils/ConsolePrinter.cpp src/data/DataLoader.cpp src/data/DataController.cpp src/data/AllocationWriter.cpp src/data/RequestResultWriter.cpp src/models/User.cpp src/models/Space.cpp src/models/Classroom.cpp src/models/Laboratory.cpp src/models/MeetingRoom.cpp src/models/TimeSlot.cpp src/models/Request.cpp src/models/OneTimeRequest.cpp src/models/RecurringRequest.cpp src/models/Allocation.cpp src/rules/AvailabilityRule.cpp src/rules/CapacityRule.cpp src/rules/FeatureRule.cpp src/rules/StatusRule.cpp src/rules/LocationRule.cpp src/rules/UserRoleRule.cpp src/rules/RuleEvaluationResult.cpp src/rules/RuleEngine.cpp src/rules/RuleEngineFacade.cpp src/services/AllocationService.cpp -o allocation_system
 
 Run:
 ./allocation_system
