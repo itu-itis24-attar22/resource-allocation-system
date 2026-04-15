@@ -6,6 +6,7 @@
 #include "../models/Laboratory.h"
 #include "../models/MeetingRoom.h"
 #include "../models/UserRole.h"
+#include "RequestResultWriter.h"
 
 std::vector<User> DataLoader::loadUsers(const std::string& filename) {
     std::vector<User> users;
