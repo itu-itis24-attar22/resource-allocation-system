@@ -38,6 +38,7 @@ void printOneTimeResult(
     std::cout << "Request type: OneTimeRequest\n";
     std::cout << "Requester: " << request.getRequester().getName() << "\n";
     std::cout << "Requester role: " << userRoleToString(request.getRequester().getRole()) << "\n";
+    std::cout << "Priority: " << request.getPriority() << "\n";
     std::cout << "Requested type: " << request.getRequestedSpace()->getType() << "\n";
     std::cout << "Requested space: " << request.getRequestedSpace()->getName() << "\n";
     std::cout << "Space building: " << request.getRequestedSpace()->getBuilding() << "\n";
@@ -74,6 +75,7 @@ void printRecurringResult(
     std::cout << "Request type: RecurringRequest\n";
     std::cout << "Requester: " << request.getRequester().getName() << "\n";
     std::cout << "Requester role: " << userRoleToString(request.getRequester().getRole()) << "\n";
+    std::cout << "Priority: " << request.getPriority() << "\n";
     std::cout << "Requested type: " << request.getRequestedSpace()->getType() << "\n";
     std::cout << "Requested space: " << request.getRequestedSpace()->getName() << "\n";
     std::cout << "Space building: " << request.getRequestedSpace()->getBuilding() << "\n";

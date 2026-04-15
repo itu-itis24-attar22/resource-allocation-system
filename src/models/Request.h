@@ -12,6 +12,7 @@ protected:
     User requester;
     Space* requestedSpace;
     int participantCount;
+    int priority;
     RequestStatus status;
     std::string requiredFeature;
     std::string requiredBuilding;
@@ -29,6 +30,7 @@ public:
     User getRequester() const;
     Space* getRequestedSpace() const;
     int getParticipantCount() const;
+    int getPriority() const;
     RequestStatus getStatus() const;
     std::string getRequiredFeature() const;
     std::string getRequiredBuilding() const;

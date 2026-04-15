@@ -47,7 +47,7 @@ int main() {
         "Request 1",
         request1,
         result1,
-        "Student request for classroom approved because student is allowed to request classroom and all rules pass"
+        "Student classroom request approved; request now carries computed priority based on user role"
     );
 
     OneTimeRequest request2(
@@ -62,7 +62,7 @@ int main() {
         "Request 2",
         request2,
         result2,
-        "Student request for meeting room rejected because the required building does not match"
+        "Student meeting room request rejected because the required building does not match"
     );
 
     RecurringRequest request3(
@@ -77,7 +77,7 @@ int main() {
         "Request 3",
         request3,
         result3,
-        "Instructor recurring request for meeting room approved because instructor is allowed and all rules pass"
+        "Instructor recurring request approved; instructor priority is higher than student priority"
     );
 
     RecurringRequest request4(
@@ -152,7 +152,7 @@ int main() {
         "Request 8",
         request8,
         result8,
-        "Administrator meeting room request approved because administrator can request all space types"
+        "Administrator meeting room request approved; administrator receives the highest request priority"
     );
 
     allocationService.printAllocations();

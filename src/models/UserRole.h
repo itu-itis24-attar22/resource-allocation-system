@@ -29,4 +29,14 @@ inline UserRole stringToUserRole(const std::string& role) {
     return UserRole::Student;
 }
 
+inline int userRoleToPriority(UserRole role) {
+    switch (role) {
+        case UserRole::Administrator: return 4;
+        case UserRole::Instructor: return 3;
+        case UserRole::Staff: return 2;
+        case UserRole::Student: return 1;
+        default: return 0;
+    }
+}
+
 #endif
