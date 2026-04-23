@@ -23,6 +23,7 @@ void AllocationService::addExistingAllocation(const Allocation& allocation) {
 }
 
 bool AllocationService::processRequest(OneTimeRequest& request) {
+    request.addHistoryEvent("evaluated");
     RuleEvaluationResult result = ruleEngineFacade.evaluateRequest(request, allocations);
 
     if (!result.isPassed()) {
@@ -42,6 +43,7 @@ bool AllocationService::processRequest(OneTimeRequest& request) {
 }
 
 bool AllocationService::processRequest(RecurringRequest& request) {
+    request.addHistoryEvent("evaluated");
     RuleEvaluationResult result = ruleEngineFacade.evaluateRequest(request, allocations);
 
     if (!result.isPassed()) {

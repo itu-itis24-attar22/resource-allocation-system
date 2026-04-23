@@ -13,7 +13,9 @@ Request::Request(int requestId, const User& requester, Space* requestedSpace,
       status(RequestStatus::Pending),
       requiredFeature(requiredFeature),
       requiredBuilding(requiredBuilding),
-      rejectionReason("") {}
+      rejectionReason("") {
+    addHistoryEvent("created");
+}
 
 int Request::getId() const {
     return requestId;
@@ -51,12 +53,22 @@ std::string Request::getRejectionReason() const {
     return rejectionReason;
 }
 
+const std::vector<std::string>& Request::getLifecycleHistory() const {
+    return lifecycleHistory;
+}
+
+void Request::addHistoryEvent(const std::string& event) {
+    lifecycleHistory.push_back(event);
+}
+
 void Request::markApproved() {
     status = RequestStatus::Approved;
     rejectionReason = "";
+    addHistoryEvent("approved");
 }
 
 void Request::markRejected(const std::string& reason) {
     status = RequestStatus::Rejected;
     rejectionReason = reason;
+    addHistoryEvent("rejected: " + reason);
 }

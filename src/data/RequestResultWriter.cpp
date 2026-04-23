@@ -6,6 +6,20 @@
 #include "../models/UserRole.h"
 
 namespace {
+    std::string buildHistoryInfo(const Request* request) {
+        std::string result;
+        const std::vector<std::string>& history = request->getLifecycleHistory();
+
+        for (size_t i = 0; i < history.size(); i++) {
+            result += history[i];
+            if (i + 1 < history.size()) {
+                result += " | ";
+            }
+        }
+
+        return result;
+    }
+
     std::string dayToString(int day) {
         switch (day) {
             case 1: return "Monday";
@@ -70,9 +84,11 @@ void RequestResultWriter::writeRequestResults(const std::string& filename,
         return;
     }
 
-    file << "requestId,requestType,requesterName,requesterRole,priority,spaceName,spaceType,spaceBuilding,requiredBuilding,requiredFeature,participants,status,rejectionReason,timeInfo\n";
+    file << "requestId,requestType,requesterName,requesterRole,priority,spaceName,spaceType,spaceBuilding,requiredBuilding,requiredFeature,participants,status,rejectionReason,timeInfo,lifecycleHistory\n";
 
-    for (const Request* request : requests) {
+    for (Request* request : requests) {
+        request->addHistoryEvent("exported");
+
         file << request->getId() << ","
              << requestTypeToString(request) << ","
              << request->getRequester().getName() << ","
@@ -86,7 +102,8 @@ void RequestResultWriter::writeRequestResults(const std::string& filename,
              << request->getParticipantCount() << ","
              << requestStatusToString(request->getStatus()) << ","
              << (request->getRejectionReason().empty() ? "None" : request->getRejectionReason()) << ","
-             << buildTimeInfo(request)
+             << buildTimeInfo(request) << ","
+             << buildHistoryInfo(request)
              << "\n";
     }
 

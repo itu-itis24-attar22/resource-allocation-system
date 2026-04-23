@@ -2,6 +2,7 @@
 #define REQUEST_H
 
 #include <string>
+#include <vector>
 #include "User.h"
 #include "Space.h"
 #include "Status.h"
@@ -17,6 +18,7 @@ protected:
     std::string requiredFeature;
     std::string requiredBuilding;
     std::string rejectionReason;
+    std::vector<std::string> lifecycleHistory;
 
 public:
     Request(int requestId, const User& requester, Space* requestedSpace,
@@ -35,6 +37,9 @@ public:
     std::string getRequiredFeature() const;
     std::string getRequiredBuilding() const;
     std::string getRejectionReason() const;
+    const std::vector<std::string>& getLifecycleHistory() const;
+
+    void addHistoryEvent(const std::string& event);
 
     virtual void markApproved();
     virtual void markRejected(const std::string& reason);
