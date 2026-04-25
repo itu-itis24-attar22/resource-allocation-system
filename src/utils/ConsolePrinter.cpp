@@ -106,3 +106,30 @@ void printRecurringResult(
     std::cout << "Case: " << explanation << "\n";
     std::cout << "-----------------------------------\n";
 }
+
+void printInvalidResult(
+    const std::string& label,
+    const InvalidRequest& request,
+    const std::string& explanation
+) {
+    std::cout << label << "\n";
+    std::cout << "Request type: InvalidRequest\n";
+    std::cout << "Requester: " << request.getRequester().getName() << "\n";
+    std::cout << "Requester role: " << userRoleToString(request.getRequester().getRole()) << "\n";
+    std::cout << "Priority: " << request.getPriority() << "\n";
+    std::cout << "Requested type: " << request.getRequestedSpace()->getType() << "\n";
+    std::cout << "Requested space: " << request.getRequestedSpace()->getName() << "\n";
+    std::cout << "Space building: " << request.getRequestedSpace()->getBuilding() << "\n";
+    std::cout << "Required building: "
+              << (request.getRequiredBuilding().empty() ? "None" : request.getRequiredBuilding()) << "\n";
+    std::cout << "Required feature: "
+              << (request.getRequiredFeature().empty() ? "None" : request.getRequiredFeature()) << "\n";
+    std::cout << "Status: " << requestStatusToString(request.getStatus()) << "\n";
+    std::cout << "Participants: " << request.getParticipantCount() << "\n";
+    std::cout << "Raw time input: "
+              << (request.getRawTimeInfo().empty() ? "None" : request.getRawTimeInfo()) << "\n";
+    std::cout << "Request rejected.\n";
+    std::cout << "Rejection reason: " << request.getRejectionReason() << "\n";
+    std::cout << "Case: " << explanation << "\n";
+    std::cout << "-----------------------------------\n";
+}

@@ -4,6 +4,7 @@
 #include <string>
 #include "../models/OneTimeRequest.h"
 #include "../models/RecurringRequest.h"
+#include "../models/InvalidRequest.h"
 #include "../models/Status.h"
 
 std::string requestStatusToString(RequestStatus status);
@@ -21,6 +22,12 @@ void printRecurringResult(
     const std::string& label,
     const RecurringRequest& request,
     bool result,
+    const std::string& explanation
+);
+
+void printInvalidResult(
+    const std::string& label,
+    const InvalidRequest& request,
     const std::string& explanation
 );
 

@@ -1,8 +1,10 @@
 #include <iostream>
 #include <vector>
+#include <cstdio>
 #include "models/Request.h"
 #include "models/OneTimeRequest.h"
 #include "models/RecurringRequest.h"
+#include "models/InvalidRequest.h"
 #include "models/Allocation.h"
 #include "services/AllocationService.h"
 #include "data/DataController.h"
@@ -17,7 +19,10 @@ int main() {
     );
 
     if (data.users.empty() || data.spaces.empty() || data.requests.empty()) {
+        std::remove("data/allocations.csv");
+        std::remove("data/request_results.csv");
         std::cout << "Error: Failed to load system data.\n";
+        std::cout << "Stale output files were cleared.\n";
         dataController.cleanupData(data);
         return 1;
     }
@@ -46,6 +51,13 @@ int main() {
                 *recurring,
                 result,
                 "Recurring request loaded from external CSV source"
+            );
+        }
+        else if (InvalidRequest* invalid = dynamic_cast<InvalidRequest*>(request)) {
+            printInvalidResult(
+                label,
+                *invalid,
+                "Invalid request loaded from external CSV source"
             );
         }
     }
