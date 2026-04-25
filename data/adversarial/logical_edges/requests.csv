@@ -1,0 +1,11 @@
+1,Recurring,2,301,8,Projector,AdminBuilding,2-9-10;2-9-10
+2,Recurring,2,301,8,Projector,AdminBuilding,3-9-11;3-10-12
+3,OneTime,3,101,40,Projector,Engineering,1-0-1
+4,OneTime,3,101,41,Projector,Engineering,1-1-2
+5,OneTime,3,101,5,Projector,Engineering,7-22-23
+5,OneTime,3,101,5,Projector,Engineering,7-22-23
+6,OneTime,3,101,5,Projector,Engineering,1-0-0
+7,OneTime,3,101,5,Projector,Engineering,1-23-23
+8,OneTime,3,101,5,Projector,Engineering,1-23-24
+9,OneTime,3,101,5,Projector,Engineering,1-22-23
+10,OneTime,3,101,5,Projector,Engineering,1-22-23
