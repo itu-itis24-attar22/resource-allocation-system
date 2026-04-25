@@ -1,6 +1,9 @@
 #include <iostream>
 #include "AllocationService.h"
 
+AllocationService::AllocationService()
+    : allocationStrategy(&defaultStrategy) {}
+
 const std::vector<Allocation>& AllocationService::getAllocations() const {
     return allocations;
 }
@@ -23,45 +26,11 @@ void AllocationService::addExistingAllocation(const Allocation& allocation) {
 }
 
 bool AllocationService::processRequest(OneTimeRequest& request) {
-    request.addHistoryEvent("evaluated");
-    RuleEvaluationResult result = ruleEngineFacade.evaluateRequest(request, allocations);
-
-    if (!result.isPassed()) {
-        request.markRejected(result.getFailureReason());
-        return false;
-    }
-
-    request.markApproved();
-
-    int allocationId = static_cast<int>(allocations.size()) + 1;
-    Allocation allocation(allocationId, request.getId(),
-                          request.getRequestedSpace(),
-                          request.getRequestedTimeSlot());
-    allocations.push_back(allocation);
-
-    return true;
+    return allocationStrategy->processRequest(request, allocations, ruleEngineFacade);
 }
 
 bool AllocationService::processRequest(RecurringRequest& request) {
-    request.addHistoryEvent("evaluated");
-    RuleEvaluationResult result = ruleEngineFacade.evaluateRequest(request, allocations);
-
-    if (!result.isPassed()) {
-        request.markRejected(result.getFailureReason());
-        return false;
-    }
-
-    request.markApproved();
-
-    const std::vector<TimeSlot>& slots = request.getRequestedTimeSlots();
-    for (const TimeSlot& slot : slots) {
-        int allocationId = static_cast<int>(allocations.size()) + 1;
-        Allocation allocation(allocationId, request.getId(),
-                              request.getRequestedSpace(), slot);
-        allocations.push_back(allocation);
-    }
-
-    return true;
+    return allocationStrategy->processRequest(request, allocations, ruleEngineFacade);
 }
 
 void AllocationService::printAllocations() const {
