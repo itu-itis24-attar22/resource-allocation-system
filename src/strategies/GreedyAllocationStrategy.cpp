@@ -1,5 +1,18 @@
 #include "GreedyAllocationStrategy.h"
 
+namespace {
+    bool hasSelfConflict(const std::vector<TimeSlot>& slots) {
+        for (size_t i = 0; i < slots.size(); i++) {
+            for (size_t j = i + 1; j < slots.size(); j++) {
+                if (slots[i].overlapsWith(slots[j])) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+}
+
 bool GreedyAllocationStrategy::processRequest(OneTimeRequest& request,
                                               std::vector<Allocation>& allocations,
                                               const RuleEngineFacade& ruleEngineFacade) const {
@@ -26,6 +39,12 @@ bool GreedyAllocationStrategy::processRequest(RecurringRequest& request,
                                               std::vector<Allocation>& allocations,
                                               const RuleEngineFacade& ruleEngineFacade) const {
     request.addHistoryEvent("evaluated");
+
+    if (hasSelfConflict(request.getRequestedTimeSlots())) {
+        request.markRejected("Self-conflicting recurring request");
+        return false;
+    }
+
     RuleEvaluationResult result = ruleEngineFacade.evaluateRequest(request, allocations);
 
     if (!result.isPassed()) {
