@@ -2,17 +2,81 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <set>
 #include "DataLoader.h"
 #include "AllocationWriter.h"
 #include "../models/OneTimeRequest.h"
 #include "../models/RecurringRequest.h"
+#include "../models/InvalidRequest.h"
 #include "DataController.h"
 #include "RequestResultWriter.h"
 
 namespace {
+    class PlaceholderSpace : public Space {
+    public:
+        PlaceholderSpace()
+            : Space(-1, "UnknownSpace", 0, false, false, false, false, "Unknown") {}
+
+        std::string getType() const override {
+            return "Unknown";
+        }
+    };
+
+    User& placeholderUser() {
+        static User user(-1, "UnknownUser", UserRole::Student);
+        return user;
+    }
+
+    Space* placeholderSpace() {
+        static PlaceholderSpace space;
+        return &space;
+    }
+
     std::string normalizeOptionalField(const std::string& value) {
         if (value == "None") return "";
         return value;
+    }
+
+    bool tryParseInt(const std::string& text, int& value) {
+        try {
+            size_t parsedLength = 0;
+            value = std::stoi(text, &parsedLength);
+            return parsedLength == text.size();
+        } catch (...) {
+            return false;
+        }
+    }
+
+    InvalidRequest* createRejectedRequest(int requestId,
+                                          const std::string& requestType,
+                                          const User* user,
+                                          Space* space,
+                                          int participantCount,
+                                          const std::string& requiredFeature,
+                                          const std::string& requiredBuilding,
+                                          const std::string& timeData,
+                                          const std::string& reason) {
+        InvalidRequest* request = new InvalidRequest(
+            requestId,
+            user ? *user : placeholderUser(),
+            space ? space : placeholderSpace(),
+            participantCount,
+            requestType.empty() ? "Unknown" : requestType,
+            timeData,
+            requiredFeature,
+            requiredBuilding
+        );
+        request->addHistoryEvent("evaluated");
+        request->markRejected(reason);
+        return request;
+    }
+
+    void printRejectedRequestWarning(int requestId, const std::string& reason) {
+        if (requestId >= 0) {
+            std::cerr << "Warning: Request " << requestId << " rejected: " << reason << ".\n";
+        } else {
+            std::cerr << "Warning: Rejected request: " << reason << ".\n";
+        }
     }
 
     const User* findUserById(const std::vector<User>& users, int userId) {
@@ -33,42 +97,67 @@ namespace {
         return nullptr;
     }
 
-    TimeSlot parseSingleTimeSlot(const std::string& text) {
+    bool tryParseSingleTimeSlot(const std::string& text,
+                                TimeSlot& slot,
+                                std::string& errorReason) {
         std::stringstream ss(text);
         std::string token;
 
         int day, startHour, endHour;
 
-        std::getline(ss, token, '-');
-        day = std::stoi(token);
+        if (!std::getline(ss, token, '-') || !tryParseInt(token, day)) {
+            errorReason = "Malformed input";
+            return false;
+        }
 
-        std::getline(ss, token, '-');
-        startHour = std::stoi(token);
+        if (!std::getline(ss, token, '-') || !tryParseInt(token, startHour)) {
+            errorReason = "Malformed input";
+            return false;
+        }
 
-        std::getline(ss, token, '-');
-        endHour = std::stoi(token);
+        if (!std::getline(ss, token, '-') || !tryParseInt(token, endHour)) {
+            errorReason = "Malformed input";
+            return false;
+        }
 
-        return TimeSlot(day, startHour, endHour);
+        try {
+            slot = TimeSlot(day, startHour, endHour);
+            return true;
+        } catch (...) {
+            errorReason = "Invalid time slot";
+            return false;
+        }
     }
 
-    std::vector<TimeSlot> parseRecurringTimeSlots(const std::string& text) {
-        std::vector<TimeSlot> slots;
+    bool tryParseRecurringTimeSlots(const std::string& text,
+                                    std::vector<TimeSlot>& slots,
+                                    std::string& errorReason) {
         std::stringstream ss(text);
         std::string part;
 
         while (std::getline(ss, part, ';')) {
             if (!part.empty()) {
-                slots.push_back(parseSingleTimeSlot(part));
+                TimeSlot slot(1, 0, 1);
+                if (!tryParseSingleTimeSlot(part, slot, errorReason)) {
+                    return false;
+                }
+                slots.push_back(slot);
             }
         }
 
-        return slots;
+        if (slots.empty()) {
+            errorReason = "Malformed input";
+            return false;
+        }
+
+        return true;
     }
 
     std::vector<Request*> loadRequestsFromCsv(const std::string& filename,
                                               const std::vector<User>& users,
                                               const std::vector<Space*>& spaces) {
         std::vector<Request*> requests;
+        std::set<int> seenRequestIds;
         std::ifstream file(filename);
 
         if (!file.is_open()) {
@@ -83,60 +172,173 @@ namespace {
             std::stringstream ss(line);
             std::string token;
 
-            int requestId;
+            int requestId = -1;
             std::string requestType;
-            int userId;
-            int spaceId;
-            int participantCount;
+            int userId = -1;
+            int spaceId = -1;
+            int participantCount = 0;
             std::string requiredFeature;
             std::string requiredBuilding;
             std::string timeData;
 
-            std::getline(ss, token, ',');
-            requestId = std::stoi(token);
+            if (!std::getline(ss, token, ',') || !tryParseInt(token, requestId)) {
+                requests.push_back(createRejectedRequest(
+                    -1, "Unknown", nullptr, nullptr, 0, "", "", "", "Malformed input"
+                ));
+                printRejectedRequestWarning(-1, "Malformed input");
+                continue;
+            }
 
-            std::getline(ss, requestType, ',');
+            if (seenRequestIds.find(requestId) != seenRequestIds.end()) {
+                std::getline(ss, requestType, ',');
+                std::getline(ss, token, ',');
+                userId = tryParseInt(token, userId) ? userId : -1;
+                std::getline(ss, token, ',');
+                spaceId = tryParseInt(token, spaceId) ? spaceId : -1;
+                std::getline(ss, token, ',');
+                participantCount = tryParseInt(token, participantCount) ? participantCount : 0;
+                std::getline(ss, requiredFeature, ',');
+                requiredFeature = normalizeOptionalField(requiredFeature);
+                std::getline(ss, requiredBuilding, ',');
+                requiredBuilding = normalizeOptionalField(requiredBuilding);
+                std::getline(ss, timeData);
 
-            std::getline(ss, token, ',');
-            userId = std::stoi(token);
+                requests.push_back(createRejectedRequest(
+                    requestId,
+                    requestType.empty() ? "Unknown" : requestType,
+                    findUserById(users, userId),
+                    findSpaceById(spaces, spaceId),
+                    participantCount,
+                    requiredFeature,
+                    requiredBuilding,
+                    timeData,
+                    "Duplicate request ID"
+                ));
+                printRejectedRequestWarning(requestId, "Duplicate request ID");
+                continue;
+            }
 
-            std::getline(ss, token, ',');
-            spaceId = std::stoi(token);
+            seenRequestIds.insert(requestId);
 
-            std::getline(ss, token, ',');
-            participantCount = std::stoi(token);
+            if (!std::getline(ss, requestType, ',')) {
+                requests.push_back(createRejectedRequest(
+                    requestId, "Unknown", nullptr, nullptr, 0, "", "", "", "Malformed input"
+                ));
+                printRejectedRequestWarning(requestId, "Malformed input");
+                continue;
+            }
 
-            std::getline(ss, requiredFeature, ',');
+            if (!std::getline(ss, token, ',') || !tryParseInt(token, userId)) {
+                requests.push_back(createRejectedRequest(
+                    requestId, requestType, nullptr, nullptr, 0, "", "", "", "Malformed input"
+                ));
+                printRejectedRequestWarning(requestId, "Malformed input");
+                continue;
+            }
+
+            if (!std::getline(ss, token, ',') || !tryParseInt(token, spaceId)) {
+                requests.push_back(createRejectedRequest(
+                    requestId, requestType, findUserById(users, userId), nullptr, 0, "", "", "", "Malformed input"
+                ));
+                printRejectedRequestWarning(requestId, "Malformed input");
+                continue;
+            }
+
+            if (!std::getline(ss, token, ',') || !tryParseInt(token, participantCount)) {
+                requests.push_back(createRejectedRequest(
+                    requestId, requestType, findUserById(users, userId), findSpaceById(spaces, spaceId),
+                    0, "", "", "", "Malformed input"
+                ));
+                printRejectedRequestWarning(requestId, "Malformed input");
+                continue;
+            }
+
+            if (!std::getline(ss, requiredFeature, ',')) {
+                requests.push_back(createRejectedRequest(
+                    requestId, requestType, findUserById(users, userId), findSpaceById(spaces, spaceId),
+                    participantCount, "", "", "", "Malformed input"
+                ));
+                printRejectedRequestWarning(requestId, "Malformed input");
+                continue;
+            }
             requiredFeature = normalizeOptionalField(requiredFeature);
 
-            std::getline(ss, requiredBuilding, ',');
+            if (!std::getline(ss, requiredBuilding, ',')) {
+                requests.push_back(createRejectedRequest(
+                    requestId, requestType, findUserById(users, userId), findSpaceById(spaces, spaceId),
+                    participantCount, requiredFeature, "", "", "Malformed input"
+                ));
+                printRejectedRequestWarning(requestId, "Malformed input");
+                continue;
+            }
             requiredBuilding = normalizeOptionalField(requiredBuilding);
 
-            std::getline(ss, timeData);
+            if (!std::getline(ss, timeData)) {
+                requests.push_back(createRejectedRequest(
+                    requestId, requestType, findUserById(users, userId), findSpaceById(spaces, spaceId),
+                    participantCount, requiredFeature, requiredBuilding, "", "Malformed input"
+                ));
+                printRejectedRequestWarning(requestId, "Malformed input");
+                continue;
+            }
 
             const User* user = findUserById(users, userId);
             Space* space = findSpaceById(spaces, spaceId);
 
-            if (!user || !space) {
-                std::cerr << "Warning: Skipping request " << requestId
-                          << "missing user or space reference.\n";
+            if (!user) {
+                requests.push_back(createRejectedRequest(
+                    requestId, requestType, nullptr, space, participantCount,
+                    requiredFeature, requiredBuilding, timeData, "Invalid user reference"
+                ));
+                printRejectedRequestWarning(requestId, "Invalid user reference");
+                continue;
+            }
+
+            if (!space) {
+                requests.push_back(createRejectedRequest(
+                    requestId, requestType, user, nullptr, participantCount,
+                    requiredFeature, requiredBuilding, timeData, "Invalid space reference"
+                ));
+                printRejectedRequestWarning(requestId, "Invalid space reference");
                 continue;
             }
 
             if (requestType == "OneTime") {
-                TimeSlot slot = parseSingleTimeSlot(timeData);
+                TimeSlot slot(1, 0, 1);
+                std::string errorReason;
+                if (!tryParseSingleTimeSlot(timeData, slot, errorReason)) {
+                    requests.push_back(createRejectedRequest(
+                        requestId, requestType, user, space, participantCount,
+                        requiredFeature, requiredBuilding, timeData, errorReason
+                    ));
+                    printRejectedRequestWarning(requestId, errorReason);
+                    continue;
+                }
                 requests.push_back(new OneTimeRequest(
                     requestId, *user, space, slot,
                     participantCount, requiredFeature, requiredBuilding
                 ));
             } else if (requestType == "Recurring") {
-                std::vector<TimeSlot> slots = parseRecurringTimeSlots(timeData);
+                std::vector<TimeSlot> slots;
+                std::string errorReason;
+                if (!tryParseRecurringTimeSlots(timeData, slots, errorReason)) {
+                    requests.push_back(createRejectedRequest(
+                        requestId, requestType, user, space, participantCount,
+                        requiredFeature, requiredBuilding, timeData, errorReason
+                    ));
+                    printRejectedRequestWarning(requestId, errorReason);
+                    continue;
+                }
                 requests.push_back(new RecurringRequest(
                     requestId, *user, space, slots,
                     participantCount, requiredFeature, requiredBuilding
                 ));
             } else {
-                std::cerr << "Warning: Unknown request type for request " << requestId << "\n";
+                requests.push_back(createRejectedRequest(
+                    requestId, requestType, user, space, participantCount,
+                    requiredFeature, requiredBuilding, timeData, "Malformed input"
+                ));
+                printRejectedRequestWarning(requestId, "Malformed input");
             }
         }
 
