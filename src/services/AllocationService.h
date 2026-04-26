@@ -19,6 +19,7 @@ public:
     AllocationService();
     const std::vector<Allocation>& getAllocations() const;
     void addExistingAllocation(const Allocation& allocation);
+    void processRequests(const std::vector<Request*>& requests);
     bool processRequest(OneTimeRequest& request);
     bool processRequest(RecurringRequest& request);
     void printAllocations() const;

@@ -25,6 +25,10 @@ void AllocationService::addExistingAllocation(const Allocation& allocation) {
     allocations.push_back(allocation);
 }
 
+void AllocationService::processRequests(const std::vector<Request*>& requests) {
+    allocationStrategy->processRequests(requests, allocations, ruleEngineFacade);
+}
+
 bool AllocationService::processRequest(OneTimeRequest& request) {
     return allocationStrategy->processRequest(request, allocations, ruleEngineFacade);
 }
