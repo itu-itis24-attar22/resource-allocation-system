@@ -32,11 +32,13 @@ int main() {
     Allocation existingClassroomAllocation(100, 999, data.spaces[0], TimeSlot(1, 10, 12));
     allocationService.addExistingAllocation(existingClassroomAllocation);
 
+    allocationService.processRequests(data.requests);
+
     for (Request* request : data.requests) {
         std::string label = "Request " + std::to_string(request->getId());
 
         if (OneTimeRequest* oneTime = dynamic_cast<OneTimeRequest*>(request)) {
-            bool result = allocationService.processRequest(*oneTime);
+            bool result = oneTime->getStatus() == RequestStatus::Approved;
             printOneTimeResult(
                 label,
                 *oneTime,
@@ -45,7 +47,7 @@ int main() {
             );
         }
         else if (RecurringRequest* recurring = dynamic_cast<RecurringRequest*>(request)) {
-            bool result = allocationService.processRequest(*recurring);
+            bool result = recurring->getStatus() == RequestStatus::Approved;
             printRecurringResult(
                 label,
                 *recurring,
