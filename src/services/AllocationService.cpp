@@ -1,8 +1,12 @@
 #include <iostream>
 #include "AllocationService.h"
+#include "../strategies/AllocationStrategyFactory.h"
 
 AllocationService::AllocationService()
-    : allocationStrategy(&defaultStrategy) {}
+    : AllocationService("greedy") {}
+
+AllocationService::AllocationService(const std::string& strategyName)
+    : allocationStrategy(AllocationStrategyFactory::getInstance().getStrategy(strategyName)) {}
 
 const std::vector<Allocation>& AllocationService::getAllocations() const {
     return allocations;
