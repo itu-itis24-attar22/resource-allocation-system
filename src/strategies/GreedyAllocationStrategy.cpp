@@ -1,4 +1,5 @@
 #include "GreedyAllocationStrategy.h"
+#include "../models/InvalidRequest.h"
 
 namespace {
     bool hasSelfConflict(const std::vector<TimeSlot>& slots) {
@@ -22,10 +23,15 @@ void GreedyAllocationStrategy::processRequests(const std::vector<Request*>& requ
                                                const RuleEngineFacade& ruleEngineFacade) const {
     for (Request* request : requests) {
         if (OneTimeRequest* oneTime = dynamic_cast<OneTimeRequest*>(request)) {
+            oneTime->addHistoryEvent("Greedy batch processing started");
             processRequest(*oneTime, allocations, ruleEngineFacade);
         }
         else if (RecurringRequest* recurring = dynamic_cast<RecurringRequest*>(request)) {
+            recurring->addHistoryEvent("Greedy batch processing started");
             processRequest(*recurring, allocations, ruleEngineFacade);
+        }
+        else if (InvalidRequest* invalid = dynamic_cast<InvalidRequest*>(request)) {
+            invalid->addHistoryEvent("Greedy batch processing skipped invalid request");
         }
     }
 }
