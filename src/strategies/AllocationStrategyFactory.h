@@ -4,10 +4,12 @@
 #include <string>
 #include "IAllocationStrategy.h"
 #include "GreedyAllocationStrategy.h"
+#include "PriorityAllocationStrategy.h"
 
 class AllocationStrategyFactory {
 private:
     GreedyAllocationStrategy greedyStrategy;
+    PriorityAllocationStrategy priorityStrategy;
 
     AllocationStrategyFactory() = default;
 

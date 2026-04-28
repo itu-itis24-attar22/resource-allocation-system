@@ -25,5 +25,9 @@ const IAllocationStrategy* AllocationStrategyFactory::getStrategy(const std::str
         return &greedyStrategy;
     }
 
+    if (normalizedName == "priority") {
+        return &priorityStrategy;
+    }
+
     return &greedyStrategy;
 }
