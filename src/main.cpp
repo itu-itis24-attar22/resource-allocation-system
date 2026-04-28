@@ -27,7 +27,8 @@ int main() {
         return 1;
     }
 
-    AllocationService allocationService;
+    const std::string strategyName = "priority";
+    AllocationService allocationService(strategyName);
 
     Allocation existingClassroomAllocation(100, 999, data.spaces[0], TimeSlot(1, 10, 12));
     allocationService.addExistingAllocation(existingClassroomAllocation);
