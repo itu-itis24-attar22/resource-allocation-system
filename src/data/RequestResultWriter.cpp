@@ -4,7 +4,6 @@
 #include "../models/OneTimeRequest.h"
 #include "../models/RecurringRequest.h"
 #include "../models/InvalidRequest.h"
-#include "../models/UserRole.h"
 
 namespace {
     std::string escapeCsv(const std::string& value) {
@@ -122,8 +121,8 @@ void RequestResultWriter::writeRequestResults(const std::string& filename,
 
         file << request->getId() << ","
              << escapeCsv(requestTypeToString(request)) << ","
-             << escapeCsv(request->getRequester().getName()) << ","
-             << escapeCsv(userRoleToString(request->getRequester().getRole())) << ","
+             << escapeCsv(request->getRequester()->getName()) << ","
+             << escapeCsv(request->getRequester()->getRoleName()) << ","
              << request->getPriority() << ","
              << escapeCsv(request->getRequestedSpace()->getName()) << ","
              << escapeCsv(request->getRequestedSpace()->getType()) << ","

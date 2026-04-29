@@ -1,6 +1,5 @@
 #include <iostream>
 #include "ConsolePrinter.h"
-#include "../models/UserRole.h"
 
 std::string requestStatusToString(RequestStatus status) {
     switch (status) {
@@ -36,8 +35,8 @@ void printOneTimeResult(
 ) {
     std::cout << label << "\n";
     std::cout << "Request type: OneTimeRequest\n";
-    std::cout << "Requester: " << request.getRequester().getName() << "\n";
-    std::cout << "Requester role: " << userRoleToString(request.getRequester().getRole()) << "\n";
+    std::cout << "Requester: " << request.getRequester()->getName() << "\n";
+    std::cout << "Requester role: " << request.getRequester()->getRoleName() << "\n";
     std::cout << "Priority: " << request.getPriority() << "\n";
     std::cout << "Requested type: " << request.getRequestedSpace()->getType() << "\n";
     std::cout << "Requested space: " << request.getRequestedSpace()->getName() << "\n";
@@ -73,8 +72,8 @@ void printRecurringResult(
 ) {
     std::cout << label << "\n";
     std::cout << "Request type: RecurringRequest\n";
-    std::cout << "Requester: " << request.getRequester().getName() << "\n";
-    std::cout << "Requester role: " << userRoleToString(request.getRequester().getRole()) << "\n";
+    std::cout << "Requester: " << request.getRequester()->getName() << "\n";
+    std::cout << "Requester role: " << request.getRequester()->getRoleName() << "\n";
     std::cout << "Priority: " << request.getPriority() << "\n";
     std::cout << "Requested type: " << request.getRequestedSpace()->getType() << "\n";
     std::cout << "Requested space: " << request.getRequestedSpace()->getName() << "\n";
@@ -114,8 +113,8 @@ void printInvalidResult(
 ) {
     std::cout << label << "\n";
     std::cout << "Request type: InvalidRequest\n";
-    std::cout << "Requester: " << request.getRequester().getName() << "\n";
-    std::cout << "Requester role: " << userRoleToString(request.getRequester().getRole()) << "\n";
+    std::cout << "Requester: " << request.getRequester()->getName() << "\n";
+    std::cout << "Requester role: " << request.getRequester()->getRoleName() << "\n";
     std::cout << "Priority: " << request.getPriority() << "\n";
     std::cout << "Requested type: " << request.getRequestedSpace()->getType() << "\n";
     std::cout << "Requested space: " << request.getRequestedSpace()->getName() << "\n";
