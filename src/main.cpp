@@ -12,6 +12,7 @@
 
 int main() {
     DataController dataController;
+    std::string strategyName = dataController.loadAllocationStrategyName("data/config.txt");
     SystemData data = dataController.loadAllData(
         "data/users.csv",
         "data/spaces.csv",
@@ -27,7 +28,6 @@ int main() {
         return 1;
     }
 
-    const std::string strategyName = "priority";
     AllocationService allocationService(strategyName);
 
     Allocation existingClassroomAllocation(100, 999, data.spaces[0], TimeSlot(1, 10, 12));
