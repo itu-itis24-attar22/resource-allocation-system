@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iostream>
 #include <set>
+#include <cctype>
 #include "DataLoader.h"
 #include "AllocationWriter.h"
 #include "../models/Student.h"
@@ -13,6 +14,27 @@
 #include "RequestResultWriter.h"
 
 namespace {
+    std::string trim(const std::string& value) {
+        const std::string whitespace = " \t\r\n";
+        const size_t start = value.find_first_not_of(whitespace);
+        if (start == std::string::npos) {
+            return "";
+        }
+
+        const size_t end = value.find_last_not_of(whitespace);
+        return value.substr(start, end - start + 1);
+    }
+
+    std::string normalizeStrategyName(const std::string& strategyName) {
+        std::string normalized;
+
+        for (char ch : strategyName) {
+            normalized += static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+        }
+
+        return normalized;
+    }
+
     class PlaceholderSpace : public Space {
     public:
         PlaceholderSpace()
@@ -345,6 +367,51 @@ namespace {
 
         return requests;
     }
+}
+
+std::string DataController::loadAllocationStrategyName(const std::string& configFile) const {
+    std::ifstream file(configFile);
+
+    if (!file.is_open()) {
+        std::cerr << "Warning: allocation strategy config missing. Falling back to greedy.\n";
+        return "greedy";
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        std::string trimmedLine = trim(line);
+
+        if (trimmedLine.empty() || trimmedLine[0] == '#') {
+            continue;
+        }
+
+        const size_t equalsPos = trimmedLine.find('=');
+        if (equalsPos == std::string::npos) {
+            continue;
+        }
+
+        const std::string key = trim(trimmedLine.substr(0, equalsPos));
+        const std::string value = trim(trimmedLine.substr(equalsPos + 1));
+
+        if (key == "allocation_strategy") {
+            if (!value.empty()) {
+                const std::string normalizedValue = normalizeStrategyName(value);
+
+                if (normalizedValue == "greedy" || normalizedValue == "priority") {
+                    return normalizedValue;
+                }
+
+                std::cerr << "Warning: unknown allocation strategy. Falling back to greedy.\n";
+                return "greedy";
+            }
+
+            std::cerr << "Warning: allocation strategy config missing. Falling back to greedy.\n";
+            return "greedy";
+        }
+    }
+
+    std::cerr << "Warning: allocation strategy config missing. Falling back to greedy.\n";
+    return "greedy";
 }
 
 SystemData DataController::loadAllData(const std::string& usersFile,

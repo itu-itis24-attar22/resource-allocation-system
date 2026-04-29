@@ -16,6 +16,8 @@ struct SystemData {
 
 class DataController {
 public:
+    std::string loadAllocationStrategyName(const std::string& configFile) const;
+
     SystemData loadAllData(const std::string& usersFile,
                            const std::string& spacesFile,
                            const std::string& requestsFile) const;
