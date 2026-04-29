@@ -1,7 +1,7 @@
 #include "User.h"
 
-User::User(int userId, const std::string& name, UserRole role)
-    : userId(userId), name(name), role(role) {}
+User::User(int userId, const std::string& name)
+    : userId(userId), name(name) {}
 
 int User::getId() const {
     return userId;
@@ -9,8 +9,4 @@ int User::getId() const {
 
 std::string User::getName() const {
     return name;
-}
-
-UserRole User::getRole() const {
-    return role;
 }

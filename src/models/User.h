@@ -2,20 +2,22 @@
 #define USER_H
 
 #include <string>
-#include "UserRole.h"
 
 class User {
-private:
+protected:
     int userId;
     std::string name;
-    UserRole role;
 
 public:
-    User(int userId, const std::string& name, UserRole role);
+    User(int userId, const std::string& name);
+    virtual ~User() = default;
 
     int getId() const;
     std::string getName() const;
-    UserRole getRole() const;
+
+    virtual std::string getRoleName() const = 0;
+    virtual int getPriority() const = 0;
+    virtual bool canRequestSpaceType(const std::string& spaceType) const = 0;
 };
 
 #endif
