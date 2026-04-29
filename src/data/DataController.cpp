@@ -5,6 +5,7 @@
 #include <set>
 #include "DataLoader.h"
 #include "AllocationWriter.h"
+#include "../models/Student.h"
 #include "../models/OneTimeRequest.h"
 #include "../models/RecurringRequest.h"
 #include "../models/InvalidRequest.h"
@@ -22,9 +23,9 @@ namespace {
         }
     };
 
-    User& placeholderUser() {
-        static User user(-1, "UnknownUser", UserRole::Student);
-        return user;
+    User* placeholderUser() {
+        static Student user(-1, "UnknownUser");
+        return &user;
     }
 
     Space* placeholderSpace() {
@@ -49,7 +50,7 @@ namespace {
 
     InvalidRequest* createRejectedRequest(int requestId,
                                           const std::string& requestType,
-                                          const User* user,
+                                          User* user,
                                           Space* space,
                                           int participantCount,
                                           const std::string& requiredFeature,
@@ -58,7 +59,7 @@ namespace {
                                           const std::string& reason) {
         InvalidRequest* request = new InvalidRequest(
             requestId,
-            user ? *user : placeholderUser(),
+            user ? user : placeholderUser(),
             space ? space : placeholderSpace(),
             participantCount,
             requestType.empty() ? "Unknown" : requestType,
@@ -79,10 +80,10 @@ namespace {
         }
     }
 
-    const User* findUserById(const std::vector<User>& users, int userId) {
-        for (const User& user : users) {
-            if (user.getId() == userId) {
-                return &user;
+    User* findUserById(const std::vector<User*>& users, int userId) {
+        for (User* user : users) {
+            if (user->getId() == userId) {
+                return user;
             }
         }
         return nullptr;
@@ -154,7 +155,7 @@ namespace {
     }
 
     std::vector<Request*> loadRequestsFromCsv(const std::string& filename,
-                                              const std::vector<User>& users,
+                                              const std::vector<User*>& users,
                                               const std::vector<Space*>& spaces) {
         std::vector<Request*> requests;
         std::set<int> seenRequestIds;
@@ -282,7 +283,7 @@ namespace {
                 continue;
             }
 
-            const User* user = findUserById(users, userId);
+            User* user = findUserById(users, userId);
             Space* space = findSpaceById(spaces, spaceId);
 
             if (!user) {
@@ -315,7 +316,7 @@ namespace {
                     continue;
                 }
                 requests.push_back(new OneTimeRequest(
-                    requestId, *user, space, slot,
+                    requestId, user, space, slot,
                     participantCount, requiredFeature, requiredBuilding
                 ));
             } else if (requestType == "Recurring") {
@@ -330,7 +331,7 @@ namespace {
                     continue;
                 }
                 requests.push_back(new RecurringRequest(
-                    requestId, *user, space, slots,
+                    requestId, user, space, slots,
                     participantCount, requiredFeature, requiredBuilding
                 ));
             } else {
@@ -371,6 +372,11 @@ void DataController::cleanupData(SystemData& data) const {
         delete space;
     }
     data.spaces.clear();
+
+    for (User* user : data.users) {
+        delete user;
+    }
+    data.users.clear();
 }
 
 void DataController::exportRequestResults(const std::string& resultsFile,

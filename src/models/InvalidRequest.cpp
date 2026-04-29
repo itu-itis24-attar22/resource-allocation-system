@@ -1,6 +1,6 @@
 #include "InvalidRequest.h"
 
-InvalidRequest::InvalidRequest(int requestId, const User& requester, Space* requestedSpace,
+InvalidRequest::InvalidRequest(int requestId, User* requester, Space* requestedSpace,
                                int participantCount,
                                const std::string& requestTypeLabel,
                                const std::string& rawTimeInfo,

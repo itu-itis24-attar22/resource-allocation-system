@@ -1,7 +1,6 @@
 #include "Request.h"
-#include "UserRole.h"
 
-Request::Request(int requestId, const User& requester, Space* requestedSpace,
+Request::Request(int requestId, User* requester, Space* requestedSpace,
                  int participantCount,
                  const std::string& requiredFeature,
                  const std::string& requiredBuilding)
@@ -9,7 +8,7 @@ Request::Request(int requestId, const User& requester, Space* requestedSpace,
       requester(requester),
       requestedSpace(requestedSpace),
       participantCount(participantCount),
-      priority(userRoleToPriority(requester.getRole())),
+      priority(requester ? requester->getPriority() : 0),
       status(RequestStatus::Pending),
       requiredFeature(requiredFeature),
       requiredBuilding(requiredBuilding),
@@ -21,7 +20,7 @@ int Request::getId() const {
     return requestId;
 }
 
-User Request::getRequester() const {
+const User* Request::getRequester() const {
     return requester;
 }
 

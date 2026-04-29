@@ -9,7 +9,7 @@
 #include "../models/Allocation.h"
 
 struct SystemData {
-    std::vector<User> users;
+    std::vector<User*> users;
     std::vector<Space*> spaces;
     std::vector<Request*> requests;
 };

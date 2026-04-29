@@ -1,6 +1,6 @@
 #include "RecurringRequest.h"
 
-RecurringRequest::RecurringRequest(int requestId, const User& requester, Space* requestedSpace,
+RecurringRequest::RecurringRequest(int requestId, User* requester, Space* requestedSpace,
                                    const std::vector<TimeSlot>& requestedTimeSlots,
                                    int participantCount,
                                    const std::string& requiredFeature,

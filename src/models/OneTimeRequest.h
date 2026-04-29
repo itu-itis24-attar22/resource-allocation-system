@@ -9,7 +9,7 @@ private:
     TimeSlot requestedTimeSlot;
 
 public:
-    OneTimeRequest(int requestId, const User& requester, Space* requestedSpace,
+    OneTimeRequest(int requestId, User* requester, Space* requestedSpace,
                    const TimeSlot& requestedTimeSlot, int participantCount,
                    const std::string& requiredFeature = "",
                    const std::string& requiredBuilding = "");

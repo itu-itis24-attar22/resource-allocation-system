@@ -10,7 +10,7 @@
 class Request {
 protected:
     int requestId;
-    User requester;
+    User* requester;
     Space* requestedSpace;
     int participantCount;
     int priority;
@@ -21,7 +21,7 @@ protected:
     std::vector<std::string> lifecycleHistory;
 
 public:
-    Request(int requestId, const User& requester, Space* requestedSpace,
+    Request(int requestId, User* requester, Space* requestedSpace,
             int participantCount,
             const std::string& requiredFeature = "",
             const std::string& requiredBuilding = "");
@@ -29,7 +29,7 @@ public:
     virtual ~Request() = default;
 
     int getId() const;
-    User getRequester() const;
+    const User* getRequester() const;
     Space* getRequestedSpace() const;
     int getParticipantCount() const;
     int getPriority() const;
