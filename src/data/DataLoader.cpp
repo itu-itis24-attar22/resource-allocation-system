@@ -5,8 +5,7 @@
 #include "../models/Classroom.h"
 #include "../models/Laboratory.h"
 #include "../models/MeetingRoom.h"
-#include "../models/UserRole.h"
-#include "RequestResultWriter.h"
+#include "../models/UserFactory.h"
 
 namespace {
     bool tryParseInt(const std::string& text, int& value) {
@@ -31,29 +30,10 @@ namespace {
         return false;
     }
 
-    bool tryParseUserRole(const std::string& text, UserRole& role) {
-        if (text == "Student") {
-            role = UserRole::Student;
-            return true;
-        }
-        if (text == "Instructor") {
-            role = UserRole::Instructor;
-            return true;
-        }
-        if (text == "Staff") {
-            role = UserRole::Staff;
-            return true;
-        }
-        if (text == "Administrator") {
-            role = UserRole::Administrator;
-            return true;
-        }
-        return false;
-    }
 }
 
-std::vector<User> DataLoader::loadUsers(const std::string& filename) {
-    std::vector<User> users;
+std::vector<User*> DataLoader::loadUsers(const std::string& filename) {
+    std::vector<User*> users;
     std::ifstream file(filename);
 
     if (!file.is_open()) {
@@ -72,7 +52,6 @@ std::vector<User> DataLoader::loadUsers(const std::string& filename) {
         std::string name;
         std::string roleString;
         int id = 0;
-        UserRole role;
 
         if (!std::getline(ss, idToken, ',') ||
             !std::getline(ss, name, ',') ||
@@ -81,12 +60,18 @@ std::vector<User> DataLoader::loadUsers(const std::string& filename) {
             continue;
         }
 
-        if (!tryParseInt(idToken, id) || !tryParseUserRole(roleString, role)) {
+        if (!tryParseInt(idToken, id)) {
             std::cerr << "Warning: Skipping malformed user row " << lineNumber << ".\n";
             continue;
         }
 
-        users.emplace_back(id, name, role);
+        User* user = UserFactory::createUser(id, name, roleString);
+        if (!user) {
+            std::cerr << "Warning: Skipping malformed user row " << lineNumber << ".\n";
+            continue;
+        }
+
+        users.push_back(user);
     }
 
     return users;

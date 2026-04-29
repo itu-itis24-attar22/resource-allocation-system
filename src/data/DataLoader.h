@@ -8,7 +8,7 @@
 
 class DataLoader {
 public:
-    static std::vector<User> loadUsers(const std::string& filename);
+    static std::vector<User*> loadUsers(const std::string& filename);
     static std::vector<Space*> loadSpaces(const std::string& filename);
 };
 
