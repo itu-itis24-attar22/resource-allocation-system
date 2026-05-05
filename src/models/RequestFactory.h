@@ -11,6 +11,8 @@ public:
                                   User* requester,
                                   Space* requestedSpace,
                                   int participantCount,
+                                  const std::string& title,
+                                  const std::string& purpose,
                                   const std::string& requiredFeature,
                                   const std::string& requiredBuilding,
                                   const std::string& timeData);
@@ -20,6 +22,8 @@ public:
                                          User* requester,
                                          Space* requestedSpace,
                                          int participantCount,
+                                         const std::string& title,
+                                         const std::string& purpose,
                                          const std::string& requiredFeature,
                                          const std::string& requiredBuilding,
                                          const std::string& timeData,

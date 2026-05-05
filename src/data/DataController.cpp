@@ -36,6 +36,12 @@ namespace {
         return value;
     }
 
+    std::string normalizeMetadataField(const std::string& value) {
+        std::string normalized = trim(value);
+        if (normalized == "None") return "";
+        return normalized;
+    }
+
     bool tryParseInt(const std::string& text, int& value) {
         try {
             size_t parsedLength = 0;
@@ -99,10 +105,12 @@ namespace {
             std::string requiredFeature;
             std::string requiredBuilding;
             std::string timeData;
+            std::string title;
+            std::string purpose;
 
             if (!std::getline(ss, token, ',') || !tryParseInt(token, requestId)) {
                 requests.push_back(RequestFactory::createInvalidRequest(
-                    -1, "Unknown", nullptr, nullptr, 0, "", "", "", "Malformed input"
+                    -1, "Unknown", nullptr, nullptr, 0, "", "", "", "", "", "Malformed input"
                 ));
                 printRejectedRequestWarning(-1, "Malformed input");
                 continue;
@@ -120,7 +128,15 @@ namespace {
                 requiredFeature = normalizeOptionalField(requiredFeature);
                 std::getline(ss, requiredBuilding, ',');
                 requiredBuilding = normalizeOptionalField(requiredBuilding);
-                std::getline(ss, timeData);
+                std::getline(ss, timeData, ',');
+                timeData = trim(timeData);
+
+                if (std::getline(ss, title, ',')) {
+                    title = normalizeMetadataField(title);
+                }
+                if (std::getline(ss, purpose)) {
+                    purpose = normalizeMetadataField(purpose);
+                }
 
                 requests.push_back(RequestFactory::createInvalidRequest(
                     requestId,
@@ -128,6 +144,8 @@ namespace {
                     findUserById(users, userId),
                     findSpaceById(spaces, spaceId),
                     participantCount,
+                    title,
+                    purpose,
                     requiredFeature,
                     requiredBuilding,
                     timeData,
@@ -141,7 +159,7 @@ namespace {
 
             if (!std::getline(ss, requestType, ',')) {
                 requests.push_back(RequestFactory::createInvalidRequest(
-                    requestId, "Unknown", nullptr, nullptr, 0, "", "", "", "Malformed input"
+                    requestId, "Unknown", nullptr, nullptr, 0, "", "", "", "", "", "Malformed input"
                 ));
                 printRejectedRequestWarning(requestId, "Malformed input");
                 continue;
@@ -149,7 +167,7 @@ namespace {
 
             if (!std::getline(ss, token, ',') || !tryParseInt(token, userId)) {
                 requests.push_back(RequestFactory::createInvalidRequest(
-                    requestId, requestType, nullptr, nullptr, 0, "", "", "", "Malformed input"
+                    requestId, requestType, nullptr, nullptr, 0, "", "", "", "", "", "Malformed input"
                 ));
                 printRejectedRequestWarning(requestId, "Malformed input");
                 continue;
@@ -157,16 +175,30 @@ namespace {
 
             if (!std::getline(ss, token, ',') || !tryParseInt(token, spaceId)) {
                 requests.push_back(RequestFactory::createInvalidRequest(
-                    requestId, requestType, findUserById(users, userId), nullptr, 0, "", "", "", "Malformed input"
+                    requestId, requestType, findUserById(users, userId), nullptr, 0, "", "", "", "", "", "Malformed input"
                 ));
                 printRejectedRequestWarning(requestId, "Malformed input");
                 continue;
             }
 
             if (!std::getline(ss, token, ',') || !tryParseInt(token, participantCount)) {
+                std::getline(ss, requiredFeature, ',');
+                requiredFeature = normalizeOptionalField(requiredFeature);
+                std::getline(ss, requiredBuilding, ',');
+                requiredBuilding = normalizeOptionalField(requiredBuilding);
+                std::getline(ss, timeData, ',');
+                timeData = trim(timeData);
+
+                if (std::getline(ss, title, ',')) {
+                    title = normalizeMetadataField(title);
+                }
+                if (std::getline(ss, purpose)) {
+                    purpose = normalizeMetadataField(purpose);
+                }
+
                 requests.push_back(RequestFactory::createInvalidRequest(
                     requestId, requestType, findUserById(users, userId), findSpaceById(spaces, spaceId),
-                    0, "", "", "", "Malformed input"
+                    0, title, purpose, requiredFeature, requiredBuilding, timeData, "Malformed input"
                 ));
                 printRejectedRequestWarning(requestId, "Malformed input");
                 continue;
@@ -175,7 +207,7 @@ namespace {
             if (!std::getline(ss, requiredFeature, ',')) {
                 requests.push_back(RequestFactory::createInvalidRequest(
                     requestId, requestType, findUserById(users, userId), findSpaceById(spaces, spaceId),
-                    participantCount, "", "", "", "Malformed input"
+                    participantCount, "", "", "", "", "", "Malformed input"
                 ));
                 printRejectedRequestWarning(requestId, "Malformed input");
                 continue;
@@ -185,20 +217,28 @@ namespace {
             if (!std::getline(ss, requiredBuilding, ',')) {
                 requests.push_back(RequestFactory::createInvalidRequest(
                     requestId, requestType, findUserById(users, userId), findSpaceById(spaces, spaceId),
-                    participantCount, requiredFeature, "", "", "Malformed input"
+                    participantCount, "", "", requiredFeature, "", "", "Malformed input"
                 ));
                 printRejectedRequestWarning(requestId, "Malformed input");
                 continue;
             }
             requiredBuilding = normalizeOptionalField(requiredBuilding);
 
-            if (!std::getline(ss, timeData)) {
+            if (!std::getline(ss, timeData, ',')) {
                 requests.push_back(RequestFactory::createInvalidRequest(
                     requestId, requestType, findUserById(users, userId), findSpaceById(spaces, spaceId),
-                    participantCount, requiredFeature, requiredBuilding, "", "Malformed input"
+                    participantCount, "", "", requiredFeature, requiredBuilding, "", "Malformed input"
                 ));
                 printRejectedRequestWarning(requestId, "Malformed input");
                 continue;
+            }
+            timeData = trim(timeData);
+
+            if (std::getline(ss, title, ',')) {
+                title = normalizeMetadataField(title);
+            }
+            if (std::getline(ss, purpose)) {
+                purpose = normalizeMetadataField(purpose);
             }
 
             User* user = findUserById(users, userId);
@@ -207,6 +247,8 @@ namespace {
             if (!user) {
                 requests.push_back(RequestFactory::createInvalidRequest(
                     requestId, requestType, nullptr, space, participantCount,
+                    title,
+                    purpose,
                     requiredFeature, requiredBuilding, timeData, "Invalid user reference"
                 ));
                 printRejectedRequestWarning(requestId, "Invalid user reference");
@@ -216,6 +258,8 @@ namespace {
             if (!space) {
                 requests.push_back(RequestFactory::createInvalidRequest(
                     requestId, requestType, user, nullptr, participantCount,
+                    title,
+                    purpose,
                     requiredFeature, requiredBuilding, timeData, "Invalid space reference"
                 ));
                 printRejectedRequestWarning(requestId, "Invalid space reference");
@@ -228,6 +272,8 @@ namespace {
                 user,
                 space,
                 participantCount,
+                title,
+                purpose,
                 requiredFeature,
                 requiredBuilding,
                 timeData
