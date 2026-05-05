@@ -18,3 +18,6 @@
 18,Exam,2,101,35,Whiteboard,Engineering,4-10-12,BLG101 Midterm Exam,Exam,BLG101,Introduction to Computer Engineering,Midterm,true
 19,Exam,2,102,50,Whiteboard,Engineering,5-10-12,BLG202 Final Exam,Exam
 20,Exam,2,101,20,Whiteboard,Engineering,bad-time,BLG303 Quiz,Exam,BLG303,Computer Networks,Quiz,false
+21,Exam,1,102,20,Whiteboard,Engineering,6-9-11,Student Submitted Exam,Exam,BLG104,Programming Fundamentals,Midterm,false
+22,Exam,3,301,8,Projector,AdminBuilding,6-13-15,Staff Submitted Exam,Exam,ADM100,Administrative Training,Quiz,false
+23,Exam,4,102,25,Whiteboard,Engineering,7-9-11,Administrator Scheduled Exam,Exam,BLG401,Software Architecture,Final,true
