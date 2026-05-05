@@ -15,3 +15,6 @@
 15,Recurring,2,302,10,Projector,AdminBuilding,1-8-9;3-8-9;5-8-9,Research Coordination Meeting,Meeting
 16,OneTime,4,302,5,Projector,AdminBuilding,8-10-11,Final Exam Board Meeting,Meeting
 17,OneTime,2,101,abc,Projector,Engineering,2-8-9,BLG202 Quiz Session,Exam
+18,Exam,2,101,35,Whiteboard,Engineering,4-10-12,BLG101 Midterm Exam,Exam,BLG101,Introduction to Computer Engineering,Midterm,true
+19,Exam,2,102,50,Whiteboard,Engineering,5-10-12,BLG202 Final Exam,Exam
+20,Exam,2,101,20,Whiteboard,Engineering,bad-time,BLG303 Quiz,Exam,BLG303,Computer Networks,Quiz,false

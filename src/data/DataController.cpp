@@ -42,6 +42,53 @@ namespace {
         return normalized;
     }
 
+    bool parseOptionalBoolField(const std::string& value) {
+        std::string normalized = normalizeMetadataField(value);
+
+        for (char& ch : normalized) {
+            ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+        }
+
+        return normalized == "true" || normalized == "1" || normalized == "yes";
+    }
+
+    struct OptionalRequestFields {
+        std::string title;
+        std::string purpose;
+        std::string courseCode;
+        std::string courseName;
+        std::string examType;
+        bool canSplitAcrossRooms = false;
+    };
+
+    void parseOptionalRequestFields(std::stringstream& ss, OptionalRequestFields& fields) {
+        std::string token;
+
+        if (std::getline(ss, token, ',')) {
+            fields.title = normalizeMetadataField(token);
+        }
+
+        if (std::getline(ss, token, ',')) {
+            fields.purpose = normalizeMetadataField(token);
+        }
+
+        if (std::getline(ss, token, ',')) {
+            fields.courseCode = normalizeMetadataField(token);
+        }
+
+        if (std::getline(ss, token, ',')) {
+            fields.courseName = normalizeMetadataField(token);
+        }
+
+        if (std::getline(ss, token, ',')) {
+            fields.examType = normalizeMetadataField(token);
+        }
+
+        if (std::getline(ss, token)) {
+            fields.canSplitAcrossRooms = parseOptionalBoolField(token);
+        }
+    }
+
     bool tryParseInt(const std::string& text, int& value) {
         try {
             size_t parsedLength = 0;
@@ -105,8 +152,7 @@ namespace {
             std::string requiredFeature;
             std::string requiredBuilding;
             std::string timeData;
-            std::string title;
-            std::string purpose;
+            OptionalRequestFields optionalFields;
 
             if (!std::getline(ss, token, ',') || !tryParseInt(token, requestId)) {
                 requests.push_back(RequestFactory::createInvalidRequest(
@@ -131,12 +177,7 @@ namespace {
                 std::getline(ss, timeData, ',');
                 timeData = trim(timeData);
 
-                if (std::getline(ss, title, ',')) {
-                    title = normalizeMetadataField(title);
-                }
-                if (std::getline(ss, purpose)) {
-                    purpose = normalizeMetadataField(purpose);
-                }
+                parseOptionalRequestFields(ss, optionalFields);
 
                 requests.push_back(RequestFactory::createInvalidRequest(
                     requestId,
@@ -144,12 +185,16 @@ namespace {
                     findUserById(users, userId),
                     findSpaceById(spaces, spaceId),
                     participantCount,
-                    title,
-                    purpose,
+                    optionalFields.title,
+                    optionalFields.purpose,
                     requiredFeature,
                     requiredBuilding,
                     timeData,
-                    "Duplicate request ID"
+                    "Duplicate request ID",
+                    optionalFields.courseCode,
+                    optionalFields.courseName,
+                    optionalFields.examType,
+                    optionalFields.canSplitAcrossRooms
                 ));
                 printRejectedRequestWarning(requestId, "Duplicate request ID");
                 continue;
@@ -189,16 +234,13 @@ namespace {
                 std::getline(ss, timeData, ',');
                 timeData = trim(timeData);
 
-                if (std::getline(ss, title, ',')) {
-                    title = normalizeMetadataField(title);
-                }
-                if (std::getline(ss, purpose)) {
-                    purpose = normalizeMetadataField(purpose);
-                }
+                parseOptionalRequestFields(ss, optionalFields);
 
                 requests.push_back(RequestFactory::createInvalidRequest(
                     requestId, requestType, findUserById(users, userId), findSpaceById(spaces, spaceId),
-                    0, title, purpose, requiredFeature, requiredBuilding, timeData, "Malformed input"
+                    0, optionalFields.title, optionalFields.purpose, requiredFeature, requiredBuilding, timeData,
+                    "Malformed input", optionalFields.courseCode, optionalFields.courseName,
+                    optionalFields.examType, optionalFields.canSplitAcrossRooms
                 ));
                 printRejectedRequestWarning(requestId, "Malformed input");
                 continue;
@@ -234,12 +276,7 @@ namespace {
             }
             timeData = trim(timeData);
 
-            if (std::getline(ss, title, ',')) {
-                title = normalizeMetadataField(title);
-            }
-            if (std::getline(ss, purpose)) {
-                purpose = normalizeMetadataField(purpose);
-            }
+            parseOptionalRequestFields(ss, optionalFields);
 
             User* user = findUserById(users, userId);
             Space* space = findSpaceById(spaces, spaceId);
@@ -247,9 +284,11 @@ namespace {
             if (!user) {
                 requests.push_back(RequestFactory::createInvalidRequest(
                     requestId, requestType, nullptr, space, participantCount,
-                    title,
-                    purpose,
-                    requiredFeature, requiredBuilding, timeData, "Invalid user reference"
+                    optionalFields.title,
+                    optionalFields.purpose,
+                    requiredFeature, requiredBuilding, timeData,
+                    "Invalid user reference", optionalFields.courseCode, optionalFields.courseName,
+                    optionalFields.examType, optionalFields.canSplitAcrossRooms
                 ));
                 printRejectedRequestWarning(requestId, "Invalid user reference");
                 continue;
@@ -258,9 +297,11 @@ namespace {
             if (!space) {
                 requests.push_back(RequestFactory::createInvalidRequest(
                     requestId, requestType, user, nullptr, participantCount,
-                    title,
-                    purpose,
-                    requiredFeature, requiredBuilding, timeData, "Invalid space reference"
+                    optionalFields.title,
+                    optionalFields.purpose,
+                    requiredFeature, requiredBuilding, timeData,
+                    "Invalid space reference", optionalFields.courseCode, optionalFields.courseName,
+                    optionalFields.examType, optionalFields.canSplitAcrossRooms
                 ));
                 printRejectedRequestWarning(requestId, "Invalid space reference");
                 continue;
@@ -272,11 +313,15 @@ namespace {
                 user,
                 space,
                 participantCount,
-                title,
-                purpose,
+                optionalFields.title,
+                optionalFields.purpose,
                 requiredFeature,
                 requiredBuilding,
-                timeData
+                timeData,
+                optionalFields.courseCode,
+                optionalFields.courseName,
+                optionalFields.examType,
+                optionalFields.canSplitAcrossRooms
             );
             requests.push_back(request);
 

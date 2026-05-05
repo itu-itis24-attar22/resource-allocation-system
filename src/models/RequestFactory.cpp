@@ -3,6 +3,7 @@
 #include "Student.h"
 #include "OneTimeRequest.h"
 #include "RecurringRequest.h"
+#include "ExamRequest.h"
 #include "InvalidRequest.h"
 #include "TimeSlot.h"
 
@@ -106,7 +107,16 @@ Request* RequestFactory::createInvalidRequest(int requestId,
                                              const std::string& requiredFeature,
                                              const std::string& requiredBuilding,
                                              const std::string& timeData,
-                                             const std::string& rejectionReason) {
+                                             const std::string& rejectionReason,
+                                             const std::string& courseCode,
+                                             const std::string& courseName,
+                                             const std::string& examType,
+                                             bool canSplitAcrossRooms) {
+    (void)courseCode;
+    (void)courseName;
+    (void)examType;
+    (void)canSplitAcrossRooms;
+
     InvalidRequest* request = new InvalidRequest(
         requestId,
         requester ? requester : placeholderUser(),
@@ -134,7 +144,11 @@ Request* RequestFactory::createRequest(int requestId,
                                        const std::string& purpose,
                                        const std::string& requiredFeature,
                                        const std::string& requiredBuilding,
-                                       const std::string& timeData) {
+                                       const std::string& timeData,
+                                       const std::string& courseCode,
+                                       const std::string& courseName,
+                                       const std::string& examType,
+                                       bool canSplitAcrossRooms) {
     if (requestType == "OneTime") {
         TimeSlot slot(1, 0, 1);
         std::string errorReason;
@@ -150,7 +164,11 @@ Request* RequestFactory::createRequest(int requestId,
                 requiredFeature,
                 requiredBuilding,
                 timeData,
-                errorReason
+                errorReason,
+                courseCode,
+                courseName,
+                examType,
+                canSplitAcrossRooms
             );
         }
 
@@ -164,6 +182,46 @@ Request* RequestFactory::createRequest(int requestId,
             purpose,
             requiredFeature,
             requiredBuilding
+        );
+    }
+
+    if (requestType == "Exam") {
+        TimeSlot slot(1, 0, 1);
+        std::string errorReason;
+        if (!tryParseSingleTimeSlot(timeData, slot, errorReason)) {
+            return createInvalidRequest(
+                requestId,
+                requestType,
+                requester,
+                requestedSpace,
+                participantCount,
+                title,
+                purpose,
+                requiredFeature,
+                requiredBuilding,
+                timeData,
+                errorReason,
+                courseCode,
+                courseName,
+                examType,
+                canSplitAcrossRooms
+            );
+        }
+
+        return new ExamRequest(
+            requestId,
+            requester,
+            requestedSpace,
+            slot,
+            participantCount,
+            title,
+            purpose,
+            requiredFeature,
+            requiredBuilding,
+            courseCode,
+            courseName,
+            examType,
+            canSplitAcrossRooms
         );
     }
 
@@ -182,7 +240,11 @@ Request* RequestFactory::createRequest(int requestId,
                 requiredFeature,
                 requiredBuilding,
                 timeData,
-                errorReason
+                errorReason,
+                courseCode,
+                courseName,
+                examType,
+                canSplitAcrossRooms
             );
         }
 
@@ -210,6 +272,10 @@ Request* RequestFactory::createRequest(int requestId,
         requiredFeature,
         requiredBuilding,
         timeData,
-        "Malformed input"
+        "Malformed input",
+        courseCode,
+        courseName,
+        examType,
+        canSplitAcrossRooms
     );
 }
