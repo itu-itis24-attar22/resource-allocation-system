@@ -35,7 +35,7 @@ int main() {
                                            data.spaces[0]->getCapacity());
     allocationService.addExistingAllocation(existingClassroomAllocation);
 
-    allocationService.processRequests(data.requests);
+    allocationService.processRequests(data.requests, data.spaces);
 
     for (Request* request : data.requests) {
         std::string label = "Request " + std::to_string(request->getId());

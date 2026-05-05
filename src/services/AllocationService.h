@@ -5,6 +5,7 @@
 #include <vector>
 #include "../models/Allocation.h"
 #include "../models/Request.h"
+#include "../models/Space.h"
 #include "../models/OneTimeRequest.h"
 #include "../models/RecurringRequest.h"
 #include "../models/ExamRequest.h"
@@ -23,6 +24,8 @@ public:
     const std::vector<Allocation>& getAllocations() const;
     void addExistingAllocation(const Allocation& allocation);
     void processRequests(const std::vector<Request*>& requests);
+    void processRequests(const std::vector<Request*>& requests,
+                         const std::vector<Space*>& spaces);
     bool processRequest(OneTimeRequest& request);
     bool processRequest(RecurringRequest& request);
     bool processRequest(ExamRequest& request);
