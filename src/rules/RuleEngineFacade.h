@@ -7,9 +7,11 @@
 #include "StatusRule.h"
 #include "LocationRule.h"
 #include "UserRoleRule.h"
+#include "RequestTypeRule.h"
 
 class RuleEngineFacade {
 private:
+    RequestTypeRule requestTypeRule;
     CapacityRule capacityRule;
     FeatureRule featureRule;
     StatusRule statusRule;

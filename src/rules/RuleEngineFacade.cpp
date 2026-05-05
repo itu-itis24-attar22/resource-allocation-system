@@ -2,6 +2,7 @@
 
 RuleEngineFacade::RuleEngineFacade()
     : ruleEngine(std::vector<const IRequestRule*>{
+          &requestTypeRule,
           &userRoleRule,
           &capacityRule,
           &featureRule,
