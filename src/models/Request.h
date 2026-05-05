@@ -15,6 +15,8 @@ protected:
     int participantCount;
     int priority;
     RequestStatus status;
+    std::string title;
+    std::string purpose;
     std::string requiredFeature;
     std::string requiredBuilding;
     std::string rejectionReason;
@@ -23,6 +25,8 @@ protected:
 public:
     Request(int requestId, User* requester, Space* requestedSpace,
             int participantCount,
+            const std::string& title = "",
+            const std::string& purpose = "",
             const std::string& requiredFeature = "",
             const std::string& requiredBuilding = "");
 
@@ -34,6 +38,8 @@ public:
     int getParticipantCount() const;
     int getPriority() const;
     RequestStatus getStatus() const;
+    std::string getTitle() const;
+    std::string getPurpose() const;
     std::string getRequiredFeature() const;
     std::string getRequiredBuilding() const;
     std::string getRejectionReason() const;

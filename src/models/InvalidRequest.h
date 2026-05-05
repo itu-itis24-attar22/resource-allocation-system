@@ -13,6 +13,8 @@ public:
                    int participantCount,
                    const std::string& requestTypeLabel,
                    const std::string& rawTimeInfo,
+                   const std::string& title = "",
+                   const std::string& purpose = "",
                    const std::string& requiredFeature = "",
                    const std::string& requiredBuilding = "");
 

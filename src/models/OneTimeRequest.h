@@ -11,6 +11,8 @@ private:
 public:
     OneTimeRequest(int requestId, User* requester, Space* requestedSpace,
                    const TimeSlot& requestedTimeSlot, int participantCount,
+                   const std::string& title = "",
+                   const std::string& purpose = "",
                    const std::string& requiredFeature = "",
                    const std::string& requiredBuilding = "");
 

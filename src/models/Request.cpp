@@ -1,7 +1,19 @@
 #include "Request.h"
 
+namespace {
+    std::string normalizeTitle(const std::string& value) {
+        return value.empty() ? "Untitled Request" : value;
+    }
+
+    std::string normalizePurpose(const std::string& value) {
+        return value.empty() ? "General" : value;
+    }
+}
+
 Request::Request(int requestId, User* requester, Space* requestedSpace,
                  int participantCount,
+                 const std::string& title,
+                 const std::string& purpose,
                  const std::string& requiredFeature,
                  const std::string& requiredBuilding)
     : requestId(requestId),
@@ -10,6 +22,8 @@ Request::Request(int requestId, User* requester, Space* requestedSpace,
       participantCount(participantCount),
       priority(requester ? requester->getPriority() : 0),
       status(RequestStatus::Pending),
+      title(normalizeTitle(title)),
+      purpose(normalizePurpose(purpose)),
       requiredFeature(requiredFeature),
       requiredBuilding(requiredBuilding),
       rejectionReason("") {
@@ -38,6 +52,14 @@ int Request::getPriority() const {
 
 RequestStatus Request::getStatus() const {
     return status;
+}
+
+std::string Request::getTitle() const {
+    return title;
+}
+
+std::string Request::getPurpose() const {
+    return purpose;
 }
 
 std::string Request::getRequiredFeature() const {

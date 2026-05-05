@@ -4,9 +4,12 @@ InvalidRequest::InvalidRequest(int requestId, User* requester, Space* requestedS
                                int participantCount,
                                const std::string& requestTypeLabel,
                                const std::string& rawTimeInfo,
+                               const std::string& title,
+                               const std::string& purpose,
                                const std::string& requiredFeature,
                                const std::string& requiredBuilding)
-    : Request(requestId, requester, requestedSpace, participantCount, requiredFeature, requiredBuilding),
+    : Request(requestId, requester, requestedSpace, participantCount, title, purpose,
+              requiredFeature, requiredBuilding),
       requestTypeLabel(requestTypeLabel),
       rawTimeInfo(rawTimeInfo) {}
 
