@@ -6,6 +6,7 @@
 #include "../models/Request.h"
 #include "../models/OneTimeRequest.h"
 #include "../models/RecurringRequest.h"
+#include "../models/ExamRequest.h"
 #include "../rules/RuleEngineFacade.h"
 
 class IAllocationStrategy {
@@ -21,6 +22,10 @@ public:
                                 const RuleEngineFacade& ruleEngineFacade) const = 0;
 
     virtual bool processRequest(RecurringRequest& request,
+                                std::vector<Allocation>& allocations,
+                                const RuleEngineFacade& ruleEngineFacade) const = 0;
+
+    virtual bool processRequest(ExamRequest& request,
                                 std::vector<Allocation>& allocations,
                                 const RuleEngineFacade& ruleEngineFacade) const = 0;
 };

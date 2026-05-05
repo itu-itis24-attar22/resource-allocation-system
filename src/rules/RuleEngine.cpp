@@ -34,3 +34,19 @@ RuleEvaluationResult RuleEngine::evaluate(RecurringRequest& request,
 
     return RuleEvaluationResult(true, "");
 }
+
+RuleEvaluationResult RuleEngine::evaluate(ExamRequest& request,
+                                          const std::vector<Allocation>& allocations) const {
+    for (const IRequestRule* rule : requestRules) {
+        RuleEvaluationResult result = rule->evaluate(request);
+        if (!result.isPassed()) {
+            return result;
+        }
+    }
+
+    if (!availabilityRule.check(request, allocations)) {
+        return RuleEvaluationResult(false, "Time slot unavailable");
+    }
+
+    return RuleEvaluationResult(true, "");
+}

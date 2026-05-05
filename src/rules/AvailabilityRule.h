@@ -4,6 +4,7 @@
 #include <vector>
 #include "../models/OneTimeRequest.h"
 #include "../models/RecurringRequest.h"
+#include "../models/ExamRequest.h"
 #include "../models/Allocation.h"
 
 class AvailabilityRule {
@@ -13,6 +14,7 @@ private:
 public:
     bool check(const OneTimeRequest& request, const std::vector<Allocation>& existingAllocations) const;
     bool check(const RecurringRequest& request, const std::vector<Allocation>& existingAllocations) const;
+    bool check(const ExamRequest& request, const std::vector<Allocation>& existingAllocations) const;
 };
 
 #endif

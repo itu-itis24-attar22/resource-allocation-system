@@ -7,6 +7,7 @@
 #include "../models/Request.h"
 #include "../models/OneTimeRequest.h"
 #include "../models/RecurringRequest.h"
+#include "../models/ExamRequest.h"
 #include "../rules/RuleEngineFacade.h"
 #include "../strategies/IAllocationStrategy.h"
 
@@ -24,6 +25,7 @@ public:
     void processRequests(const std::vector<Request*>& requests);
     bool processRequest(OneTimeRequest& request);
     bool processRequest(RecurringRequest& request);
+    bool processRequest(ExamRequest& request);
     void printAllocations() const;
 };
 

@@ -25,6 +25,9 @@ public:
 
     RuleEvaluationResult evaluateRequest(RecurringRequest& request,
                                          const std::vector<Allocation>& allocations) const;
+
+    RuleEvaluationResult evaluateRequest(ExamRequest& request,
+                                         const std::vector<Allocation>& allocations) const;
 };
 
 #endif

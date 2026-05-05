@@ -16,6 +16,10 @@ public:
     bool processRequest(RecurringRequest& request,
                         std::vector<Allocation>& allocations,
                         const RuleEngineFacade& ruleEngineFacade) const override;
+
+    bool processRequest(ExamRequest& request,
+                        std::vector<Allocation>& allocations,
+                        const RuleEngineFacade& ruleEngineFacade) const override;
 };
 
 #endif
