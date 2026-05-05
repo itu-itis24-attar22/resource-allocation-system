@@ -1,17 +1,17 @@
-1,OneTime,1,101,30,Projector,Engineering,2-13-15
-2,OneTime,1,301,8,Projector,Engineering,3-10-12
-3,Recurring,2,301,8,Projector,AdminBuilding,2-9-10;4-9-10
-4,Recurring,1,101,20,Whiteboard,LabBuilding,2-9-10;4-9-10
-5,OneTime,2,201,20,Computers,LabBuilding,3-14-15
-6,OneTime,1,202,15,Computers,LabBuilding,5-9-11
-7,OneTime,3,102,10,Projector,Engineering,5-12-14
-8,OneTime,4,301,6,Projector,AdminBuilding,6-10-12
-9,OneTime,6,101,25,Projector,Engineering,1-11-13
-10,OneTime,2,102,50,Projector,Engineering,2-15-17
-11,OneTime,1,101,10,Computers,Engineering,3-8-9
-12,OneTime,999,101,10,Projector,Engineering,2-8-9
-13,OneTime,1,999,10,Projector,Engineering,2-8-9
-14,OneTime,2,101,10,Projector,Engineering,2-14-15
-15,Recurring,2,302,10,Projector,AdminBuilding,1-8-9;3-8-9;5-8-9
-16,OneTime,4,302,5,Projector,AdminBuilding,8-10-11
-17,OneTime,2,101,abc,Projector,Engineering,2-8-9
+1,OneTime,1,101,30,Projector,Engineering,2-13-15,BLG101 Midterm Exam,Exam
+2,OneTime,1,301,8,Projector,Engineering,3-10-12,Project Kickoff Meeting,Meeting
+3,Recurring,2,301,8,Projector,AdminBuilding,2-9-10;4-9-10,Weekly Research Meeting,Meeting
+4,Recurring,1,101,20,Whiteboard,LabBuilding,2-9-10;4-9-10,BLG102 Lecture Series,Lecture
+5,OneTime,2,201,20,Computers,LabBuilding,3-14-15,Digital Systems Lab,Lab
+6,OneTime,1,202,15,Computers,LabBuilding,5-9-11,Robotics Lab Practice,Lab
+7,OneTime,3,102,10,Projector,Engineering,5-12-14,Department Briefing,Workshop
+8,OneTime,4,301,6,Projector,AdminBuilding,6-10-12,Budget Planning Meeting,Meeting
+9,OneTime,6,101,25,Projector,Engineering,1-11-13,BLG201 Lecture,Lecture
+10,OneTime,2,102,50,Projector,Engineering,2-15-17,CEN300 Guest Lecture,Lecture
+11,OneTime,1,101,10,Computers,Engineering,3-8-9,Programming Tutorial,Lab
+12,OneTime,999,101,10,Projector,Engineering,2-8-9,Unknown User Meeting,Meeting
+13,OneTime,1,999,10,Projector,Engineering,2-8-9,Missing Space Lecture,Lecture
+14,OneTime,2,101,10,Projector,Engineering,2-14-15,BLG101 Review Session,Lecture
+15,Recurring,2,302,10,Projector,AdminBuilding,1-8-9;3-8-9;5-8-9,Research Coordination Meeting,Meeting
+16,OneTime,4,302,5,Projector,AdminBuilding,8-10-11,Final Exam Board Meeting,Meeting
+17,OneTime,2,101,abc,Projector,Engineering,2-8-9,BLG202 Quiz Session,Exam
