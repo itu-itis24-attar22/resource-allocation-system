@@ -16,3 +16,10 @@ bool Administrator::canRequestSpaceType(const std::string& spaceType) const {
            spaceType == "Laboratory" ||
            spaceType == "MeetingRoom";
 }
+
+bool Administrator::canSubmitRequestType(const std::string& requestType) const {
+    return requestType == "OneTime" ||
+           requestType == "Recurring" ||
+           requestType == "Exam" ||
+           requestType == "Invalid";
+}

@@ -10,6 +10,7 @@ public:
     std::string getRoleName() const override;
     int getPriority() const override;
     bool canRequestSpaceType(const std::string& spaceType) const override;
+    bool canSubmitRequestType(const std::string& requestType) const override;
 };
 
 #endif

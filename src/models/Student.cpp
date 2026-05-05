@@ -14,3 +14,9 @@ int Student::getPriority() const {
 bool Student::canRequestSpaceType(const std::string& spaceType) const {
     return spaceType == "Classroom" || spaceType == "MeetingRoom";
 }
+
+bool Student::canSubmitRequestType(const std::string& requestType) const {
+    return requestType == "OneTime" ||
+           requestType == "Recurring" ||
+           requestType == "Invalid";
+}

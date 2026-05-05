@@ -14,3 +14,9 @@ int Staff::getPriority() const {
 bool Staff::canRequestSpaceType(const std::string& spaceType) const {
     return spaceType == "MeetingRoom";
 }
+
+bool Staff::canSubmitRequestType(const std::string& requestType) const {
+    return requestType == "OneTime" ||
+           requestType == "Recurring" ||
+           requestType == "Invalid";
+}

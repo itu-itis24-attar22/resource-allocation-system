@@ -18,6 +18,7 @@ public:
     virtual std::string getRoleName() const = 0;
     virtual int getPriority() const = 0;
     virtual bool canRequestSpaceType(const std::string& spaceType) const = 0;
+    virtual bool canSubmitRequestType(const std::string& requestType) const = 0;
 };
 
 #endif
