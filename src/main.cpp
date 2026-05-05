@@ -31,7 +31,8 @@ int main() {
 
     AllocationService allocationService(strategyName);
 
-    Allocation existingClassroomAllocation(100, 999, data.spaces[0], TimeSlot(1, 10, 12));
+    Allocation existingClassroomAllocation(100, 999, data.spaces[0], TimeSlot(1, 10, 12),
+                                           data.spaces[0]->getCapacity());
     allocationService.addExistingAllocation(existingClassroomAllocation);
 
     allocationService.processRequests(data.requests);

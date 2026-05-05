@@ -74,7 +74,8 @@ bool PriorityAllocationStrategy::processRequest(OneTimeRequest& request,
     int allocationId = nextAllocationId(allocations);
     Allocation allocation(allocationId, request.getId(),
                           request.getRequestedSpace(),
-                          request.getRequestedTimeSlot());
+                          request.getRequestedTimeSlot(),
+                          request.getParticipantCount());
     allocations.push_back(allocation);
 
     return true;
@@ -107,7 +108,8 @@ bool PriorityAllocationStrategy::processRequest(RecurringRequest& request,
     for (const TimeSlot& slot : slots) {
         int allocationId = nextAllocationId(allocations);
         Allocation allocation(allocationId, request.getId(),
-                              request.getRequestedSpace(), slot);
+                              request.getRequestedSpace(), slot,
+                              request.getParticipantCount());
         allocations.push_back(allocation);
     }
 
@@ -133,7 +135,8 @@ bool PriorityAllocationStrategy::processRequest(ExamRequest& request,
     int allocationId = nextAllocationId(allocations);
     Allocation allocation(allocationId, request.getId(),
                           request.getRequestedSpace(),
-                          request.getExamTimeSlot());
+                          request.getExamTimeSlot(),
+                          request.getParticipantCount());
     allocations.push_back(allocation);
 
     return true;
