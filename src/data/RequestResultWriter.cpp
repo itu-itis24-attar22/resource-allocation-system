@@ -3,6 +3,7 @@
 #include <iostream>
 #include "../models/OneTimeRequest.h"
 #include "../models/RecurringRequest.h"
+#include "../models/ExamRequest.h"
 #include "../models/InvalidRequest.h"
 
 namespace {
@@ -88,6 +89,13 @@ namespace {
             return result;
         }
 
+        if (const ExamRequest* exam = dynamic_cast<const ExamRequest*>(request)) {
+            TimeSlot slot = exam->getExamTimeSlot();
+            return dayToString(slot.getDay()) + " " +
+                   std::to_string(slot.getStartHour()) + ":00-" +
+                   std::to_string(slot.getEndHour()) + ":00";
+        }
+
         if (const InvalidRequest* invalid = dynamic_cast<const InvalidRequest*>(request)) {
             return invalid->getRawTimeInfo().empty() ? "None" : invalid->getRawTimeInfo();
         }
@@ -98,10 +106,39 @@ namespace {
     std::string requestTypeToString(const Request* request) {
         if (dynamic_cast<const OneTimeRequest*>(request)) return "OneTime";
         if (dynamic_cast<const RecurringRequest*>(request)) return "Recurring";
+        if (dynamic_cast<const ExamRequest*>(request)) return "Exam";
         if (const InvalidRequest* invalid = dynamic_cast<const InvalidRequest*>(request)) {
             return invalid->getRequestTypeLabel();
         }
         return "Unknown";
+    }
+
+    std::string examCourseCodeToString(const Request* request) {
+        if (const ExamRequest* exam = dynamic_cast<const ExamRequest*>(request)) {
+            return exam->getCourseCode();
+        }
+        return "None";
+    }
+
+    std::string examCourseNameToString(const Request* request) {
+        if (const ExamRequest* exam = dynamic_cast<const ExamRequest*>(request)) {
+            return exam->getCourseName();
+        }
+        return "None";
+    }
+
+    std::string examTypeToString(const Request* request) {
+        if (const ExamRequest* exam = dynamic_cast<const ExamRequest*>(request)) {
+            return exam->getExamType();
+        }
+        return "None";
+    }
+
+    std::string canSplitAcrossRoomsToString(const Request* request) {
+        if (const ExamRequest* exam = dynamic_cast<const ExamRequest*>(request)) {
+            return exam->getCanSplitAcrossRooms() ? "true" : "false";
+        }
+        return "None";
     }
 }
 
@@ -114,7 +151,7 @@ void RequestResultWriter::writeRequestResults(const std::string& filename,
         return;
     }
 
-    file << "requestId,requestType,title,purpose,requesterName,requesterRole,priority,spaceName,spaceType,spaceBuilding,requiredBuilding,requiredFeature,participants,status,rejectionReason,timeInfo,lifecycleHistory\n";
+    file << "requestId,requestType,title,purpose,courseCode,courseName,examType,canSplitAcrossRooms,requesterName,requesterRole,priority,spaceName,spaceType,spaceBuilding,requiredBuilding,requiredFeature,participants,status,rejectionReason,timeInfo,lifecycleHistory\n";
 
     for (Request* request : requests) {
         request->addHistoryEvent("exported");
@@ -123,6 +160,10 @@ void RequestResultWriter::writeRequestResults(const std::string& filename,
              << escapeCsv(requestTypeToString(request)) << ","
              << escapeCsv(request->getTitle()) << ","
              << escapeCsv(request->getPurpose()) << ","
+             << escapeCsv(examCourseCodeToString(request)) << ","
+             << escapeCsv(examCourseNameToString(request)) << ","
+             << escapeCsv(examTypeToString(request)) << ","
+             << escapeCsv(canSplitAcrossRoomsToString(request)) << ","
              << escapeCsv(request->getRequester()->getName()) << ","
              << escapeCsv(request->getRequester()->getRoleName()) << ","
              << request->getPriority() << ","

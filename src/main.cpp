@@ -4,6 +4,7 @@
 #include "models/Request.h"
 #include "models/OneTimeRequest.h"
 #include "models/RecurringRequest.h"
+#include "models/ExamRequest.h"
 #include "models/InvalidRequest.h"
 #include "models/Allocation.h"
 #include "services/AllocationService.h"
@@ -54,6 +55,15 @@ int main() {
                 *recurring,
                 result,
                 "Recurring request loaded from external CSV source"
+            );
+        }
+        else if (ExamRequest* exam = dynamic_cast<ExamRequest*>(request)) {
+            bool result = exam->getStatus() == RequestStatus::Approved;
+            printExamResult(
+                label,
+                *exam,
+                result,
+                "Exam request loaded from external CSV source"
             );
         }
         else if (InvalidRequest* invalid = dynamic_cast<InvalidRequest*>(request)) {

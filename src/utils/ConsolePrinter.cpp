@@ -110,6 +110,49 @@ void printRecurringResult(
     std::cout << "-----------------------------------\n";
 }
 
+void printExamResult(
+    const std::string& label,
+    const ExamRequest& request,
+    bool result,
+    const std::string& explanation
+) {
+    std::cout << label << "\n";
+    std::cout << "Request type: ExamRequest\n";
+    std::cout << "Title: " << request.getTitle() << "\n";
+    std::cout << "Purpose: " << request.getPurpose() << "\n";
+    std::cout << "Course code: " << request.getCourseCode() << "\n";
+    std::cout << "Course name: " << request.getCourseName() << "\n";
+    std::cout << "Exam type: " << request.getExamType() << "\n";
+    std::cout << "Can split across rooms: " << (request.getCanSplitAcrossRooms() ? "Yes" : "No") << "\n";
+    std::cout << "Requester: " << request.getRequester()->getName() << "\n";
+    std::cout << "Requester role: " << request.getRequester()->getRoleName() << "\n";
+    std::cout << "Priority: " << request.getPriority() << "\n";
+    std::cout << "Requested type: " << request.getRequestedSpace()->getType() << "\n";
+    std::cout << "Requested space: " << request.getRequestedSpace()->getName() << "\n";
+    std::cout << "Space building: " << request.getRequestedSpace()->getBuilding() << "\n";
+    std::cout << "Required building: "
+              << (request.getRequiredBuilding().empty() ? "None" : request.getRequiredBuilding()) << "\n";
+    std::cout << "Space status: " << availabilityToString(request.getRequestedSpace()->getIsAvailable()) << "\n";
+    std::cout << "Required feature: "
+              << (request.getRequiredFeature().empty() ? "None" : request.getRequiredFeature()) << "\n";
+    std::cout << "Status: " << requestStatusToString(request.getStatus()) << "\n";
+    std::cout << "Participants: " << request.getParticipantCount() << "\n";
+    std::cout << "Exam time: "
+              << dayToString(request.getExamTimeSlot().getDay()) << ", "
+              << request.getExamTimeSlot().getStartHour() << ":00 - "
+              << request.getExamTimeSlot().getEndHour() << ":00\n";
+
+    if (result) {
+        std::cout << "Allocation created.\n";
+    } else {
+        std::cout << "Request rejected.\n";
+        std::cout << "Rejection reason: " << request.getRejectionReason() << "\n";
+    }
+
+    std::cout << "Case: " << explanation << "\n";
+    std::cout << "-----------------------------------\n";
+}
+
 void printInvalidResult(
     const std::string& label,
     const InvalidRequest& request,
