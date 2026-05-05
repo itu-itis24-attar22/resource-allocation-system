@@ -29,5 +29,9 @@ const IAllocationStrategy* AllocationStrategyFactory::getStrategy(const std::str
         return &priorityStrategy;
     }
 
+    if (normalizedName == "multi_room_exam_greedy") {
+        return &multiRoomExamGreedyStrategy;
+    }
+
     return &greedyStrategy;
 }
