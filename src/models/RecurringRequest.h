@@ -21,6 +21,7 @@ public:
     const std::vector<TimeSlot>& getRequestedTimeSlots() const;
 
     bool isRecurring() const override;
+    std::string getRequestType() const override;
 };
 
 #endif

@@ -32,6 +32,7 @@ public:
     TimeSlot getExamTimeSlot() const;
 
     bool isRecurring() const override;
+    std::string getRequestType() const override;
 };
 
 #endif

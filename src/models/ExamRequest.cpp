@@ -55,3 +55,7 @@ TimeSlot ExamRequest::getExamTimeSlot() const {
 bool ExamRequest::isRecurring() const {
     return false;
 }
+
+std::string ExamRequest::getRequestType() const {
+    return "Exam";
+}

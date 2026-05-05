@@ -19,6 +19,7 @@ public:
     TimeSlot getRequestedTimeSlot() const;
 
     bool isRecurring() const override;
+    std::string getRequestType() const override;
 };
 
 #endif

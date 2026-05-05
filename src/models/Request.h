@@ -51,6 +51,7 @@ public:
     virtual void markRejected(const std::string& reason);
 
     virtual bool isRecurring() const = 0;
+    virtual std::string getRequestType() const = 0;
 };
 
 #endif

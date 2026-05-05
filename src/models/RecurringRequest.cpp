@@ -18,3 +18,7 @@ const std::vector<TimeSlot>& RecurringRequest::getRequestedTimeSlots() const {
 bool RecurringRequest::isRecurring() const {
     return true;
 }
+
+std::string RecurringRequest::getRequestType() const {
+    return "Recurring";
+}

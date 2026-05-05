@@ -24,3 +24,7 @@ std::string InvalidRequest::getRawTimeInfo() const {
 bool InvalidRequest::isRecurring() const {
     return false;
 }
+
+std::string InvalidRequest::getRequestType() const {
+    return "Invalid";
+}

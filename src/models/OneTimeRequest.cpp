@@ -17,3 +17,7 @@ TimeSlot OneTimeRequest::getRequestedTimeSlot() const {
 bool OneTimeRequest::isRecurring() const {
     return false;
 }
+
+std::string OneTimeRequest::getRequestType() const {
+    return "OneTime";
+}
