@@ -114,13 +114,15 @@ void RequestResultWriter::writeRequestResults(const std::string& filename,
         return;
     }
 
-    file << "requestId,requestType,requesterName,requesterRole,priority,spaceName,spaceType,spaceBuilding,requiredBuilding,requiredFeature,participants,status,rejectionReason,timeInfo,lifecycleHistory\n";
+    file << "requestId,requestType,title,purpose,requesterName,requesterRole,priority,spaceName,spaceType,spaceBuilding,requiredBuilding,requiredFeature,participants,status,rejectionReason,timeInfo,lifecycleHistory\n";
 
     for (Request* request : requests) {
         request->addHistoryEvent("exported");
 
         file << request->getId() << ","
              << escapeCsv(requestTypeToString(request)) << ","
+             << escapeCsv(request->getTitle()) << ","
+             << escapeCsv(request->getPurpose()) << ","
              << escapeCsv(request->getRequester()->getName()) << ","
              << escapeCsv(request->getRequester()->getRoleName()) << ","
              << request->getPriority() << ","

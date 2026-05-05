@@ -35,6 +35,8 @@ void printOneTimeResult(
 ) {
     std::cout << label << "\n";
     std::cout << "Request type: OneTimeRequest\n";
+    std::cout << "Title: " << request.getTitle() << "\n";
+    std::cout << "Purpose: " << request.getPurpose() << "\n";
     std::cout << "Requester: " << request.getRequester()->getName() << "\n";
     std::cout << "Requester role: " << request.getRequester()->getRoleName() << "\n";
     std::cout << "Priority: " << request.getPriority() << "\n";
@@ -72,6 +74,8 @@ void printRecurringResult(
 ) {
     std::cout << label << "\n";
     std::cout << "Request type: RecurringRequest\n";
+    std::cout << "Title: " << request.getTitle() << "\n";
+    std::cout << "Purpose: " << request.getPurpose() << "\n";
     std::cout << "Requester: " << request.getRequester()->getName() << "\n";
     std::cout << "Requester role: " << request.getRequester()->getRoleName() << "\n";
     std::cout << "Priority: " << request.getPriority() << "\n";
@@ -113,6 +117,8 @@ void printInvalidResult(
 ) {
     std::cout << label << "\n";
     std::cout << "Request type: InvalidRequest\n";
+    std::cout << "Title: " << request.getTitle() << "\n";
+    std::cout << "Purpose: " << request.getPurpose() << "\n";
     std::cout << "Requester: " << request.getRequester()->getName() << "\n";
     std::cout << "Requester role: " << request.getRequester()->getRoleName() << "\n";
     std::cout << "Priority: " << request.getPriority() << "\n";
