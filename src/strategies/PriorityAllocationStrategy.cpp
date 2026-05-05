@@ -20,8 +20,11 @@ namespace {
 }
 
 void PriorityAllocationStrategy::processRequests(const std::vector<Request*>& requests,
+                                                 const std::vector<Space*>& spaces,
                                                  std::vector<Allocation>& allocations,
                                                  const RuleEngineFacade& ruleEngineFacade) const {
+    (void)spaces;
+
     std::vector<Request*> sortedRequests = requests;
 
     std::stable_sort(sortedRequests.begin(), sortedRequests.end(),

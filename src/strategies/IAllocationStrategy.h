@@ -7,6 +7,7 @@
 #include "../models/OneTimeRequest.h"
 #include "../models/RecurringRequest.h"
 #include "../models/ExamRequest.h"
+#include "../models/Space.h"
 #include "../rules/RuleEngineFacade.h"
 
 class IAllocationStrategy {
@@ -14,6 +15,7 @@ public:
     virtual ~IAllocationStrategy() = default;
 
     virtual void processRequests(const std::vector<Request*>& requests,
+                                 const std::vector<Space*>& spaces,
                                  std::vector<Allocation>& allocations,
                                  const RuleEngineFacade& ruleEngineFacade) const = 0;
 

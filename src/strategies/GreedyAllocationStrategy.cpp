@@ -19,8 +19,11 @@ namespace {
 }
 
 void GreedyAllocationStrategy::processRequests(const std::vector<Request*>& requests,
+                                               const std::vector<Space*>& spaces,
                                                std::vector<Allocation>& allocations,
                                                const RuleEngineFacade& ruleEngineFacade) const {
+    (void)spaces;
+
     for (Request* request : requests) {
         if (OneTimeRequest* oneTime = dynamic_cast<OneTimeRequest*>(request)) {
             oneTime->addHistoryEvent("Greedy batch processing started");
