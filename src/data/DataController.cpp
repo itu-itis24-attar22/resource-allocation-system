@@ -21,6 +21,17 @@ namespace {
         return value.substr(start, end - start + 1);
     }
 
+    std::string firstCsvToken(const std::string& line) {
+        std::stringstream ss(line);
+        std::string token;
+        std::getline(ss, token, ',');
+        return trim(token);
+    }
+
+    bool isRequestsHeader(const std::string& line) {
+        return firstCsvToken(line) == "requestId";
+    }
+
     std::string normalizeStrategyName(const std::string& strategyName) {
         std::string normalized;
 
@@ -138,8 +149,11 @@ namespace {
         }
 
         std::string line;
+        int lineNumber = 0;
         while (std::getline(file, line)) {
+            lineNumber++;
             if (line.empty()) continue;
+            if (lineNumber == 1 && isRequestsHeader(line)) continue;
 
             std::stringstream ss(line);
             std::string token;
@@ -362,7 +376,9 @@ std::string DataController::loadAllocationStrategyName(const std::string& config
             if (!value.empty()) {
                 const std::string normalizedValue = normalizeStrategyName(value);
 
-                if (normalizedValue == "greedy" || normalizedValue == "priority") {
+                if (normalizedValue == "greedy" ||
+                    normalizedValue == "priority" ||
+                    normalizedValue == "multi_room_exam_greedy") {
                     return normalizedValue;
                 }
 

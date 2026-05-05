@@ -1,4 +1,4 @@
-allocation_strategy=priority
+allocation_strategy=multi_room_exam_greedy
 
 
 
