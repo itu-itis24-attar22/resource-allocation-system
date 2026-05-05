@@ -1,10 +1,12 @@
 #include "Allocation.h"
 
-Allocation::Allocation(int id, int requestId, const Space* space, const TimeSlot& timeSlot)
+Allocation::Allocation(int id, int requestId, const Space* space, const TimeSlot& timeSlot,
+                       int assignedParticipants)
     : id(id),
       requestId(requestId),
       space(space),
       timeSlot(timeSlot),
+      assignedParticipants(assignedParticipants),
       status(AllocationStatus::Active) {}
 
 int Allocation::getId() const {
@@ -21,6 +23,10 @@ const Space* Allocation::getSpace() const {
 
 const TimeSlot& Allocation::getTimeSlot() const {
     return timeSlot;
+}
+
+int Allocation::getAssignedParticipants() const {
+    return assignedParticipants;
 }
 
 AllocationStatus Allocation::getStatus() const {

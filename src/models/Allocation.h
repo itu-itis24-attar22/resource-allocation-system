@@ -11,15 +11,18 @@ private:
     int requestId;
     const Space* space;
     TimeSlot timeSlot;
+    int assignedParticipants;
     AllocationStatus status;
 
 public:
-    Allocation(int id, int requestId, const Space* space, const TimeSlot& timeSlot);
+    Allocation(int id, int requestId, const Space* space, const TimeSlot& timeSlot,
+               int assignedParticipants);
 
     int getId() const;
     int getRequestId() const;
     const Space* getSpace() const;
     const TimeSlot& getTimeSlot() const;
+    int getAssignedParticipants() const;
     AllocationStatus getStatus() const;
 };
 
