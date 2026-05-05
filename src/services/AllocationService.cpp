@@ -55,6 +55,7 @@ void AllocationService::printAllocations() const {
                   << " (" << allocation.getSpace()->getType() << ")\n";
         std::cout << "Building: " << allocation.getSpace()->getBuilding() << "\n";
         std::cout << "Request ID: " << allocation.getRequestId() << "\n";
+        std::cout << "Assigned participants: " << allocation.getAssignedParticipants() << "\n";
         std::cout << "Time: "
                   << dayToString(allocation.getTimeSlot().getDay()) << ", "
                   << allocation.getTimeSlot().getStartHour() << ":00 - "

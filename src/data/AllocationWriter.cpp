@@ -36,7 +36,7 @@ void AllocationWriter::writeAllocations(const std::string& filename,
         return;
     }
 
-    file << "allocationId,requestId,spaceId,spaceName,spaceType,building,day,startHour,endHour\n";
+    file << "allocationId,requestId,spaceId,spaceName,spaceType,building,day,startHour,endHour,assignedParticipants\n";
 
     for (const Allocation& allocation : allocations) {
         file << allocation.getId() << ","
@@ -47,7 +47,8 @@ void AllocationWriter::writeAllocations(const std::string& filename,
              << escapeCsv(allocation.getSpace()->getBuilding()) << ","
              << allocation.getTimeSlot().getDay() << ","
              << allocation.getTimeSlot().getStartHour() << ","
-             << allocation.getTimeSlot().getEndHour() << "\n";
+             << allocation.getTimeSlot().getEndHour() << ","
+             << allocation.getAssignedParticipants() << "\n";
     }
 
     file.close();
