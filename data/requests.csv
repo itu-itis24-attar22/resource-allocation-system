@@ -1,3 +1,4 @@
+requestId,requestType,userId,spaceId,participantCount,requiredFeature,requiredBuilding,timeData,title,purpose,courseCode,courseName,examType,canSplitAcrossRooms
 1,OneTime,1,101,30,Projector,Engineering,2-13-15,BLG101 Midterm Exam,Exam
 2,OneTime,1,301,8,Projector,Engineering,3-10-12,Project Kickoff Meeting,Meeting
 3,Recurring,2,301,8,Projector,AdminBuilding,2-9-10;4-9-10,Weekly Research Meeting,Meeting
@@ -21,3 +22,5 @@
 21,Exam,1,102,20,Whiteboard,Engineering,6-9-11,Student Submitted Exam,Exam,BLG104,Programming Fundamentals,Midterm,false
 22,Exam,3,301,8,Projector,AdminBuilding,6-13-15,Staff Submitted Exam,Exam,ADM100,Administrative Training,Quiz,false
 23,Exam,4,102,25,Whiteboard,Engineering,7-9-11,Administrator Scheduled Exam,Exam,BLG401,Software Architecture,Final,true
+24,Exam,2,101,70,Whiteboard,Engineering,7-12-14,BLG205 Combined Final Exam,Exam,BLG205,Software Systems,Final,true
+25,Exam,2,101,120,Whiteboard,Engineering,7-15-17,BLG305 Large Final Exam,Exam,BLG305,Operating Systems,Final,true
