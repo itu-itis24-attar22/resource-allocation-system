@@ -8,6 +8,21 @@
 #include "../models/UserFactory.h"
 
 namespace {
+    std::string firstCsvToken(const std::string& line) {
+        std::stringstream ss(line);
+        std::string token;
+        std::getline(ss, token, ',');
+        return token;
+    }
+
+    bool isUsersHeader(const std::string& line) {
+        return firstCsvToken(line) == "userId";
+    }
+
+    bool isSpacesHeader(const std::string& line) {
+        return firstCsvToken(line) == "spaceId";
+    }
+
     bool tryParseInt(const std::string& text, int& value) {
         try {
             size_t parsedLength = 0;
@@ -46,6 +61,7 @@ std::vector<User*> DataLoader::loadUsers(const std::string& filename) {
     while (std::getline(file, line)) {
         lineNumber++;
         if (line.empty()) continue;
+        if (lineNumber == 1 && isUsersHeader(line)) continue;
 
         std::stringstream ss(line);
         std::string idToken;
@@ -91,6 +107,7 @@ std::vector<Space*> DataLoader::loadSpaces(const std::string& filename) {
     while (std::getline(file, line)) {
         lineNumber++;
         if (line.empty()) continue;
+        if (lineNumber == 1 && isSpacesHeader(line)) continue;
 
         std::stringstream ss(line);
         std::string idToken;
