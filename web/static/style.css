@@ -97,9 +97,77 @@ body {
 .hero-card p,
 .info-panel p,
 .empty-state p,
-.table-summary p {
+.table-summary p,
+.run-result p {
     color: var(--muted);
     line-height: 1.6;
+}
+
+.run-form {
+    margin-top: 1.2rem;
+}
+
+.run-form button {
+    appearance: none;
+    border: 0;
+    border-radius: 999px;
+    padding: 0.85rem 1.25rem;
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.run-form button:hover {
+    background: var(--accent-dark);
+}
+
+.run-result {
+    margin: 1.2rem 0;
+    padding: 1.2rem;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: rgba(255, 253, 248, 0.95);
+}
+
+.run-result-success {
+    border-color: rgba(47, 111, 94, 0.45);
+}
+
+.run-result-error {
+    border-color: rgba(150, 62, 45, 0.45);
+    background: #fff6f2;
+}
+
+.run-result h2 {
+    margin-top: 0;
+}
+
+.run-result a {
+    color: var(--accent-dark);
+    font-weight: 700;
+}
+
+.run-result details {
+    margin-top: 0.8rem;
+}
+
+.run-result summary {
+    cursor: pointer;
+    color: var(--accent-dark);
+    font-weight: 700;
+}
+
+.run-result pre {
+    max-height: 18rem;
+    overflow: auto;
+    white-space: pre-wrap;
+    background: #25302c;
+    color: #fff8e8;
+    padding: 1rem;
+    border-radius: 14px;
 }
 
 .cards-grid {

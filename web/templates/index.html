@@ -11,7 +11,36 @@
         This web dashboard is read-only. It displays CSV data produced or used by
         the C++ backend and does not modify requests, strategies, rules, or results.
     </p>
+    <form class="run-form" method="post" action="{{ url_for('run_allocation') }}">
+        <button type="submit">Run Allocation</button>
+    </form>
 </section>
+
+{% if run_result %}
+<section class="run-result run-result-{{ run_result.status }}">
+    <h2>{{ run_result.message }}</h2>
+    {% if run_result.status == "success" %}
+    <p>
+        View the updated <a href="{{ url_for('allocations') }}">allocations</a>
+        and <a href="{{ url_for('results') }}">request results</a>.
+    </p>
+    {% endif %}
+
+    {% if run_result.stdout %}
+    <details>
+        <summary>Backend output</summary>
+        <pre>{{ run_result.stdout }}</pre>
+    </details>
+    {% endif %}
+
+    {% if run_result.stderr %}
+    <details>
+        <summary>Backend warnings/errors</summary>
+        <pre>{{ run_result.stderr }}</pre>
+    </details>
+    {% endif %}
+</section>
+{% endif %}
 
 <section class="cards-grid" aria-label="System counts">
     {% for stat in stats %}
