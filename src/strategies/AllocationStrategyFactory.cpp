@@ -33,5 +33,9 @@ const IAllocationStrategy* AllocationStrategyFactory::getStrategy(const std::str
         return &multiRoomExamGreedyStrategy;
     }
 
+    if (normalizedName == "multi_room_exam_best_fit") {
+        return &multiRoomExamBestFitStrategy;
+    }
+
     return &greedyStrategy;
 }

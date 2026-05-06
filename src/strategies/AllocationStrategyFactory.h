@@ -6,12 +6,14 @@
 #include "GreedyAllocationStrategy.h"
 #include "PriorityAllocationStrategy.h"
 #include "MultiRoomExamGreedyStrategy.h"
+#include "MultiRoomExamBestFitStrategy.h"
 
 class AllocationStrategyFactory {
 private:
     GreedyAllocationStrategy greedyStrategy;
     PriorityAllocationStrategy priorityStrategy;
     MultiRoomExamGreedyStrategy multiRoomExamGreedyStrategy;
+    MultiRoomExamBestFitStrategy multiRoomExamBestFitStrategy;
 
     AllocationStrategyFactory() = default;
 
