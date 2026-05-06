@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | Resource Allocation System{% endblock %}
+{% block page_heading %}{{ title }}{% endblock %}
+
+{% block content %}
+<section class="table-card">
+    {% if not table.exists %}
+        <div class="empty-state">
+            <h2>Nothing to show yet</h2>
+            <p>{{ empty_message }}</p>
+        </div>
+    {% elif table.rows|length == 0 %}
+        <div class="empty-state">
+            <h2>No rows found</h2>
+            <p>{{ empty_message }}</p>
+        </div>
+    {% else %}
+        <div class="table-summary">
+            <p>{{ table.rows|length }} row(s) loaded from CSV.</p>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        {% for header in table.headers %}
+                        <th>{{ header }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in table.rows %}
+                    <tr>
+                        {% for header in table.headers %}
+                        <td>{{ row.get(header, "") }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

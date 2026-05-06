@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Resource Allocation Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <div>
+            <p class="eyebrow">Resource Allocation System</p>
+            <h1>{% block page_heading %}Dashboard{% endblock %}</h1>
+        </div>
+        <nav class="nav-links" aria-label="Main navigation">
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('users') }}">Users</a>
+            <a href="{{ url_for('spaces') }}">Spaces</a>
+            <a href="{{ url_for('requests') }}">Requests</a>
+            <a href="{{ url_for('allocations') }}">Allocations</a>
+            <a href="{{ url_for('results') }}">Results</a>
+        </nav>
+    </header>
+
+    <main class="page-shell">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

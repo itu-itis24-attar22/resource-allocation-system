@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Resource Allocation System{% endblock %}
+{% block page_heading %}Read-Only Dashboard{% endblock %}
+
+{% block content %}
+<section class="hero-card">
+    <p class="eyebrow">Current Allocation Strategy</p>
+    <h2>{{ strategy }}</h2>
+    <p>
+        This web dashboard is read-only. It displays CSV data produced or used by
+        the C++ backend and does not modify requests, strategies, rules, or results.
+    </p>
+</section>
+
+<section class="cards-grid" aria-label="System counts">
+    {% for stat in stats %}
+    <article class="stat-card">
+        <p>{{ stat.label }}</p>
+        <strong>{{ stat.value }}</strong>
+    </article>
+    {% endfor %}
+</section>
+
+<section class="info-panel">
+    <h2>Demo Notes</h2>
+    <p>
+        Use the navigation links to inspect users, spaces, requests, allocations,
+        and request results. If output files are missing, the relevant pages show
+        a friendly message instead of failing.
+    </p>
+</section>
+{% endblock %}
