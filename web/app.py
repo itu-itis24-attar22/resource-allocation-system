@@ -1,5 +1,6 @@
 from pathlib import Path
 import csv
+import subprocess
 
 from flask import Flask, render_template
 
@@ -8,6 +9,12 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
 
 app = Flask(__name__)
+
+EXECUTABLE_NAMES = [
+    "allocation_system.exe",
+    "allocation_system_test.exe",
+    "allocation_system",
+]
 
 
 def read_config_strategy():
@@ -63,6 +70,83 @@ def count_optional_file(filename):
     return len(table["rows"])
 
 
+def truncate_output(text, limit=3000):
+    if not text:
+        return ""
+
+    if len(text) <= limit:
+        return text
+
+    return text[:limit] + "\n... output truncated for dashboard display ..."
+
+
+def find_backend_executable():
+    for executable_name in EXECUTABLE_NAMES:
+        executable_path = PROJECT_ROOT / executable_name
+        if executable_path.exists() and executable_path.is_file():
+            return executable_path
+
+    return None
+
+
+def build_dashboard_context(run_result=None):
+    stats = [
+        {"label": "Users", "value": len(read_csv_table("users.csv")["rows"])},
+        {"label": "Spaces", "value": len(read_csv_table("spaces.csv")["rows"])},
+        {"label": "Requests", "value": len(read_csv_table("requests.csv")["rows"])},
+        {"label": "Allocations", "value": count_optional_file("allocations.csv")},
+        {"label": "Request Results", "value": count_optional_file("request_results.csv")},
+    ]
+
+    return {
+        "strategy": read_config_strategy(),
+        "stats": stats,
+        "run_result": run_result,
+    }
+
+
+def run_backend_allocation():
+    executable_path = find_backend_executable()
+
+    if executable_path is None:
+        return {
+            "status": "error",
+            "message": "Backend executable not found. Please compile the C++ project first.",
+            "stdout": "",
+            "stderr": "",
+        }
+
+    try:
+        completed = subprocess.run(
+            [str(executable_path)],
+            text=True,
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            timeout=30,
+        )
+    except subprocess.TimeoutExpired as exc:
+        return {
+            "status": "error",
+            "message": "Backend execution timed out after 30 seconds.",
+            "stdout": truncate_output(exc.stdout or ""),
+            "stderr": truncate_output(exc.stderr or ""),
+        }
+
+    if completed.returncode == 0:
+        status = "success"
+        message = "Allocation backend ran successfully. Results were updated."
+    else:
+        status = "error"
+        message = f"Allocation backend failed with exit code {completed.returncode}."
+
+    return {
+        "status": status,
+        "message": message,
+        "stdout": truncate_output(completed.stdout),
+        "stderr": truncate_output(completed.stderr),
+    }
+
+
 def render_csv_page(template_name, title, filename, empty_message):
     table = read_csv_table(filename)
     return render_template(
@@ -75,19 +159,13 @@ def render_csv_page(template_name, title, filename, empty_message):
 
 @app.route("/")
 def index():
-    stats = [
-        {"label": "Users", "value": len(read_csv_table("users.csv")["rows"])},
-        {"label": "Spaces", "value": len(read_csv_table("spaces.csv")["rows"])},
-        {"label": "Requests", "value": len(read_csv_table("requests.csv")["rows"])},
-        {"label": "Allocations", "value": count_optional_file("allocations.csv")},
-        {"label": "Request Results", "value": count_optional_file("request_results.csv")},
-    ]
+    return render_template("index.html", **build_dashboard_context())
 
-    return render_template(
-        "index.html",
-        strategy=read_config_strategy(),
-        stats=stats,
-    )
+
+@app.post("/run-allocation")
+def run_allocation():
+    run_result = run_backend_allocation()
+    return render_template("index.html", **build_dashboard_context(run_result))
 
 
 @app.route("/users")
