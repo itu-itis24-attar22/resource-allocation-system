@@ -10,7 +10,22 @@ The web dashboard does not run allocation logic, edit CSV files, or modify the C
 pip install flask
 ```
 
-## Run From The Project Root
+## Compile The C++ Backend
+
+From PowerShell in the project root:
+
+```powershell
+$sources = Get-ChildItem -Recurse -Path src -Filter *.cpp | ForEach-Object { $_.FullName }
+g++ -std=c++17 $sources -o allocation_system
+```
+
+The dashboard looks for one of these executables in the project root:
+
+- `allocation_system.exe`
+- `allocation_system_test.exe`
+- `allocation_system`
+
+## Run Flask From The Project Root
 
 ```bash
 python web/app.py
@@ -30,6 +45,8 @@ Open this address in a browser:
 ```text
 http://127.0.0.1:5000
 ```
+
+Click `Run Allocation` on the home page to run the compiled C++ backend executable. The web app uses a fixed executable lookup, runs it from the project root, and then displays the updated `allocations.csv` and `request_results.csv` files.
 
 ## Pages
 
