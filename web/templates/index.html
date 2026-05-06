@@ -1,20 +1,43 @@
 {% extends "base.html" %}
 
 {% block title %}Dashboard | Resource Allocation System{% endblock %}
-{% block page_heading %}Read-Only Dashboard{% endblock %}
+{% block page_heading %}Allocation Dashboard{% endblock %}
 
 {% block content %}
 <section class="hero-card">
     <p class="eyebrow">Current Allocation Strategy</p>
     <h2>{{ strategy }}</h2>
     <p>
-        This web dashboard is read-only. It displays CSV data produced or used by
-        the C++ backend and does not modify requests, strategies, rules, or results.
+        This dashboard displays CSV data and coordinates demo actions. Strategy
+        selection only updates the config file, and Run Allocation delegates to
+        the compiled C++ backend.
     </p>
-    <form class="run-form" method="post" action="{{ url_for('run_allocation') }}">
-        <button type="submit">Run Allocation</button>
-    </form>
+    <div class="action-grid">
+        <form class="strategy-form" method="post" action="{{ url_for('set_strategy') }}">
+            <label for="strategy">Select strategy</label>
+            <div class="strategy-controls">
+                <select id="strategy" name="strategy">
+                    {% for option in strategies %}
+                    <option value="{{ option.value }}" {% if option.value == strategy %}selected{% endif %}>
+                        {{ option.label }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <button type="submit">Save Strategy</button>
+            </div>
+        </form>
+
+        <form class="run-form" method="post" action="{{ url_for('run_allocation') }}">
+            <button type="submit">Run Allocation</button>
+        </form>
+    </div>
 </section>
+
+{% if strategy_message %}
+<section class="strategy-message strategy-message-{{ strategy_message.status }}">
+    <p>{{ strategy_message.text }}</p>
+</section>
+{% endif %}
 
 {% if run_result %}
 <section class="run-result run-result-{{ run_result.status }}">

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Request Added | Resource Allocation System{% endblock %}
+{% block page_heading %}Request Added{% endblock %}
+
+{% block content %}
+<section class="confirmation-card">
+    <p class="eyebrow">Pending Request</p>
+    <h2>Request {{ request_id }} was added successfully.</h2>
+    <p>
+        It is pending until allocation is run. The request already appears in
+        <code>data/requests.csv</code>, but approval or rejection will appear
+        only after the C++ backend updates <code>request_results.csv</code>.
+    </p>
+
+    {% if request_row %}
+    <dl class="confirmation-details">
+        <div>
+            <dt>Type</dt>
+            <dd>{{ request_row.get("requestType", "N/A") }}</dd>
+        </div>
+        <div>
+            <dt>Title</dt>
+            <dd>{{ request_row.get("title", "N/A") }}</dd>
+        </div>
+        <div>
+            <dt>Purpose</dt>
+            <dd>{{ request_row.get("purpose", "N/A") }}</dd>
+        </div>
+        <div>
+            <dt>Time Data</dt>
+            <dd>{{ request_row.get("timeData", "N/A") }}</dd>
+        </div>
+    </dl>
+    {% endif %}
+
+    <div class="confirmation-actions">
+        <a href="{{ url_for('add_request') }}">Add Another Request</a>
+        <a href="{{ url_for('requests') }}">View Requests</a>
+        <form method="post" action="{{ url_for('run_allocation_now', request_id=request_id) }}">
+            <button type="submit">Run Allocation Now</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

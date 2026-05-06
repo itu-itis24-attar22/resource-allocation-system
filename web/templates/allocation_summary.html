@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Allocation Summary | Resource Allocation System{% endblock %}
+{% block page_heading %}Allocation Summary{% endblock %}
+
+{% block content %}
+<section class="info-panel">
+    <p class="eyebrow">Grouped Allocation View</p>
+    <h2>Current strategy: {{ strategy }}</h2>
+    <p>
+        This page groups requests by request ID and displays related allocation
+        rows beneath each request. It reads existing CSV outputs only.
+    </p>
+
+    {% if not allocations_available or not results_available %}
+    <div class="page-message page-message-error">
+        <p>Run allocation first to see assignment results.</p>
+    </div>
+    {% endif %}
+
+    {% if run_message %}
+    <div class="page-message page-message-{{ run_message.status }}">
+        <p>{{ run_message.text }}</p>
+    </div>
+    {% endif %}
+</section>
+
+{% if not requests_available %}
+<section class="empty-state">
+    <h2>Requests file is missing</h2>
+    <p>No requests can be summarized because <code>requests.csv</code> is not available.</p>
+</section>
+{% elif summaries|length == 0 %}
+<section class="empty-state">
+    <h2>No requests found</h2>
+    <p>No request rows were found in <code>requests.csv</code>.</p>
+</section>
+{% else %}
+<section class="summary-list">
+    {% for item in summaries %}
+    <article id="request-{{ item.request_id }}" class="request-card {% if item.request_id == highlight_id %}request-card-highlight{% endif %}">
+        <div class="request-card-header">
+            <div>
+                <p class="eyebrow">Request {{ item.request_id }}</p>
+                <h2>{{ item.title }}</h2>
+                <p>{{ item.request_type }} request - {{ item.purpose }}</p>
+            </div>
+            <div class="exam-badges">
+                <span class="badge">{{ item.request_type }}</span>
+                <span class="badge badge-{{ item.status_class }}">{{ item.status }}</span>
+                {% if item.is_exam %}
+                <span class="badge">{{ "Splittable" if item.can_split == "true" else "Non-splittable" }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="exam-metrics">
+            <div>
+                <span>Participants</span>
+                <strong>{{ item.participant_display }}</strong>
+            </div>
+            <div>
+                <span>Total assigned</span>
+                <strong>{{ item.assignment_display }}</strong>
+            </div>
+            <div>
+                <span>Room capacity</span>
+                <strong>{{ item.total_capacity }}</strong>
+            </div>
+            <div>
+                <span>Unused capacity</span>
+                <strong>{{ item.waste }}</strong>
+            </div>
+        </div>
+
+        <dl class="exam-details">
+            <div>
+                <dt>Time</dt>
+                <dd>{{ item.time_data }}</dd>
+            </div>
+            <div>
+                <dt>Requester</dt>
+                <dd>{{ item.user_id }} - {{ item.requester_name }}</dd>
+            </div>
+            {% if item.is_exam %}
+            <div>
+                <dt>Course</dt>
+                <dd>{{ item.course_code }} - {{ item.course_name }}</dd>
+            </div>
+            <div>
+                <dt>Exam type</dt>
+                <dd>{{ item.exam_type }}</dd>
+            </div>
+            {% endif %}
+        </dl>
+
+        {% if item.rejection_reason %}
+        <div class="rejection-box">
+            <strong>Rejection reason:</strong> {{ item.rejection_reason }}
+        </div>
+        {% endif %}
+
+        {% if item.assigned_rooms %}
+        <div class="assigned-rooms">
+            <h3>Related Allocations</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Space</th>
+                            <th>Type</th>
+                            <th>Building</th>
+                            <th>Capacity</th>
+                            <th>Assigned Participants</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for room in item.assigned_rooms %}
+                        <tr>
+                            <td>{{ room.name }} ({{ room.space_id }})</td>
+                            <td>{{ room.type }}</td>
+                            <td>{{ room.building }}</td>
+                            <td>{{ room.capacity_display }}</td>
+                            <td>{{ room.assigned }}</td>
+                            <td>{{ room.time }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <p class="no-rooms">No allocation rows are available for this request.</p>
+        {% endif %}
+    </article>
+    {% endfor %}
+</section>
+{% endif %}
+{% endblock %}

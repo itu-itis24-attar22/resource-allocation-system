@@ -77,6 +77,8 @@ body {
 .hero-card,
 .info-panel,
 .table-card,
+.form-card,
+.confirmation-card,
 .stat-card {
     background: rgba(255, 253, 248, 0.92);
     border: 1px solid var(--line);
@@ -103,11 +105,43 @@ body {
     line-height: 1.6;
 }
 
-.run-form {
+.action-grid {
+    display: flex;
+    align-items: end;
+    flex-wrap: wrap;
+    gap: 1rem;
     margin-top: 1.2rem;
 }
 
-.run-form button {
+.strategy-form {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.strategy-form label {
+    color: var(--accent-dark);
+    font-weight: 700;
+}
+
+.strategy-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+}
+
+.strategy-controls select {
+    min-width: 240px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.78rem 1rem;
+    background: white;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.run-form button,
+.strategy-form button {
     appearance: none;
     border: 0;
     border-radius: 999px;
@@ -120,8 +154,30 @@ body {
     font-weight: 700;
 }
 
-.run-form button:hover {
+.run-form button:hover,
+.strategy-form button:hover {
     background: var(--accent-dark);
+}
+
+.strategy-message {
+    margin: 1.2rem 0;
+    padding: 0.95rem 1.1rem;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: rgba(255, 253, 248, 0.95);
+}
+
+.strategy-message p {
+    margin: 0;
+}
+
+.strategy-message-success {
+    border-color: rgba(47, 111, 94, 0.45);
+}
+
+.strategy-message-error {
+    border-color: rgba(150, 62, 45, 0.45);
+    background: #fff6f2;
 }
 
 .run-result {
@@ -192,8 +248,226 @@ body {
 }
 
 .info-panel,
-.table-card {
+.table-card,
+.form-card,
+.confirmation-card {
     padding: 1.4rem;
+}
+
+.form-card h2,
+.confirmation-card h2 {
+    margin: 0.3rem 0 0.7rem;
+    color: var(--accent-dark);
+}
+
+.form-card p,
+.confirmation-card p {
+    color: var(--muted);
+    line-height: 1.6;
+}
+
+.exam-form,
+.request-form {
+    margin-top: 1.2rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+.form-wide {
+    grid-column: 1 / -1;
+}
+
+.exam-form label,
+.request-form label {
+    display: grid;
+    gap: 0.4rem;
+    color: var(--accent-dark);
+    font-weight: 700;
+}
+
+.exam-form input,
+.exam-form select,
+.request-form input,
+.request-form select {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 0.78rem 0.9rem;
+    background: white;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-top: 1.2rem;
+}
+
+.form-actions a {
+    color: var(--accent-dark);
+    font-weight: 700;
+}
+
+.form-section {
+    border-top: 1px solid #ece4d6;
+    margin-top: 1.2rem;
+    padding-top: 1.2rem;
+}
+
+.form-section:first-of-type {
+    border-top: 0;
+    margin-top: 0;
+    padding-top: 0;
+}
+
+.form-section h3 {
+    margin: 0 0 0.4rem;
+    color: var(--accent-dark);
+}
+
+.form-section p {
+    margin: 0 0 0.8rem;
+}
+
+.exam-form button,
+.request-form button {
+    appearance: none;
+    border: 0;
+    border-radius: 999px;
+    padding: 0.85rem 1.25rem;
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.exam-form button:hover,
+.request-form button:hover {
+    background: var(--accent-dark);
+}
+
+.form-message,
+.page-message {
+    margin: 1.2rem 0;
+    padding: 0.95rem 1.1rem;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: rgba(255, 253, 248, 0.95);
+}
+
+.form-message h3 {
+    margin: 0 0 0.6rem;
+}
+
+.form-message ul {
+    margin: 0;
+    padding-left: 1.2rem;
+}
+
+.form-message p,
+.page-message p {
+    margin: 0;
+}
+
+.page-message-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-top: 0.8rem;
+}
+
+.page-message-actions button {
+    appearance: none;
+    border: 0;
+    border-radius: 999px;
+    padding: 0.7rem 1rem;
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.page-message-actions button:hover {
+    background: var(--accent-dark);
+}
+
+.page-message-actions a {
+    color: var(--accent-dark);
+    font-weight: 700;
+}
+
+.confirmation-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.8rem;
+    margin: 1rem 0;
+}
+
+.confirmation-details div {
+    border: 1px solid #ece4d6;
+    border-radius: 16px;
+    background: white;
+    padding: 0.9rem;
+}
+
+.confirmation-details dt {
+    color: var(--muted);
+    font-weight: 700;
+}
+
+.confirmation-details dd {
+    margin: 0.2rem 0 0;
+}
+
+.confirmation-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-top: 1.2rem;
+}
+
+.confirmation-actions a,
+.confirmation-actions button {
+    appearance: none;
+    border: 0;
+    border-radius: 999px;
+    padding: 0.8rem 1.1rem;
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.confirmation-actions a:hover,
+.confirmation-actions button:hover {
+    background: var(--accent-dark);
+}
+
+.form-message-error,
+.page-message-error {
+    border-color: rgba(150, 62, 45, 0.45);
+    background: #fff6f2;
+}
+
+.page-message-success {
+    border-color: rgba(47, 111, 94, 0.45);
 }
 
 .table-summary {
@@ -241,6 +515,147 @@ tr:nth-child(even) td {
 
 .empty-state h2 {
     margin-top: 0;
+}
+
+.exam-summary-list,
+.summary-list {
+    display: grid;
+    gap: 1.2rem;
+    margin-top: 1.2rem;
+}
+
+.exam-card,
+.request-card {
+    background: rgba(255, 253, 248, 0.94);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    box-shadow: 0 18px 45px rgba(38, 49, 45, 0.08);
+    padding: 1.35rem;
+}
+
+.request-card-highlight {
+    border-color: var(--highlight);
+    box-shadow:
+        0 0 0 4px rgba(240, 198, 106, 0.24),
+        0 18px 45px rgba(38, 49, 45, 0.08);
+}
+
+.exam-card-header,
+.request-card-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.exam-card h2,
+.request-card h2 {
+    margin: 0.25rem 0 0.45rem;
+    color: var(--accent-dark);
+}
+
+.exam-card p,
+.request-card p {
+    color: var(--muted);
+}
+
+.exam-badges {
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.badge {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.45rem 0.7rem;
+    background: white;
+    color: var(--accent-dark);
+    font-weight: 700;
+}
+
+.badge-approved {
+    background: #eaf5ef;
+    border-color: rgba(47, 111, 94, 0.35);
+}
+
+.badge-rejected {
+    background: #fff0eb;
+    border-color: rgba(150, 62, 45, 0.35);
+}
+
+.badge-pending {
+    background: #fff8dd;
+    border-color: rgba(240, 198, 106, 0.6);
+}
+
+.exam-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    gap: 0.8rem;
+    margin: 1rem 0;
+}
+
+.exam-metrics div {
+    border: 1px solid #ece4d6;
+    border-radius: 16px;
+    background: white;
+    padding: 0.9rem;
+}
+
+.exam-metrics span {
+    display: block;
+    color: var(--muted);
+    font-size: 0.88rem;
+}
+
+.exam-metrics strong {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--accent-dark);
+    font-size: 1.35rem;
+}
+
+.exam-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.8rem;
+    margin: 1rem 0;
+}
+
+.exam-details div {
+    border-left: 4px solid var(--highlight);
+    padding-left: 0.75rem;
+}
+
+.exam-details dt {
+    color: var(--muted);
+    font-weight: 700;
+}
+
+.exam-details dd {
+    margin: 0.2rem 0 0;
+}
+
+.rejection-box {
+    border: 1px solid rgba(150, 62, 45, 0.35);
+    border-radius: 16px;
+    background: #fff6f2;
+    padding: 0.9rem;
+    margin: 1rem 0;
+}
+
+.assigned-rooms h3 {
+    margin: 1rem 0 0.6rem;
+    color: var(--accent-dark);
+}
+
+.no-rooms {
+    border: 1px dashed var(--line);
+    border-radius: 16px;
+    padding: 0.9rem;
+    background: #fffaf0;
 }
 
 @media (max-width: 720px) {

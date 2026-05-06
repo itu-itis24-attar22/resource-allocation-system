@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Add Request | Resource Allocation System{% endblock %}
+{% block page_heading %}Add Request{% endblock %}
+
+{% block content %}
+<section class="form-card">
+    <p class="eyebrow">Request Entry</p>
+    <h2>Create a request row</h2>
+    <p>
+        This form only appends a row to <code>data/requests.csv</code>. The C++
+        backend still creates request objects, evaluates rules, and performs
+        allocation when Run Allocation is used.
+    </p>
+
+    {% if errors %}
+    <div class="form-message form-message-error">
+        <h3>Please fix these fields</h3>
+        <ul>
+            {% for error in errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <form class="request-form" method="post" action="{{ url_for('add_request') }}">
+        <div class="form-section">
+            <h3>Common Request Fields</h3>
+            <div class="form-grid">
+                <label>
+                    Request type
+                    <select name="requestType" required>
+                        {% for request_type in request_types %}
+                        <option value="{{ request_type }}" {% if form_data.get("requestType", "OneTime") == request_type %}selected{% endif %}>
+                            {{ request_type }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label>
+                    Requester
+                    <select name="userId" required>
+                        <option value="">Choose a requester</option>
+                        {% for user in users %}
+                        {% set user_id = user.get("userId", "") %}
+                        <option value="{{ user_id }}" {% if form_data.get("userId") == user_id %}selected{% endif %}>
+                            {{ user_id }} - {{ user.get("name", "Unknown") }} ({{ user.get("role", "Unknown") }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label>
+                    Requested / reference space
+                    <select name="spaceId" required>
+                        <option value="">Choose a space</option>
+                        {% for space in spaces %}
+                        {% set space_id = space.get("spaceId", "") %}
+                        <option value="{{ space_id }}" {% if form_data.get("spaceId") == space_id %}selected{% endif %}>
+                            {{ space_id }} - {{ space.get("name", "Unknown") }}
+                            ({{ space.get("type", "Unknown") }}, cap. {{ space.get("capacity", "?") }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label>
+                    Participant count
+                    <input type="number" name="participantCount" min="1" required
+                           value="{{ form_data.get('participantCount', '') }}">
+                </label>
+
+                <label>
+                    Required feature
+                    <select name="requiredFeature">
+                        {% for feature in feature_options %}
+                        <option value="{{ feature }}" {% if form_data.get("requiredFeature", "None") == feature %}selected{% endif %}>
+                            {{ feature }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label>
+                    Required building
+                    <select name="requiredBuilding">
+                        {% for building in building_options %}
+                        <option value="{{ building }}" {% if form_data.get("requiredBuilding", "None") == building %}selected{% endif %}>
+                            {{ building }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label class="form-wide">
+                    Title
+                    <input type="text" name="title" required
+                           value="{{ form_data.get('title', '') }}">
+                </label>
+
+                <label>
+                    Purpose
+                    <select name="purpose" required>
+                        <option value="">Choose a purpose</option>
+                        {% for purpose in purpose_options %}
+                        <option value="{{ purpose }}" {% if form_data.get("purpose") == purpose %}selected{% endif %}>
+                            {{ purpose }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>OneTime / Exam Time</h3>
+            <p>Used when request type is <strong>OneTime</strong> or <strong>Exam</strong>.</p>
+            <div class="form-grid">
+                <label>
+                    Day
+                    <input type="number" name="day" min="1" max="7"
+                           value="{{ form_data.get('day', '') }}">
+                </label>
+
+                <label>
+                    Start hour
+                    <input type="number" name="startHour" min="0" max="23"
+                           value="{{ form_data.get('startHour', '') }}">
+                </label>
+
+                <label>
+                    End hour
+                    <input type="number" name="endHour" min="1" max="24"
+                           value="{{ form_data.get('endHour', '') }}">
+                </label>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Recurring Time</h3>
+            <p>Used only when request type is <strong>Recurring</strong>. Example: <code>2-9-10;4-9-10</code>.</p>
+            <label>
+                timeData
+                <input type="text" name="timeData" placeholder="2-9-10;4-9-10"
+                       value="{{ form_data.get('timeData', '') }}">
+            </label>
+        </div>
+
+        <div class="form-section">
+            <h3>Exam Details</h3>
+            <p>Used only when request type is <strong>Exam</strong>.</p>
+            <div class="form-grid">
+                <label>
+                    Course code
+                    <input type="text" name="courseCode"
+                           value="{{ form_data.get('courseCode', '') }}">
+                </label>
+
+                <label>
+                    Course name
+                    <input type="text" name="courseName"
+                           value="{{ form_data.get('courseName', '') }}">
+                </label>
+
+                <label>
+                    Exam type
+                    <select name="examType">
+                        {% for exam_type in exam_types %}
+                        <option value="{{ exam_type }}" {% if form_data.get("examType", "General") == exam_type %}selected{% endif %}>
+                            {{ exam_type }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label>
+                    Can split across rooms?
+                    <select name="canSplitAcrossRooms">
+                        <option value="true" {% if form_data.get("canSplitAcrossRooms") == "true" %}selected{% endif %}>true</option>
+                        <option value="false" {% if form_data.get("canSplitAcrossRooms", "false") == "false" %}selected{% endif %}>false</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit">Add Request</button>
+            <a href="{{ url_for('requests') }}">View Requests</a>
+        </div>
+    </form>
+</section>
+{% endblock %}
