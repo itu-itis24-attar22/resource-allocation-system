@@ -1,4 +1,6 @@
 #include "RequestFactory.h"
+#include <algorithm>
+#include <cctype>
 #include <sstream>
 #include "Student.h"
 #include "OneTimeRequest.h"
@@ -38,6 +40,65 @@ namespace {
         }
     }
 
+    std::string trim(const std::string& text) {
+        const auto first = std::find_if_not(text.begin(), text.end(), [](unsigned char ch) {
+            return std::isspace(ch);
+        });
+
+        const auto last = std::find_if_not(text.rbegin(), text.rend(), [](unsigned char ch) {
+            return std::isspace(ch);
+        }).base();
+
+        if (first >= last) {
+            return "";
+        }
+
+        return std::string(first, last);
+    }
+
+    bool tryParseTimeOfDay(const std::string& text, int& minutesFromMidnight) {
+        const std::string trimmed = trim(text);
+        const size_t colonPosition = trimmed.find(':');
+
+        if (colonPosition == std::string::npos) {
+            int hour = 0;
+            if (!tryParseInt(trimmed, hour)) {
+                return false;
+            }
+
+            if (hour < 0 || hour > 24) {
+                return false;
+            }
+
+            minutesFromMidnight = hour * 60;
+            return true;
+        }
+
+        if (trimmed.find(':', colonPosition + 1) != std::string::npos) {
+            return false;
+        }
+
+        const std::string hourText = trimmed.substr(0, colonPosition);
+        const std::string minuteText = trimmed.substr(colonPosition + 1);
+        int hour = 0;
+        int minute = 0;
+
+        if (!tryParseInt(hourText, hour) || !tryParseInt(minuteText, minute)) {
+            return false;
+        }
+
+        if (hour < 0 || hour > 24 || minute < 0 || minute > 59) {
+            return false;
+        }
+
+        if (hour == 24 && minute != 0) {
+            return false;
+        }
+
+        minutesFromMidnight = hour * 60 + minute;
+        return true;
+    }
+
     bool tryParseSingleTimeSlot(const std::string& text,
                                 TimeSlot& slot,
                                 std::string& errorReason) {
@@ -45,26 +106,31 @@ namespace {
         std::string token;
 
         int day = 0;
-        int startHour = 0;
-        int endHour = 0;
+        int startMinutes = 0;
+        int endMinutes = 0;
 
-        if (!std::getline(ss, token, '-') || !tryParseInt(token, day)) {
+        if (!std::getline(ss, token, '-') || !tryParseInt(trim(token), day)) {
             errorReason = "Malformed input";
             return false;
         }
 
-        if (!std::getline(ss, token, '-') || !tryParseInt(token, startHour)) {
+        if (!std::getline(ss, token, '-') || !tryParseTimeOfDay(token, startMinutes)) {
             errorReason = "Malformed input";
             return false;
         }
 
-        if (!std::getline(ss, token, '-') || !tryParseInt(token, endHour)) {
+        if (!std::getline(ss, token, '-') || !tryParseTimeOfDay(token, endMinutes)) {
+            errorReason = "Malformed input";
+            return false;
+        }
+
+        if (std::getline(ss, token, '-')) {
             errorReason = "Malformed input";
             return false;
         }
 
         try {
-            slot = TimeSlot(day, startHour, endHour);
+            slot = TimeSlot::fromMinutes(day, startMinutes, endMinutes);
             return true;
         } catch (...) {
             errorReason = "Invalid time slot";
