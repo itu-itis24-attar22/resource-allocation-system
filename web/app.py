@@ -208,24 +208,70 @@ def parse_int_field(form_data, field_name, label, errors):
         return None
 
 
+def parse_clock_time(form_data, time_field, hour_field, label, errors):
+    raw_value = form_data.get(time_field, "").strip()
+    if not raw_value:
+        raw_value = form_data.get(hour_field, "").strip()
+
+    if not raw_value:
+        errors.append(f"{label} is required.")
+        return None, ""
+
+    if ":" in raw_value:
+        parts = raw_value.split(":")
+        if len(parts) != 2:
+            errors.append(f"{label} must use HH:MM format.")
+            return None, raw_value
+
+        try:
+            hour = int(parts[0])
+            minute = int(parts[1])
+        except ValueError:
+            errors.append(f"{label} must use numeric HH:MM values.")
+            return None, raw_value
+
+        if hour < 0 or hour > 24 or minute < 0 or minute > 59:
+            errors.append(f"{label} must be between 00:00 and 24:00.")
+            return None, raw_value
+
+        if hour == 24 and minute != 0:
+            errors.append(f"{label} cannot be later than 24:00.")
+            return None, raw_value
+
+        return hour * 60 + minute, f"{hour:02d}:{minute:02d}"
+
+    try:
+        hour = int(raw_value)
+    except ValueError:
+        errors.append(f"{label} must be an hour or HH:MM value.")
+        return None, raw_value
+
+    if hour < 0 or hour > 24:
+        errors.append(f"{label} hour must be between 0 and 24.")
+        return None, raw_value
+
+    return hour * 60, f"{hour:02d}:00"
+
+
 def parse_time_fields(form_data, errors):
     day = parse_int_field(form_data, "day", "Day", errors)
-    start_hour = parse_int_field(form_data, "startHour", "Start hour", errors)
-    end_hour = parse_int_field(form_data, "endHour", "End hour", errors)
+    start_minutes, start_time = parse_clock_time(
+        form_data, "startTime", "startHour", "Start time", errors
+    )
+    end_minutes, end_time = parse_clock_time(
+        form_data, "endTime", "endHour", "End time", errors
+    )
 
     if day is not None and not 1 <= day <= 7:
         errors.append("Day must be between 1 and 7.")
 
-    if start_hour is not None and not 0 <= start_hour <= 23:
-        errors.append("Start hour must be between 0 and 23.")
+    if start_minutes is not None and start_minutes >= 24 * 60:
+        errors.append("Start time must be earlier than 24:00.")
 
-    if end_hour is not None and not 1 <= end_hour <= 24:
-        errors.append("End hour must be between 1 and 24.")
+    if start_minutes is not None and end_minutes is not None and start_minutes >= end_minutes:
+        errors.append("Start time must be earlier than end time.")
 
-    if start_hour is not None and end_hour is not None and start_hour >= end_hour:
-        errors.append("Start hour must be earlier than end hour.")
-
-    return day, start_hour, end_hour
+    return day, start_time, end_time
 
 
 def validate_exam_form(form_data, users, spaces):
@@ -238,7 +284,7 @@ def validate_exam_form(form_data, users, spaces):
     participant_count = parse_positive_int(
         form_data, "participantCount", "Participant count", errors
     )
-    day, start_hour, end_hour = parse_time_fields(form_data, errors)
+    day, start_time, end_time = parse_time_fields(form_data, errors)
     title = form_data.get("title", "").strip()
     course_code = form_data.get("courseCode", "").strip()
     course_name = form_data.get("courseName", "").strip()
@@ -281,7 +327,7 @@ def validate_exam_form(form_data, users, spaces):
         "requiredBuilding": normalize_optional_constraint(
             form_data.get("requiredBuilding", "")
         ),
-        "timeData": f"{day}-{start_hour}-{end_hour}",
+        "timeData": f"{day}-{start_time}-{end_time}",
         "title": title,
         "purpose": "Exam",
         "courseCode": course_code,
@@ -303,7 +349,7 @@ def validate_one_time_form(form_data, users, spaces):
     participant_count = parse_positive_int(
         form_data, "participantCount", "Participant count", errors
     )
-    day, start_hour, end_hour = parse_time_fields(form_data, errors)
+    day, start_time, end_time = parse_time_fields(form_data, errors)
     title = form_data.get("title", "").strip()
     purpose = form_data.get("purpose", "").strip()
 
@@ -336,7 +382,7 @@ def validate_one_time_form(form_data, users, spaces):
         "requiredBuilding": normalize_optional_constraint(
             form_data.get("requiredBuilding", "")
         ),
-        "timeData": f"{day}-{start_hour}-{end_hour}",
+        "timeData": f"{day}-{start_time}-{end_time}",
         "title": title,
         "purpose": purpose,
         "courseCode": "",
@@ -379,9 +425,9 @@ def validate_request_form(form_data, users, spaces):
         errors.append("Purpose is required.")
 
     if request_type in {"OneTime", "Exam"}:
-        day, start_hour, end_hour = parse_time_fields(form_data, errors)
-        if day is not None and start_hour is not None and end_hour is not None:
-            time_data = f"{day}-{start_hour}-{end_hour}"
+        day, start_time, end_time = parse_time_fields(form_data, errors)
+        if day is not None and start_time and end_time:
+            time_data = f"{day}-{start_time}-{end_time}"
     elif request_type == "Recurring":
         time_data = form_data.get("timeData", "").strip()
         if not time_data:
@@ -494,6 +540,15 @@ def get_room_capacity(space):
     return safe_int(space.get("capacity"))
 
 
+def format_time_display(value):
+    text = display_value(value)
+    if text == "N/A":
+        return text
+    if ":" in text:
+        return text
+    return f"{text}:00"
+
+
 def build_assigned_room(allocation, spaces_by_id):
     space_id = (allocation.get("spaceId") or "").strip()
     space = spaces_by_id.get(space_id, {})
@@ -509,8 +564,8 @@ def build_assigned_room(allocation, spaces_by_id):
         "assigned": safe_int(allocation.get("assignedParticipants")) or 0,
         "time": (
             f"Day {display_value(allocation.get('day'))}, "
-            f"{display_value(allocation.get('startHour'))}:00-"
-            f"{display_value(allocation.get('endHour'))}:00"
+            f"{format_time_display(allocation.get('startHour'))}-"
+            f"{format_time_display(allocation.get('endHour'))}"
         ),
     }
 
