@@ -46,8 +46,8 @@ void AllocationWriter::writeAllocations(const std::string& filename,
              << escapeCsv(allocation.getSpace()->getType()) << ","
              << escapeCsv(allocation.getSpace()->getBuilding()) << ","
              << allocation.getTimeSlot().getDay() << ","
-             << allocation.getTimeSlot().getStartHour() << ","
-             << allocation.getTimeSlot().getEndHour() << ","
+             << allocation.getTimeSlot().getStartTimeString() << ","
+             << allocation.getTimeSlot().getEndTimeString() << ","
              << allocation.getAssignedParticipants() << "\n";
     }
 

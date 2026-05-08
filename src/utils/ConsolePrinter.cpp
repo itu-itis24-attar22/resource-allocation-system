@@ -52,8 +52,8 @@ void printOneTimeResult(
     std::cout << "Participants: " << request.getParticipantCount() << "\n";
     std::cout << "Requested time: "
               << dayToString(request.getRequestedTimeSlot().getDay()) << ", "
-              << request.getRequestedTimeSlot().getStartHour() << ":00 - "
-              << request.getRequestedTimeSlot().getEndHour() << ":00\n";
+              << request.getRequestedTimeSlot().getStartTimeString() << " - "
+              << request.getRequestedTimeSlot().getEndTimeString() << "\n";
 
     if (result) {
         std::cout << "Allocation created.\n";
@@ -95,8 +95,8 @@ void printRecurringResult(
     for (size_t i = 0; i < slots.size(); i++) {
         std::cout << "  Occurrence " << i + 1 << ": "
                   << dayToString(slots[i].getDay()) << ", "
-                  << slots[i].getStartHour() << ":00 - "
-                  << slots[i].getEndHour() << ":00\n";
+                  << slots[i].getStartTimeString() << " - "
+                  << slots[i].getEndTimeString() << "\n";
     }
 
     if (result) {
@@ -139,8 +139,8 @@ void printExamResult(
     std::cout << "Participants: " << request.getParticipantCount() << "\n";
     std::cout << "Exam time: "
               << dayToString(request.getExamTimeSlot().getDay()) << ", "
-              << request.getExamTimeSlot().getStartHour() << ":00 - "
-              << request.getExamTimeSlot().getEndHour() << ":00\n";
+              << request.getExamTimeSlot().getStartTimeString() << " - "
+              << request.getExamTimeSlot().getEndTimeString() << "\n";
 
     if (result) {
         std::cout << "Allocation created.\n";
