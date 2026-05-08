@@ -85,21 +85,21 @@ requestId,requestType,userId,spaceId,participantCount,requiredFeature,requiredBu
 For `OneTime` rows:
 
 - `requestType` is `OneTime`.
-- `timeData` is written as `day-startHour-endHour`.
+- `timeData` is written as `day-HH:MM-HH:MM`.
 - exam-specific fields are empty.
 - `canSplitAcrossRooms` is `false`.
 
 For `Recurring` rows:
 
 - `requestType` is `Recurring`.
-- `timeData` is entered directly, for example `2-9-10;4-9-10`.
+- `timeData` is entered directly, for example `2-9-10;4-9-10` or `2-09:00-10:30;4-13:15-14:00`.
 - exam-specific fields are empty.
 - `canSplitAcrossRooms` is `false`.
 
 For `Exam` rows:
 
 - `requestType` is `Exam`.
-- `timeData` is written as `day-startHour-endHour`.
+- `timeData` is written as `day-HH:MM-HH:MM`.
 - course code, course name, exam type, and split support are written from the exam fields.
 
 For all new rows:
