@@ -538,11 +538,15 @@ def build_allocation_summary():
             result_row.get("requestType") or request_row.get("requestType"),
             "Unknown",
         )
+        status = display_value(result_row.get("status"), "Pending")
 
-        assigned_rooms = [
-            build_assigned_room(allocation, spaces_by_id)
-            for allocation in allocations_by_request.get(request_id, [])
-        ]
+        assigned_rooms = []
+        if status.lower() != "rejected":
+            assigned_rooms = [
+                build_assigned_room(allocation, spaces_by_id)
+                for allocation in allocations_by_request.get(request_id, [])
+            ]
+
         total_assigned = sum(room["assigned"] for room in assigned_rooms)
         capacities = [room["capacity"] for room in assigned_rooms]
         total_capacity = None
@@ -553,8 +557,6 @@ def build_allocation_summary():
         waste = None
         if total_capacity is not None and participant_count is not None:
             waste = total_capacity - participant_count
-
-        status = display_value(result_row.get("status"), "Pending")
 
         summaries.append(
             {

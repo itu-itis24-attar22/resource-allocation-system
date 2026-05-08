@@ -1,9 +1,7 @@
 spaceId,type,name,capacity,hasProjector,hasWhiteboard,hasComputers,isAvailable,building
-101,Classroom,B201,40,1,1,0,1,Engineering
-102,Classroom,B202,35,1,1,0,1,Engineering
-103,Classroom,B203,20,1,1,0,1,Engineering
-201,Laboratory,L101,25,0,1,1,0,LabBuilding
-202,Laboratory,L102,30,0,1,1,1,LabBuilding
-301,MeetingRoom,M301,12,1,1,0,1,AdminBuilding
-302,MeetingRoom,M302,16,1,1,0,1,AdminBuilding
-303,MeetingRoom,M302,16,1,1,0,1,AdminBuilding
+101,Classroom,B201,40,0,1,0,1,Engineering
+102,Classroom,B202,35,0,1,0,1,Engineering
+103,Classroom,B203,20,0,1,0,1,Engineering
+201,Laboratory,L101,25,0,0,1,1,LabBuilding
+301,MeetingRoom,M301,10,1,0,0,1,AdminBuilding
+104,Classroom,B204,10,0,1,0,1,Engineering
