@@ -45,6 +45,16 @@ FEATURE_OPTIONS = ["None", "Projector", "Whiteboard", "Computers"]
 PURPOSE_OPTIONS = ["Meeting", "Lecture", "Lab", "Exam", "General", "Other"]
 REQUEST_TYPE_OPTIONS = ["OneTime", "Recurring", "Exam"]
 
+DAY_NAMES = {
+    1: "Monday",
+    2: "Tuesday",
+    3: "Wednesday",
+    4: "Thursday",
+    5: "Friday",
+    6: "Saturday",
+    7: "Sunday",
+}
+
 
 def read_config_strategy():
     config_path = DATA_DIR / "config.txt"
@@ -173,6 +183,100 @@ def display_value(value, fallback="N/A"):
     if not stripped or stripped == "None":
         return fallback
     return stripped
+
+
+def format_day_name(value):
+    try:
+        day = int((value or "").strip())
+    except ValueError:
+        return display_value(value)
+
+    return DAY_NAMES.get(day, display_value(value))
+
+
+def format_time_part(value):
+    text = (value or "").strip()
+    if not text:
+        return "N/A"
+
+    if ":" not in text:
+        try:
+            hour = int(text)
+        except ValueError:
+            return text
+
+        if 0 <= hour <= 24:
+            return f"{hour:02d}:00"
+        return text
+
+    parts = text.split(":")
+    if len(parts) != 2:
+        return text
+
+    try:
+        hour = int(parts[0])
+        minute = int(parts[1])
+    except ValueError:
+        return text
+
+    if hour < 0 or hour > 24 or minute < 0 or minute > 59:
+        return text
+
+    if hour == 24 and minute != 0:
+        return text
+
+    return f"{hour:02d}:{minute:02d}"
+
+
+def format_time_segment(segment):
+    parts = [part.strip() for part in segment.split("-")]
+    if len(parts) != 3:
+        return None
+
+    try:
+        day = int(parts[0])
+    except ValueError:
+        return None
+
+    day_name = DAY_NAMES.get(day)
+    if not day_name:
+        return None
+
+    start_time = format_time_part(parts[1])
+    end_time = format_time_part(parts[2])
+
+    if start_time == "N/A" or end_time == "N/A":
+        return None
+
+    return f"{day_name} {start_time}\u2013{end_time}"
+
+
+def format_time_data(time_data):
+    raw_value = (time_data or "").strip()
+    if not raw_value:
+        return "N/A"
+
+    formatted_segments = []
+
+    for segment in raw_value.split(";"):
+        stripped_segment = segment.strip()
+        if not stripped_segment:
+            return raw_value
+
+        formatted_segment = format_time_segment(stripped_segment)
+        if formatted_segment is None:
+            return raw_value
+
+        formatted_segments.append(formatted_segment)
+
+    return "; ".join(formatted_segments)
+
+
+def format_slot_display(day, start_time, end_time):
+    day_name = format_day_name(day)
+    start_display = format_time_part(start_time)
+    end_display = format_time_part(end_time)
+    return f"{day_name} {start_display}\u2013{end_display}"
 
 
 def safe_int(value):
@@ -541,12 +645,7 @@ def get_room_capacity(space):
 
 
 def format_time_display(value):
-    text = display_value(value)
-    if text == "N/A":
-        return text
-    if ":" in text:
-        return text
-    return f"{text}:00"
+    return format_time_part(value)
 
 
 def build_assigned_room(allocation, spaces_by_id):
@@ -562,10 +661,10 @@ def build_assigned_room(allocation, spaces_by_id):
         "capacity": capacity,
         "capacity_display": capacity if capacity is not None else "N/A",
         "assigned": safe_int(allocation.get("assignedParticipants")) or 0,
-        "time": (
-            f"Day {display_value(allocation.get('day'))}, "
-            f"{format_time_display(allocation.get('startHour'))}-"
-            f"{format_time_display(allocation.get('endHour'))}"
+        "time": format_slot_display(
+            allocation.get("day"),
+            allocation.get("startHour"),
+            allocation.get("endHour"),
         ),
     }
 
@@ -643,7 +742,7 @@ def build_allocation_summary():
                     or result_row.get("canSplitAcrossRooms"),
                     "false",
                 ),
-                "time_data": display_value(
+                "time_data": format_time_data(
                     request_row.get("timeData") or result_row.get("timeInfo")
                 ),
                 "user_id": display_value(request_row.get("userId")),
@@ -763,8 +862,41 @@ def run_backend_allocation():
     }
 
 
+def format_table_for_display(filename, table):
+    display_table = {
+        "exists": table["exists"],
+        "headers": list(table["headers"]),
+        "rows": [],
+        "message": table["message"],
+    }
+
+    for row in table["rows"]:
+        display_row = dict(row)
+
+        if filename == "requests.csv" and "timeData" in display_row:
+            display_row["timeData"] = format_time_data(display_row.get("timeData"))
+
+        if filename == "request_results.csv":
+            if "timeData" in display_row:
+                display_row["timeData"] = format_time_data(display_row.get("timeData"))
+            if "timeInfo" in display_row:
+                display_row["timeInfo"] = format_time_data(display_row.get("timeInfo"))
+
+        if filename == "allocations.csv":
+            if "day" in display_row:
+                display_row["day"] = format_day_name(display_row.get("day"))
+            if "startHour" in display_row:
+                display_row["startHour"] = format_time_part(display_row.get("startHour"))
+            if "endHour" in display_row:
+                display_row["endHour"] = format_time_part(display_row.get("endHour"))
+
+        display_table["rows"].append(display_row)
+
+    return display_table
+
+
 def render_csv_page(template_name, title, filename, empty_message):
-    table = read_csv_table(filename)
+    table = format_table_for_display(filename, read_csv_table(filename))
     return render_template(
         template_name,
         title=title,
@@ -859,11 +991,15 @@ def add_request():
 @app.route("/request-added/<request_id>")
 def request_added(request_id):
     row = get_request_row(request_id)
+    display_row = dict(row) if row else None
+
+    if display_row and "timeData" in display_row:
+        display_row["timeData"] = format_time_data(display_row.get("timeData"))
 
     return render_template(
         "request_added.html",
         request_id=request_id,
-        request_row=row,
+        request_row=display_row,
     )
 
 
