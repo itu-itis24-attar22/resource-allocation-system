@@ -48,6 +48,19 @@ http://127.0.0.1:5000
 
 Click `Run Allocation` on the home page to run the compiled C++ backend executable. The web app uses a fixed executable lookup, runs it from the project root, and then displays the updated `allocations.csv` and `request_results.csv` files.
 
+## Recommended Demo Workflow
+
+1. Compile the C++ backend.
+2. Run the Flask dashboard.
+3. Open the dashboard in the browser.
+4. Select `multi_room_exam_best_fit`.
+5. Add or review requests.
+6. Click `Run Allocation`.
+7. Open `Allocation Summary`.
+8. Compare with `multi_room_exam_greedy` if needed.
+
+`Allocation Summary` is the best page for demonstrating split exam assignments because it groups each request with its assigned rooms.
+
 ## Select A Strategy
 
 On the dashboard home page:
@@ -63,6 +76,13 @@ allocation_strategy=<selected_strategy>
 ```
 
 The Flask app does not implement strategy logic. It only updates the config file. The C++ backend reads `config.txt` and uses `AllocationStrategyFactory` when the allocation executable runs.
+
+Supported strategies:
+
+- `greedy`: processes requests in loaded order.
+- `priority`: processes requests by request priority.
+- `multi_room_exam_greedy`: splits exams across available classrooms in greedy order.
+- `multi_room_exam_best_fit`: splits exams using a best-fit room combination to reduce unused capacity.
 
 ## Add A Request
 
@@ -102,12 +122,34 @@ For `Exam` rows:
 - `timeData` is written as `day-HH:MM-HH:MM`.
 - course code, course name, exam type, and split support are written from the exam fields.
 
+Day numbers use this mapping:
+
+- `1` = Monday
+- `2` = Tuesday
+- `3` = Wednesday
+- `4` = Thursday
+- `5` = Friday
+- `6` = Saturday
+- `7` = Sunday
+
+For example, `5-15:00-17:00` means Friday 15:00-17:00.
+
+Supported time formats include:
+
+- `3-10-12`
+- `3-10:30-12:00`
+- `2-09:00-10:30;4-13:15-14:00`
+
+The web UI displays these in a more readable form when available.
+
 For all new rows:
 
 - blank feature or building constraints are written as `None`.
 - `requestId` is generated as the current maximum numeric request ID plus one.
 
 The form only performs basic input validation, such as valid user ID, valid space ID, positive participant count, title, purpose, and the required time fields. Backend validation, request construction, permissions, rule checking, and allocation still happen in the C++ program.
+
+Adding a request only appends it to `data/requests.csv`. It does not immediately approve or reject the request. Approval, rejection, allocations, and rejection reasons appear only after `Run Allocation` is clicked.
 
 After adding a request, the dashboard shows a confirmation page. The request is saved immediately, but it remains pending until allocation is run. From the confirmation page, the user can:
 
@@ -116,6 +158,15 @@ After adding a request, the dashboard shows a confirmation page. The request is 
 - run allocation immediately.
 
 If `Run Allocation Now` is clicked, Flask runs the compiled C++ backend and redirects to `Allocation Summary` with the newly added request highlighted.
+
+## Generated Files
+
+After allocation runs, the backend generates or updates:
+
+- `data/allocations.csv`
+- `data/request_results.csv`
+
+If these files are missing, the dashboard shows a friendly message instead of crashing.
 
 ## View Allocation Summary
 
