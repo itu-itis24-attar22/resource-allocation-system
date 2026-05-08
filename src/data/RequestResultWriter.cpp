@@ -70,8 +70,8 @@ namespace {
         if (const OneTimeRequest* oneTime = dynamic_cast<const OneTimeRequest*>(request)) {
             TimeSlot slot = oneTime->getRequestedTimeSlot();
             return dayToString(slot.getDay()) + " " +
-                   std::to_string(slot.getStartHour()) + ":00-" +
-                   std::to_string(slot.getEndHour()) + ":00";
+                   slot.getStartTimeString() + "-" +
+                   slot.getEndTimeString();
         }
 
         if (const RecurringRequest* recurring = dynamic_cast<const RecurringRequest*>(request)) {
@@ -80,8 +80,8 @@ namespace {
 
             for (size_t i = 0; i < slots.size(); i++) {
                 result += dayToString(slots[i].getDay()) + " " +
-                          std::to_string(slots[i].getStartHour()) + ":00-" +
-                          std::to_string(slots[i].getEndHour()) + ":00";
+                          slots[i].getStartTimeString() + "-" +
+                          slots[i].getEndTimeString();
                 if (i + 1 < slots.size()) {
                     result += "; ";
                 }
@@ -92,8 +92,8 @@ namespace {
         if (const ExamRequest* exam = dynamic_cast<const ExamRequest*>(request)) {
             TimeSlot slot = exam->getExamTimeSlot();
             return dayToString(slot.getDay()) + " " +
-                   std::to_string(slot.getStartHour()) + ":00-" +
-                   std::to_string(slot.getEndHour()) + ":00";
+                   slot.getStartTimeString() + "-" +
+                   slot.getEndTimeString();
         }
 
         if (const InvalidRequest* invalid = dynamic_cast<const InvalidRequest*>(request)) {

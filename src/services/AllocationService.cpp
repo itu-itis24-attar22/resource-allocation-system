@@ -64,8 +64,8 @@ void AllocationService::printAllocations() const {
         std::cout << "Assigned participants: " << allocation.getAssignedParticipants() << "\n";
         std::cout << "Time: "
                   << dayToString(allocation.getTimeSlot().getDay()) << ", "
-                  << allocation.getTimeSlot().getStartHour() << ":00 - "
-                  << allocation.getTimeSlot().getEndHour() << ":00\n";
+                  << allocation.getTimeSlot().getStartTimeString() << " - "
+                  << allocation.getTimeSlot().getEndTimeString() << "\n";
         std::cout << "-----------------------------------\n";
     }
 }
