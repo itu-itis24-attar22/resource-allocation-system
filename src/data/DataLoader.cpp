@@ -2,12 +2,26 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <unordered_map>
 #include "../models/Classroom.h"
 #include "../models/Laboratory.h"
 #include "../models/MeetingRoom.h"
 #include "../models/UserFactory.h"
 
 namespace {
+    using HeaderIndex = std::unordered_map<std::string, size_t>;
+
+    std::string removeUtf8Bom(const std::string& text) {
+        if (text.size() >= 3 &&
+            static_cast<unsigned char>(text[0]) == 0xEF &&
+            static_cast<unsigned char>(text[1]) == 0xBB &&
+            static_cast<unsigned char>(text[2]) == 0xBF) {
+            return text.substr(3);
+        }
+
+        return text;
+    }
+
     std::string trim(const std::string& text) {
         const std::string whitespace = " \t\r\n";
         const size_t first = text.find_first_not_of(whitespace);
@@ -16,7 +30,7 @@ namespace {
         }
 
         const size_t last = text.find_last_not_of(whitespace);
-        return text.substr(first, last - first + 1);
+        return removeUtf8Bom(text.substr(first, last - first + 1));
     }
 
     std::vector<std::string> splitCsvLine(const std::string& line) {
@@ -41,6 +55,29 @@ namespace {
         return columns[index];
     }
 
+    HeaderIndex buildHeaderIndex(const std::vector<std::string>& headers) {
+        HeaderIndex index;
+
+        for (size_t i = 0; i < headers.size(); ++i) {
+            index[headers[i]] = i;
+        }
+
+        return index;
+    }
+
+    std::string optionalColumnByName(const std::vector<std::string>& columns,
+                                     const HeaderIndex& headerIndex,
+                                     const std::string& columnName,
+                                     size_t fallbackIndex,
+                                     const std::string& defaultValue = "") {
+        const auto it = headerIndex.find(columnName);
+        if (it != headerIndex.end()) {
+            return optionalColumn(columns, it->second, defaultValue);
+        }
+
+        return optionalColumn(columns, fallbackIndex, defaultValue);
+    }
+
     std::vector<std::string> splitRoleNames(const std::string& text) {
         std::vector<std::string> roles;
         std::stringstream ss(text);
@@ -60,7 +97,7 @@ namespace {
         std::stringstream ss(line);
         std::string token;
         std::getline(ss, token, ',');
-        return token;
+        return trim(token);
     }
 
     bool isUsersHeader(const std::string& line) {
@@ -106,10 +143,14 @@ std::vector<User*> DataLoader::loadUsers(const std::string& filename) {
 
     std::string line;
     int lineNumber = 0;
+    HeaderIndex userHeaderIndex;
     while (std::getline(file, line)) {
         lineNumber++;
         if (line.empty()) continue;
-        if (lineNumber == 1 && isUsersHeader(line)) continue;
+        if (lineNumber == 1 && isUsersHeader(line)) {
+            userHeaderIndex = buildHeaderIndex(splitCsvLine(line));
+            continue;
+        }
 
         const std::vector<std::string> columns = splitCsvLine(line);
 
@@ -129,18 +170,23 @@ std::vector<User*> DataLoader::loadUsers(const std::string& filename) {
         }
 
         UserProfileData profile;
-        profile.email = optionalColumn(columns, 3);
-        profile.status = optionalColumn(columns, 4, "active");
-        profile.studentNo = optionalColumn(columns, 5);
-        profile.program = optionalColumn(columns, 6);
-        tryParseInt(optionalColumn(columns, 7, "0"), profile.yearLevel);
-        profile.title = optionalColumn(columns, 8);
-        profile.officeRoom = optionalColumn(columns, 9);
-        profile.assistantType = optionalColumn(columns, 10);
-        profile.jobTitle = optionalColumn(columns, 11);
-        profile.adminLevel = optionalColumn(columns, 12);
-        profile.primaryUnitName = optionalColumn(columns, 13);
-        profile.assignedRoleNames = splitRoleNames(optionalColumn(columns, 14));
+        profile.email = optionalColumnByName(columns, userHeaderIndex, "email", 3);
+        profile.status = optionalColumnByName(columns, userHeaderIndex, "status", 4, "active");
+        profile.primaryUnitName = optionalColumnByName(columns, userHeaderIndex, "primaryUnit", 13);
+        profile.assignedRoleNames = splitRoleNames(
+            optionalColumnByName(columns, userHeaderIndex, "assignedRoles", 14)
+        );
+        profile.studentNo = optionalColumnByName(columns, userHeaderIndex, "studentNo", 5);
+        profile.program = optionalColumnByName(columns, userHeaderIndex, "program", 6);
+        tryParseInt(
+            optionalColumnByName(columns, userHeaderIndex, "yearLevel", 7, "0"),
+            profile.yearLevel
+        );
+        profile.title = optionalColumnByName(columns, userHeaderIndex, "title", 8);
+        profile.officeRoom = optionalColumnByName(columns, userHeaderIndex, "officeRoom", 9);
+        profile.assistantType = optionalColumnByName(columns, userHeaderIndex, "assistantType", 10);
+        profile.jobTitle = optionalColumnByName(columns, userHeaderIndex, "jobTitle", 11);
+        profile.adminLevel = optionalColumnByName(columns, userHeaderIndex, "adminLevel", 12);
 
         User* user = UserFactory::createUser(id, name, roleString, profile);
         if (!user) {
