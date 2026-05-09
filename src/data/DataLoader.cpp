@@ -8,6 +8,54 @@
 #include "../models/UserFactory.h"
 
 namespace {
+    std::string trim(const std::string& text) {
+        const std::string whitespace = " \t\r\n";
+        const size_t first = text.find_first_not_of(whitespace);
+        if (first == std::string::npos) {
+            return "";
+        }
+
+        const size_t last = text.find_last_not_of(whitespace);
+        return text.substr(first, last - first + 1);
+    }
+
+    std::vector<std::string> splitCsvLine(const std::string& line) {
+        std::vector<std::string> tokens;
+        std::stringstream ss(line);
+        std::string token;
+
+        while (std::getline(ss, token, ',')) {
+            tokens.push_back(trim(token));
+        }
+
+        return tokens;
+    }
+
+    std::string optionalColumn(const std::vector<std::string>& columns,
+                               size_t index,
+                               const std::string& defaultValue = "") {
+        if (index >= columns.size() || columns[index].empty()) {
+            return defaultValue;
+        }
+
+        return columns[index];
+    }
+
+    std::vector<std::string> splitRoleNames(const std::string& text) {
+        std::vector<std::string> roles;
+        std::stringstream ss(text);
+        std::string role;
+
+        while (std::getline(ss, role, '|')) {
+            role = trim(role);
+            if (!role.empty()) {
+                roles.push_back(role);
+            }
+        }
+
+        return roles;
+    }
+
     std::string firstCsvToken(const std::string& line) {
         std::stringstream ss(line);
         std::string token;
@@ -63,25 +111,38 @@ std::vector<User*> DataLoader::loadUsers(const std::string& filename) {
         if (line.empty()) continue;
         if (lineNumber == 1 && isUsersHeader(line)) continue;
 
-        std::stringstream ss(line);
-        std::string idToken;
-        std::string name;
-        std::string roleString;
-        int id = 0;
+        const std::vector<std::string> columns = splitCsvLine(line);
 
-        if (!std::getline(ss, idToken, ',') ||
-            !std::getline(ss, name, ',') ||
-            !std::getline(ss, roleString, ',')) {
+        if (columns.size() < 3) {
             std::cerr << "Warning: Skipping malformed user row " << lineNumber << ".\n";
             continue;
         }
+
+        std::string idToken = columns[0];
+        std::string name = columns[1];
+        std::string roleString = columns[2];
+        int id = 0;
 
         if (!tryParseInt(idToken, id)) {
             std::cerr << "Warning: Skipping malformed user row " << lineNumber << ".\n";
             continue;
         }
 
-        User* user = UserFactory::createUser(id, name, roleString);
+        UserProfileData profile;
+        profile.email = optionalColumn(columns, 3);
+        profile.status = optionalColumn(columns, 4, "active");
+        profile.studentNo = optionalColumn(columns, 5);
+        profile.program = optionalColumn(columns, 6);
+        tryParseInt(optionalColumn(columns, 7, "0"), profile.yearLevel);
+        profile.title = optionalColumn(columns, 8);
+        profile.officeRoom = optionalColumn(columns, 9);
+        profile.assistantType = optionalColumn(columns, 10);
+        profile.jobTitle = optionalColumn(columns, 11);
+        profile.adminLevel = optionalColumn(columns, 12);
+        profile.primaryUnitName = optionalColumn(columns, 13);
+        profile.assignedRoleNames = splitRoleNames(optionalColumn(columns, 14));
+
+        User* user = UserFactory::createUser(id, name, roleString, profile);
         if (!user) {
             std::cerr << "Warning: Skipping malformed user row " << lineNumber << ".\n";
             continue;
