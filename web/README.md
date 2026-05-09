@@ -159,6 +159,16 @@ After adding a request, the dashboard shows a confirmation page. The request is 
 
 If `Run Allocation Now` is clicked, Flask runs the compiled C++ backend and redirects to `Allocation Summary` with the newly added request highlighted.
 
+## User Profiles
+
+`data/users.csv` supports optional extended profile columns:
+
+```text
+userId,name,role,email,status,primaryUnit,assignedRoles,studentNo,program,yearLevel,title,officeRoom,assistantType,jobTitle,adminLevel
+```
+
+The backend remains compatible with the old `userId,name,role` format and still uses the core identity and role values for allocation behavior. The web dashboard displays the optional profile fields on `/users` and supports role filtering for `Student`, `TeachingAssistant`, `Instructor`, `Staff`, and `Administrator`.
+
 ## Generated Files
 
 After allocation runs, the backend generates or updates:
