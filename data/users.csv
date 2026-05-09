@@ -1,9 +1,9 @@
-userId,name,role
-1,Najib,Student
-2,Ali,Instructor
-3,Sara,Staff
-4,Mona,Administrator
-5,Omar,Student
-6,Lina,Instructor
-7,Ahmet,Student
-8,Omar Teaching Assistant,TeachingAssistant
+userId,name,role,email,status,primaryUnit,assignedRoles,studentNo,program,yearLevel,title,officeRoom,assistantType,jobTitle,adminLevel
+1,Najib,Student,najib@student.university.edu,active,Engineering Department,Student,S2024001,Computer Engineering,2,,,,,
+2,Ali,Instructor,ali@university.edu,active,Engineering Department,Instructor,,,,Professor,E-204,,,
+3,Sara,Staff,sara@university.edu,active,Administrative Office,Staff,,,,,,,Facilities Coordinator,
+4,Mona,Administrator,mona@university.edu,active,Administrative Office,Administrator,,,,,,,,Senior
+5,Omar,Student,omar@student.university.edu,active,Engineering Department,Student,S2024002,Software Engineering,1,,,,,
+6,Lina,Instructor,lina@university.edu,active,Engineering Department,Instructor,,,,Associate Professor,E-208,,,
+7,Ahmet,Student,ahmet@student.university.edu,active,Science Faculty,Student,S2024003,Information Systems,3,,,,,
+8,Omar Teaching Assistant,TeachingAssistant,omar.ta@university.edu,active,Engineering Department,TeachingAssistant,,,,,E-112,Graduate TA,,
