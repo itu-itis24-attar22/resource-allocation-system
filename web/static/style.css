@@ -118,18 +118,22 @@ body {
     gap: 0.45rem;
 }
 
-.strategy-form label {
+.strategy-form label,
+.filter-form label {
     color: var(--accent-dark);
     font-weight: 700;
 }
 
-.strategy-controls {
+.strategy-controls,
+.filter-controls {
     display: flex;
     flex-wrap: wrap;
     gap: 0.65rem;
+    align-items: center;
 }
 
-.strategy-controls select {
+.strategy-controls select,
+.filter-controls select {
     min-width: 240px;
     border: 1px solid var(--line);
     border-radius: 999px;
@@ -141,7 +145,8 @@ body {
 }
 
 .run-form button,
-.strategy-form button {
+.strategy-form button,
+.filter-form button {
     appearance: none;
     border: 0;
     border-radius: 999px;
@@ -155,8 +160,20 @@ body {
 }
 
 .run-form button:hover,
-.strategy-form button:hover {
+.strategy-form button:hover,
+.filter-form button:hover {
     background: var(--accent-dark);
+}
+
+.filter-form {
+    display: grid;
+    gap: 0.45rem;
+    margin: 1rem 0 1.2rem;
+}
+
+.filter-controls a {
+    color: var(--accent-dark);
+    font-weight: 700;
 }
 
 .strategy-message {

@@ -44,6 +44,14 @@ EXAM_TYPES = ["Midterm", "Final", "Quiz", "General"]
 FEATURE_OPTIONS = ["None", "Projector", "Whiteboard", "Computers"]
 PURPOSE_OPTIONS = ["Meeting", "Lecture", "Lab", "Exam", "General", "Other"]
 REQUEST_TYPE_OPTIONS = ["OneTime", "Recurring", "Exam"]
+USER_ROLE_OPTIONS = [
+    "All",
+    "Student",
+    "TeachingAssistant",
+    "Instructor",
+    "Staff",
+    "Administrator",
+]
 
 DAY_NAMES = {
     1: "Monday",
@@ -183,6 +191,60 @@ def display_value(value, fallback="N/A"):
     if not stripped or stripped == "None":
         return fallback
     return stripped
+
+
+def build_user_specific_details(user):
+    role = (user.get("role") or "").strip()
+    detail_fields = []
+
+    if role == "Student":
+        detail_fields = [
+            ("Student No", user.get("studentNo")),
+            ("Program", user.get("program")),
+            ("Year", user.get("yearLevel")),
+        ]
+    elif role == "TeachingAssistant":
+        detail_fields = [
+            ("Assistant Type", user.get("assistantType")),
+            ("Office", user.get("officeRoom")),
+        ]
+    elif role == "Instructor":
+        detail_fields = [
+            ("Title", user.get("title")),
+            ("Office", user.get("officeRoom")),
+        ]
+    elif role == "Staff":
+        detail_fields = [
+            ("Job Title", user.get("jobTitle")),
+        ]
+    elif role == "Administrator":
+        detail_fields = [
+            ("Admin Level", user.get("adminLevel")),
+        ]
+
+    details = [
+        f"{label}: {value.strip()}"
+        for label, value in detail_fields
+        if (value or "").strip()
+    ]
+
+    return "; ".join(details) if details else "N/A"
+
+
+def build_user_display_rows(rows):
+    return [
+        {
+            "userId": display_value(row.get("userId")),
+            "name": display_value(row.get("name")),
+            "role": display_value(row.get("role")),
+            "email": display_value(row.get("email")),
+            "status": display_value(row.get("status")),
+            "primaryUnit": display_value(row.get("primaryUnit")),
+            "assignedRoles": display_value(row.get("assignedRoles")),
+            "details": build_user_specific_details(row),
+        }
+        for row in rows
+    ]
 
 
 def format_day_name(value):
@@ -1054,7 +1116,29 @@ def exam_summary():
 
 @app.route("/users")
 def users():
-    return render_csv_page("users.html", "Users", "users.csv", "No users were found.")
+    table = read_csv_table("users.csv")
+    selected_role = request.args.get("role", "All").strip() or "All"
+
+    if selected_role not in USER_ROLE_OPTIONS:
+        selected_role = "All"
+
+    rows = table["rows"]
+    if selected_role != "All":
+        rows = [
+            row for row in rows
+            if (row.get("role") or "").strip() == selected_role
+        ]
+
+    return render_template(
+        "users.html",
+        title="Users",
+        table=table,
+        users=build_user_display_rows(rows),
+        role_options=USER_ROLE_OPTIONS,
+        selected_role=selected_role,
+        empty_message="No users were found.",
+        page_message=get_page_message(),
+    )
 
 
 @app.route("/spaces")

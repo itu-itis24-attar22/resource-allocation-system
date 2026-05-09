@@ -1,1 +1,79 @@
-{% extends "table.html" %}
+{% extends "base.html" %}
+
+{% block title %}Users | Resource Allocation System{% endblock %}
+{% block page_heading %}Users{% endblock %}
+
+{% block content %}
+<section class="table-card">
+    {% if page_message %}
+        <div class="page-message page-message-{{ page_message.status }}">
+            <p>{{ page_message.text }}</p>
+        </div>
+    {% endif %}
+
+    <div class="table-summary">
+        <p>The dashboard displays optional profile fields from <code>users.csv</code>. The backend still uses the core user ID, name, and role for allocation behavior.</p>
+    </div>
+
+    <form class="filter-form" method="get" action="{{ url_for('users') }}">
+        <label for="role">Filter by role</label>
+        <div class="filter-controls">
+            <select id="role" name="role">
+                {% for role in role_options %}
+                <option value="{{ role }}" {% if role == selected_role %}selected{% endif %}>{{ role }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Apply Filter</button>
+            {% if selected_role != "All" %}
+            <a href="{{ url_for('users') }}">Clear</a>
+            {% endif %}
+        </div>
+    </form>
+
+    {% if not table.exists %}
+        <div class="empty-state">
+            <h2>Nothing to show yet</h2>
+            <p>{{ empty_message }}</p>
+        </div>
+    {% elif users|length == 0 %}
+        <div class="empty-state">
+            <h2>No users match this filter</h2>
+            <p>Try selecting another role or clearing the filter.</p>
+        </div>
+    {% else %}
+        <div class="table-summary">
+            <p>{{ users|length }} user(s) shown{% if selected_role != "All" %} for {{ selected_role }}{% endif %}.</p>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Primary Unit</th>
+                        <th>Assigned Roles</th>
+                        <th>Role-Specific Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.userId }}</td>
+                        <td>{{ user.name }}</td>
+                        <td>{{ user.role }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.status }}</td>
+                        <td>{{ user.primaryUnit }}</td>
+                        <td>{{ user.assignedRoles }}</td>
+                        <td>{{ user.details }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
