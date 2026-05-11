@@ -195,6 +195,14 @@ One-time requests show their assigned space when approved. Recurring requests sh
 
 If allocation outputs are missing, the page shows a friendly message asking the user to run allocation first.
 
+## View Schedules
+
+Use the `Schedules` page to view user and space availability in a simple weekly table.
+
+- User schedules read `data/user_busy_slots.csv` and show busy/free time for instructors, teaching assistants, staff, and administrators.
+- Space schedules read `data/allocations.csv` and show allocated/free time for rooms after allocation has been run.
+- This page is visualization only. The C++ backend remains responsible for scheduling rules and allocation behavior.
+
 ## Pages
 
 - `/` shows the selected strategy and quick data counts.
@@ -203,6 +211,7 @@ If allocation outputs are missing, the page shows a friendly message asking the 
 - `/requests` shows `data/requests.csv`.
 - `/add-request` adds a new `OneTime`, `Recurring`, or `Exam` request row to `data/requests.csv`.
 - `/allocation-summary` groups all allocation results by request.
+- `/schedules` shows user busy slots and space allocation schedules.
 - `/add-one-time` redirects to `/add-request?type=OneTime`.
 - `/add-exam` redirects to `/add-request?type=Exam`.
 - `/exam-summary` redirects to `/allocation-summary`.
