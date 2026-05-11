@@ -37,5 +37,9 @@ const IAllocationStrategy* AllocationStrategyFactory::getStrategy(const std::str
         return &multiRoomExamBestFitStrategy;
     }
 
+    if (normalizedName == "shared_room_exam_best_fit") {
+        return &sharedRoomExamBestFitStrategy;
+    }
+
     return &greedyStrategy;
 }

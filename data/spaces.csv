@@ -5,3 +5,4 @@ spaceId,type,name,capacity,hasProjector,hasWhiteboard,hasComputers,isAvailable,b
 201,Laboratory,L101,25,0,0,1,1,LabBuilding
 301,MeetingRoom,M301,10,1,0,0,1,AdminBuilding
 104,Classroom,B204,10,0,1,0,1,Engineering
+105,Classroom,S401,100,0,1,0,1,SharedExamBuilding

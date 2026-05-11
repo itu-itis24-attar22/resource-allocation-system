@@ -379,7 +379,8 @@ std::string DataController::loadAllocationStrategyName(const std::string& config
                 if (normalizedValue == "greedy" ||
                     normalizedValue == "priority" ||
                     normalizedValue == "multi_room_exam_greedy" ||
-                    normalizedValue == "multi_room_exam_best_fit") {
+                    normalizedValue == "multi_room_exam_best_fit" ||
+                    normalizedValue == "shared_room_exam_best_fit") {
                     return normalizedValue;
                 }
 

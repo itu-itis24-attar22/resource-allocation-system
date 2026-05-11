@@ -5,3 +5,5 @@ requestId,requestType,userId,spaceId,participantCount,requiredFeature,requiredBu
 4,Exam,2,101,60,Whiteboard,Engineering,3-10-12,BLG101 Midterm Exam,Exam,BLG101,Introduction to Computer Engineering,Midterm,true
 5,Exam,2,101,120,Whiteboard,Engineering,3-10-12,Large Final Exam,Exam,CSE999,Large Systems Final,Final,true
 6,Exam,4,101,30,Whiteboard,Engineering,3-13-15,Admin Scheduled Quiz,Exam,MAT201,Discrete Mathematics,Quiz,false
+7,Exam,2,105,60,Whiteboard,SharedExamBuilding,5-10-12,Shared Room Exam A,Exam,PHY301,Physics Shared Seating,Midterm,true
+8,Exam,6,105,40,Whiteboard,SharedExamBuilding,5-10-12,Shared Room Exam B,Exam,PHY302,Applied Physics Shared Seating,Midterm,true
