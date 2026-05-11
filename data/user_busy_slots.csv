@@ -1,0 +1,5 @@
+userId,day,startTime,endTime,reason
+2,1,10:00,12:00,Lecture
+2,3,14:00,15:00,Office Hour
+4,2,09:00,11:00,Administrative Meeting
+5,4,13:00,15:00,Lab Supervision
