@@ -48,6 +48,7 @@ The current prototype supports:
   - `PriorityAllocationStrategy`
   - `MultiRoomExamGreedyStrategy`
   - `MultiRoomExamBestFitStrategy`
+  - `SharedRoomExamBestFitStrategy`
 - strategy selection through `AllocationStrategyFactory` and `data/config.txt`
 - `assignedParticipants` stored in each `Allocation`
 - minute-based `TimeSlot` support with backward compatibility for older hour-only data
@@ -101,7 +102,7 @@ The prototype currently uses CSV files in the `data/` folder:
 The selected allocation strategy is configured in `data/config.txt`, for example:
 
 ```text
-allocation_strategy=multi_room_exam_best_fit
+allocation_strategy=shared_room_exam_best_fit
 ```
 
 ## Testing and Robustness Report
@@ -135,6 +136,8 @@ The report covers normal workflow verification, malformed and adversarial input 
 - Iteration 28: `MultiRoomExamGreedyStrategy`
 - Iteration 29: `MultiRoomExamBestFitStrategy`
 - Iteration 30: minute-based `TimeSlot` support
+- Iteration 31: extended user and organization model
+- Iteration 32: `SharedRoomExamBestFitStrategy` for exam-to-exam same-room capacity sharing
 
 ## How to Compile and Run Backend
 
