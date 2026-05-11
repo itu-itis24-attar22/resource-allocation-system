@@ -83,6 +83,7 @@ Supported strategies:
 - `priority`: processes requests by request priority.
 - `multi_room_exam_greedy`: splits exams across available classrooms in greedy order.
 - `multi_room_exam_best_fit`: splits exams using a best-fit room combination to reduce unused capacity.
+- `shared_room_exam_best_fit`: allows overlapping exam requests to share classroom capacity while still blocking normal non-exam bookings.
 
 ## Add A Request
 

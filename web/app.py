@@ -21,6 +21,7 @@ SUPPORTED_STRATEGIES = [
     {"value": "priority", "label": "Priority"},
     {"value": "multi_room_exam_greedy", "label": "Multi-Room Exam Greedy"},
     {"value": "multi_room_exam_best_fit", "label": "Multi-Room Exam Best-Fit"},
+    {"value": "shared_room_exam_best_fit", "label": "Shared-Room Exam Best-Fit"},
 ]
 
 REQUEST_HEADERS = [
