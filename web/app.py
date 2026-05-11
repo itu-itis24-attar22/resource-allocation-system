@@ -54,6 +54,19 @@ USER_ROLE_OPTIONS = [
     "Administrator",
 ]
 
+SCHEDULE_USER_ROLES = {
+    "Instructor",
+    "TeachingAssistant",
+    "Staff",
+    "Administrator",
+}
+
+SCHEDULE_DAYS = [1, 2, 3, 4, 5]
+SCHEDULE_BLOCKS = [
+    (hour * 60, (hour + 1) * 60)
+    for hour in range(9, 17)
+]
+
 DAY_NAMES = {
     1: "Monday",
     2: "Tuesday",
@@ -347,6 +360,50 @@ def safe_int(value):
         return int((value or "").strip())
     except ValueError:
         return None
+
+
+def parse_time_to_minutes(value):
+    text = (value or "").strip()
+    if not text:
+        return None
+
+    if ":" not in text:
+        try:
+            hour = int(text)
+        except ValueError:
+            return None
+
+        if 0 <= hour <= 24:
+            return hour * 60
+        return None
+
+    parts = text.split(":")
+    if len(parts) != 2:
+        return None
+
+    try:
+        hour = int(parts[0])
+        minute = int(parts[1])
+    except ValueError:
+        return None
+
+    if hour < 0 or hour > 24 or minute < 0 or minute > 59:
+        return None
+
+    if hour == 24 and minute != 0:
+        return None
+
+    return hour * 60 + minute
+
+
+def format_minutes(minutes):
+    if minutes is None:
+        return "N/A"
+    return f"{minutes // 60:02d}:{minutes % 60:02d}"
+
+
+def time_ranges_overlap(start_a, end_a, start_b, end_b):
+    return start_a < end_b and start_b < end_a
 
 
 def parse_positive_int(form_data, field_name, label, errors):
@@ -839,6 +896,202 @@ def build_allocation_summary():
     }
 
 
+def build_schedule_resource_options(rows, id_field, label_fields, role_filter=None):
+    options = []
+
+    for row in rows:
+        if role_filter is not None and (row.get("role") or "").strip() not in role_filter:
+            continue
+
+        resource_id = (row.get(id_field) or "").strip()
+        if not resource_id:
+            continue
+
+        labels = [
+            (row.get(field) or "").strip()
+            for field in label_fields
+            if (row.get(field) or "").strip()
+        ]
+        label = " - ".join(labels) if labels else resource_id
+        options.append({"id": resource_id, "label": label, "row": row})
+
+    return options
+
+
+def build_user_schedule_events(user_id, busy_slots):
+    events = []
+
+    for slot in busy_slots:
+        if (slot.get("userId") or "").strip() != user_id:
+            continue
+
+        day = safe_int(slot.get("day"))
+        start_minutes = parse_time_to_minutes(slot.get("startTime"))
+        end_minutes = parse_time_to_minutes(slot.get("endTime"))
+
+        if day not in DAY_NAMES or start_minutes is None or end_minutes is None:
+            continue
+
+        if start_minutes >= end_minutes:
+            continue
+
+        events.append(
+            {
+                "day": day,
+                "start": start_minutes,
+                "end": end_minutes,
+                "time": f"{format_minutes(start_minutes)}-{format_minutes(end_minutes)}",
+                "label": "Busy",
+                "detail": display_value(slot.get("reason"), "Busy"),
+            }
+        )
+
+    return events
+
+
+def build_space_schedule_events(space_id, allocations):
+    events = []
+
+    for allocation in allocations:
+        if (allocation.get("spaceId") or "").strip() != space_id:
+            continue
+
+        day = safe_int(allocation.get("day"))
+        start_minutes = parse_time_to_minutes(allocation.get("startHour"))
+        end_minutes = parse_time_to_minutes(allocation.get("endHour"))
+
+        if day not in DAY_NAMES or start_minutes is None or end_minutes is None:
+            continue
+
+        if start_minutes >= end_minutes:
+            continue
+
+        request_id = display_value(allocation.get("requestId"))
+        assigned = display_value(allocation.get("assignedParticipants"))
+
+        events.append(
+            {
+                "day": day,
+                "start": start_minutes,
+                "end": end_minutes,
+                "time": f"{format_minutes(start_minutes)}-{format_minutes(end_minutes)}",
+                "label": f"Request {request_id}",
+                "detail": f"Assigned participants: {assigned}",
+            }
+        )
+
+    return events
+
+
+def build_weekly_schedule_grid(events, occupied_class):
+    schedule_rows = []
+
+    for block_start, block_end in SCHEDULE_BLOCKS:
+        day_cells = []
+
+        for day in SCHEDULE_DAYS:
+            overlapping_events = [
+                event for event in events
+                if event["day"] == day
+                and time_ranges_overlap(
+                    event["start"],
+                    event["end"],
+                    block_start,
+                    block_end,
+                )
+            ]
+
+            day_cells.append(
+                {
+                    "events": overlapping_events,
+                    "class_name": occupied_class if overlapping_events else "free",
+                    "label": "Free" if not overlapping_events else "",
+                }
+            )
+
+        schedule_rows.append(
+            {
+                "time": f"{format_minutes(block_start)}-{format_minutes(block_end)}",
+                "days": day_cells,
+            }
+        )
+
+    return schedule_rows
+
+
+def build_schedule_context():
+    schedule_type = request.args.get("type", "user").strip().lower()
+    if schedule_type not in {"user", "space"}:
+        schedule_type = "user"
+
+    users_table = read_csv_table("users.csv")
+    spaces_table = read_csv_table("spaces.csv")
+    user_options = build_schedule_resource_options(
+        users_table["rows"],
+        "userId",
+        ["name", "role"],
+        SCHEDULE_USER_ROLES,
+    )
+    space_options = build_schedule_resource_options(
+        spaces_table["rows"],
+        "spaceId",
+        ["name", "type", "building"],
+    )
+
+    selected_id = request.args.get("id", "").strip()
+    selected_resource = None
+    schedule_rows = []
+    event_file_available = True
+    event_message = ""
+
+    if schedule_type == "user":
+        if not selected_id and user_options:
+            selected_id = user_options[0]["id"]
+
+        selected_resource = next(
+            (option["row"] for option in user_options if option["id"] == selected_id),
+            None,
+        )
+        busy_table = read_csv_table("user_busy_slots.csv")
+        event_file_available = busy_table["exists"]
+
+        if not event_file_available:
+            event_message = "No user busy-slot data available."
+
+        events = build_user_schedule_events(selected_id, busy_table["rows"])
+        schedule_rows = build_weekly_schedule_grid(events, "busy")
+    else:
+        if not selected_id and space_options:
+            selected_id = space_options[0]["id"]
+
+        selected_resource = next(
+            (option["row"] for option in space_options if option["id"] == selected_id),
+            None,
+        )
+        allocations_table = read_csv_table("allocations.csv")
+        event_file_available = allocations_table["exists"]
+
+        if not event_file_available:
+            event_message = "No allocation data available yet. Run allocation first."
+
+        events = build_space_schedule_events(selected_id, allocations_table["rows"])
+        schedule_rows = build_weekly_schedule_grid(events, "allocated")
+
+    return {
+        "schedule_type": schedule_type,
+        "user_options": user_options,
+        "space_options": space_options,
+        "selected_id": selected_id,
+        "selected_resource": selected_resource,
+        "day_headers": [DAY_NAMES[day] for day in SCHEDULE_DAYS],
+        "schedule_rows": schedule_rows,
+        "event_file_available": event_file_available,
+        "event_message": event_message,
+        "users_available": users_table["exists"],
+        "spaces_available": spaces_table["exists"],
+    }
+
+
 def count_optional_file(filename):
     table = read_csv_table(filename)
     if not table["exists"]:
@@ -1113,6 +1366,11 @@ def allocation_summary():
 @app.route("/exam-summary")
 def exam_summary():
     return redirect(url_for("allocation_summary"))
+
+
+@app.route("/schedules")
+def schedules():
+    return render_template("schedules.html", **build_schedule_context())
 
 
 @app.route("/users")

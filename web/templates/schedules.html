@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Schedules | Resource Allocation System{% endblock %}
+{% block page_heading %}Schedules{% endblock %}
+
+{% block content %}
+<section class="info-panel">
+    <p class="eyebrow">Availability View</p>
+    <h2>Weekly schedules</h2>
+    <p>
+        This page visualizes existing CSV data only. User schedules read
+        <code>user_busy_slots.csv</code>, while space schedules read
+        <code>allocations.csv</code> after the backend has run.
+    </p>
+
+    <div class="schedule-switch">
+        <a class="{% if schedule_type == 'user' %}active{% endif %}" href="{{ url_for('schedules', type='user') }}">User schedule</a>
+        <a class="{% if schedule_type == 'space' %}active{% endif %}" href="{{ url_for('schedules', type='space') }}">Space schedule</a>
+    </div>
+</section>
+
+<section class="table-card">
+    {% if schedule_type == "user" %}
+        <form class="filter-form" method="get" action="{{ url_for('schedules') }}">
+            <input type="hidden" name="type" value="user">
+            <label for="user-id">Choose user</label>
+            <div class="filter-controls">
+                <select id="user-id" name="id">
+                    {% for option in user_options %}
+                    <option value="{{ option.id }}" {% if option.id == selected_id %}selected{% endif %}>{{ option.label }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit">Show Schedule</button>
+            </div>
+        </form>
+    {% else %}
+        <form class="filter-form" method="get" action="{{ url_for('schedules') }}">
+            <input type="hidden" name="type" value="space">
+            <label for="space-id">Choose space</label>
+            <div class="filter-controls">
+                <select id="space-id" name="id">
+                    {% for option in space_options %}
+                    <option value="{{ option.id }}" {% if option.id == selected_id %}selected{% endif %}>{{ option.label }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit">Show Schedule</button>
+            </div>
+        </form>
+    {% endif %}
+
+    {% if not event_file_available %}
+    <div class="page-message page-message-error">
+        <p>{{ event_message }}</p>
+    </div>
+    {% endif %}
+
+    {% if schedule_type == "user" and not users_available %}
+        <div class="empty-state">
+            <h2>Users file is missing</h2>
+            <p>No user schedule can be displayed because <code>users.csv</code> is not available.</p>
+        </div>
+    {% elif schedule_type == "space" and not spaces_available %}
+        <div class="empty-state">
+            <h2>Spaces file is missing</h2>
+            <p>No space schedule can be displayed because <code>spaces.csv</code> is not available.</p>
+        </div>
+    {% elif schedule_type == "user" and user_options|length == 0 %}
+        <div class="empty-state">
+            <h2>No schedulable users found</h2>
+            <p>Add Instructor, TeachingAssistant, Staff, or Administrator rows to <code>users.csv</code>.</p>
+        </div>
+    {% elif schedule_type == "space" and space_options|length == 0 %}
+        <div class="empty-state">
+            <h2>No spaces found</h2>
+            <p>Add space rows to <code>spaces.csv</code>.</p>
+        </div>
+    {% elif not selected_resource %}
+        <div class="empty-state">
+            <h2>Selection not found</h2>
+            <p>Please choose an available {{ schedule_type }} from the dropdown.</p>
+        </div>
+    {% else %}
+        <div class="schedule-resource-card">
+            {% if schedule_type == "user" %}
+            <div>
+                <span>Name</span>
+                <strong>{{ selected_resource.get("name", "N/A") }}</strong>
+            </div>
+            <div>
+                <span>Role</span>
+                <strong>{{ selected_resource.get("role", "N/A") }}</strong>
+            </div>
+            <div>
+                <span>Email</span>
+                <strong>{{ selected_resource.get("email", "N/A") or "N/A" }}</strong>
+            </div>
+            <div>
+                <span>Primary unit</span>
+                <strong>{{ selected_resource.get("primaryUnit", "N/A") or "N/A" }}</strong>
+            </div>
+            {% else %}
+            <div>
+                <span>Space</span>
+                <strong>{{ selected_resource.get("name", "N/A") }}</strong>
+            </div>
+            <div>
+                <span>Type</span>
+                <strong>{{ selected_resource.get("type", "N/A") }}</strong>
+            </div>
+            <div>
+                <span>Capacity</span>
+                <strong>{{ selected_resource.get("capacity", "N/A") }}</strong>
+            </div>
+            <div>
+                <span>Building</span>
+                <strong>{{ selected_resource.get("building", "N/A") }}</strong>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="schedule-note">
+            <p>Working-hour view: Monday to Friday, 09:00-17:00. Longer or minute-based events are shown in every hourly block they overlap.</p>
+        </div>
+
+        <div class="table-wrap">
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        {% for day in day_headers %}
+                        <th>{{ day }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in schedule_rows %}
+                    <tr>
+                        <th>{{ row.time }}</th>
+                        {% for cell in row.days %}
+                        <td class="schedule-slot schedule-slot-{{ cell.class_name }}">
+                            {% if cell.events %}
+                                {% for event in cell.events %}
+                                <div class="schedule-event">
+                                    <strong>{{ event.label }}</strong>
+                                    <span>{{ event.time }}</span>
+                                    <small>{{ event.detail }}</small>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <span class="schedule-free-label">{{ cell.label }}</span>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
