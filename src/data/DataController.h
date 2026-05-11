@@ -7,11 +7,13 @@
 #include "../models/Space.h"
 #include "../models/Request.h"
 #include "../models/Allocation.h"
+#include "../models/UserBusySlot.h"
 
 struct SystemData {
     std::vector<User*> users;
     std::vector<Space*> spaces;
     std::vector<Request*> requests;
+    std::vector<UserBusySlot> userBusySlots;
 };
 
 class DataController {

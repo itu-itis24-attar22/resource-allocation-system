@@ -404,6 +404,7 @@ SystemData DataController::loadAllData(const std::string& usersFile,
     data.users = DataLoader::loadUsers(usersFile);
     data.spaces = DataLoader::loadSpaces(spacesFile);
     data.requests = loadRequestsFromCsv(requestsFile, data.users, data.spaces);
+    data.userBusySlots = DataLoader::loadUserBusySlots("data/user_busy_slots.csv");
     return data;
 }
 

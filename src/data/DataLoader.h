@@ -5,11 +5,13 @@
 #include <vector>
 #include "../models/User.h"
 #include "../models/Space.h"
+#include "../models/UserBusySlot.h"
 
 class DataLoader {
 public:
     static std::vector<User*> loadUsers(const std::string& filename);
     static std::vector<Space*> loadSpaces(const std::string& filename);
+    static std::vector<UserBusySlot> loadUserBusySlots(const std::string& filename);
 };
 
 #endif

@@ -108,6 +108,10 @@ namespace {
         return firstCsvToken(line) == "spaceId";
     }
 
+    bool isUserBusySlotsHeader(const std::string& line) {
+        return firstCsvToken(line) == "userId";
+    }
+
     bool tryParseInt(const std::string& text, int& value) {
         try {
             size_t parsedLength = 0;
@@ -128,6 +132,45 @@ namespace {
             return true;
         }
         return false;
+    }
+
+    bool tryParseTimeOfDay(const std::string& text, int& minutesFromMidnight) {
+        const std::string trimmed = trim(text);
+        const size_t colonPosition = trimmed.find(':');
+
+        if (colonPosition == std::string::npos) {
+            int hour = 0;
+            if (!tryParseInt(trimmed, hour)) {
+                return false;
+            }
+
+            if (hour < 0 || hour > 24) {
+                return false;
+            }
+
+            minutesFromMidnight = hour * 60;
+            return true;
+        }
+
+        const std::string hourText = trimmed.substr(0, colonPosition);
+        const std::string minuteText = trimmed.substr(colonPosition + 1);
+        int hour = 0;
+        int minute = 0;
+
+        if (!tryParseInt(hourText, hour) || !tryParseInt(minuteText, minute)) {
+            return false;
+        }
+
+        if (hour < 0 || hour > 24 || minute < 0 || minute > 59) {
+            return false;
+        }
+
+        if (hour == 24 && minute != 0) {
+            return false;
+        }
+
+        minutesFromMidnight = hour * 60 + minute;
+        return true;
     }
 
 }
@@ -274,4 +317,55 @@ std::vector<Space*> DataLoader::loadSpaces(const std::string& filename) {
     }
 
     return spaces;
+}
+
+std::vector<UserBusySlot> DataLoader::loadUserBusySlots(const std::string& filename) {
+    std::vector<UserBusySlot> busySlots;
+    std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        std::cerr << "Warning: Could not open user busy slots file: " << filename
+                  << ". Continuing with no busy slots.\n";
+        return busySlots;
+    }
+
+    std::string line;
+    int lineNumber = 0;
+    while (std::getline(file, line)) {
+        lineNumber++;
+        if (line.empty()) continue;
+        if (lineNumber == 1 && isUserBusySlotsHeader(line)) continue;
+
+        const std::vector<std::string> columns = splitCsvLine(line);
+
+        if (columns.size() < 5) {
+            std::cerr << "Warning: Skipping malformed user busy slot row "
+                      << lineNumber << ".\n";
+            continue;
+        }
+
+        int userId = 0;
+        int day = 0;
+        int startMinutes = 0;
+        int endMinutes = 0;
+
+        if (!tryParseInt(columns[0], userId) ||
+            !tryParseInt(columns[1], day) ||
+            !tryParseTimeOfDay(columns[2], startMinutes) ||
+            !tryParseTimeOfDay(columns[3], endMinutes)) {
+            std::cerr << "Warning: Skipping malformed user busy slot row "
+                      << lineNumber << ".\n";
+            continue;
+        }
+
+        try {
+            TimeSlot slot = TimeSlot::fromMinutes(day, startMinutes, endMinutes);
+            busySlots.emplace_back(userId, slot, columns[4]);
+        } catch (...) {
+            std::cerr << "Warning: Skipping invalid user busy slot row "
+                      << lineNumber << ".\n";
+        }
+    }
+
+    return busySlots;
 }
