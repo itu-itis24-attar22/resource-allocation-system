@@ -92,7 +92,36 @@
                 <dd>{{ item.exam_type }}</dd>
             </div>
             {% endif %}
+            {% if item.is_committee %}
+            <div>
+                <dt>Meeting topic</dt>
+                <dd>{{ item.title }}</dd>
+            </div>
+            <div>
+                <dt>Required participants</dt>
+                <dd>{{ item.committee_participants|length }}</dd>
+            </div>
+            {% endif %}
         </dl>
+
+        {% if item.is_committee %}
+        <div class="committee-participants">
+            <h3>Required Participants</h3>
+            {% if item.committee_participants %}
+            <div class="committee-participant-list">
+                {% for participant in item.committee_participants %}
+                <div>
+                    <strong>{{ participant.name }}</strong>
+                    <span>{{ participant.role }}</span>
+                    <small>User {{ participant.user_id }} - {{ participant.user_role }}</small>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>No required participants were found for this committee meeting.</p>
+            {% endif %}
+        </div>
+        {% endif %}
 
         {% if item.rejection_reason %}
         <div class="rejection-box">

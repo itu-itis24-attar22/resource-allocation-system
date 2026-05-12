@@ -34,6 +34,21 @@
     </dl>
     {% endif %}
 
+    {% if committee_participants %}
+    <div class="committee-participants">
+        <h3>Required Participants</h3>
+        <div class="committee-participant-list">
+            {% for participant in committee_participants %}
+            <div>
+                <strong>{{ participant.name }}</strong>
+                <span>{{ participant.role }}</span>
+                <small>User {{ participant.user_id }} - {{ participant.user_role }}</small>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <div class="confirmation-actions">
         <a href="{{ url_for('add_request') }}">Add Another Request</a>
         <a href="{{ url_for('requests') }}">View Requests</a>

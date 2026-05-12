@@ -94,8 +94,9 @@ The form lets the user choose:
 - `OneTime`
 - `Recurring`
 - `Exam`
+- `CommitteeMeeting`
 
-It collects the common request fields first, then asks for the time format needed by the selected type. Exam-specific fields are used only when the selected request type is `Exam`.
+It collects the common request fields first, then asks for the time format needed by the selected type. Exam-specific fields are used only when the selected request type is `Exam`, and committee participant fields are used only when the selected request type is `CommitteeMeeting`.
 
 When submitted, Flask appends one row to `data/requests.csv` using this format:
 
@@ -122,6 +123,25 @@ For `Exam` rows:
 - `requestType` is `Exam`.
 - `timeData` is written as `day-HH:MM-HH:MM`.
 - course code, course name, exam type, and split support are written from the exam fields.
+
+For `CommitteeMeeting` rows:
+
+- `requestType` is `CommitteeMeeting`.
+- `timeData` is written as `day-HH:MM-HH:MM`.
+- `title` stores the meeting topic.
+- `purpose` stores the selected meeting purpose, such as `Presentation`, `Thesis Defense`, `Project Review`, or `Committee Meeting`.
+- exam-specific fields are empty.
+- `canSplitAcrossRooms` is `false`.
+
+The same request ID is also used to append required participants to `data/request_participants.csv`:
+
+```text
+requestId,userId,participantRole
+```
+
+The Add Request page shows instructor, teaching assistant, staff, and administrator users as selectable committee participants. Any number of participants can be selected, but at least one is required. Each selected participant can keep the default role `Participant` or use a role such as `Supervisor`, `CommitteeMember`, `Advisor`, or `Examiner`.
+
+Flask does not check whether committee participants are free. It only writes `requests.csv` and `request_participants.csv`. After `Run Allocation`, the C++ backend creates the `CommitteeMeetingRequest`, attaches participants, and uses `ParticipantAvailabilityRule` with `user_busy_slots.csv` to approve or reject the request.
 
 Day numbers use this mapping:
 
@@ -209,7 +229,7 @@ Use the `Schedules` page to view user and space availability in a simple weekly 
 - `/users` shows `data/users.csv`.
 - `/spaces` shows `data/spaces.csv`.
 - `/requests` shows `data/requests.csv`.
-- `/add-request` adds a new `OneTime`, `Recurring`, or `Exam` request row to `data/requests.csv`.
+- `/add-request` adds a new `OneTime`, `Recurring`, `Exam`, or `CommitteeMeeting` request row to `data/requests.csv`.
 - `/allocation-summary` groups all allocation results by request.
 - `/schedules` shows user busy slots and space allocation schedules.
 - `/add-one-time` redirects to `/add-request?type=OneTime`.
