@@ -112,6 +112,10 @@ namespace {
         return firstCsvToken(line) == "userId";
     }
 
+    bool isRequestParticipantsHeader(const std::string& line) {
+        return firstCsvToken(line) == "requestId";
+    }
+
     bool tryParseInt(const std::string& text, int& value) {
         try {
             size_t parsedLength = 0;
@@ -368,4 +372,46 @@ std::vector<UserBusySlot> DataLoader::loadUserBusySlots(const std::string& filen
     }
 
     return busySlots;
+}
+
+std::vector<RequestParticipant> DataLoader::loadRequestParticipants(const std::string& filename) {
+    std::vector<RequestParticipant> participants;
+    std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        std::cerr << "Warning: Could not open request participants file: " << filename
+                  << ". Continuing with no request participants.\n";
+        return participants;
+    }
+
+    std::string line;
+    int lineNumber = 0;
+    while (std::getline(file, line)) {
+        lineNumber++;
+        if (line.empty()) continue;
+        if (lineNumber == 1 && isRequestParticipantsHeader(line)) continue;
+
+        const std::vector<std::string> columns = splitCsvLine(line);
+
+        if (columns.size() < 3) {
+            std::cerr << "Warning: Skipping malformed request participant row "
+                      << lineNumber << ".\n";
+            continue;
+        }
+
+        int requestId = 0;
+        int userId = 0;
+
+        if (!tryParseInt(columns[0], requestId) ||
+            !tryParseInt(columns[1], userId) ||
+            columns[2].empty()) {
+            std::cerr << "Warning: Skipping malformed request participant row "
+                      << lineNumber << ".\n";
+            continue;
+        }
+
+        participants.emplace_back(requestId, userId, columns[2]);
+    }
+
+    return participants;
 }

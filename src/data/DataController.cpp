@@ -7,6 +7,7 @@
 #include "DataLoader.h"
 #include "AllocationWriter.h"
 #include "../models/RequestFactory.h"
+#include "../models/CommitteeMeetingRequest.h"
 #include "RequestResultWriter.h"
 
 namespace {
@@ -346,6 +347,40 @@ namespace {
 
         return requests;
     }
+
+    void attachParticipantsToCommitteeRequests(
+        std::vector<Request*>& requests,
+        const std::vector<RequestParticipant>& requestParticipants
+    ) {
+        for (Request* request : requests) {
+            CommitteeMeetingRequest* committeeRequest =
+                dynamic_cast<CommitteeMeetingRequest*>(request);
+
+            if (!committeeRequest) {
+                continue;
+            }
+
+            int attachedCount = 0;
+            for (const RequestParticipant& participant : requestParticipants) {
+                if (participant.getRequestId() == committeeRequest->getId()) {
+                    committeeRequest->addRequiredParticipant(
+                        participant.getUserId(),
+                        participant.getParticipantRole()
+                    );
+                    attachedCount++;
+                }
+            }
+
+            if (attachedCount == 0) {
+                committeeRequest->addHistoryEvent("No request participants loaded for committee meeting");
+            } else {
+                committeeRequest->addHistoryEvent(
+                    "Loaded " + std::to_string(attachedCount)
+                    + " required committee participant(s)"
+                );
+            }
+        }
+    }
 }
 
 std::string DataController::loadAllocationStrategyName(const std::string& configFile) const {
@@ -405,6 +440,8 @@ SystemData DataController::loadAllData(const std::string& usersFile,
     data.spaces = DataLoader::loadSpaces(spacesFile);
     data.requests = loadRequestsFromCsv(requestsFile, data.users, data.spaces);
     data.userBusySlots = DataLoader::loadUserBusySlots("data/user_busy_slots.csv");
+    data.requestParticipants = DataLoader::loadRequestParticipants("data/request_participants.csv");
+    attachParticipantsToCommitteeRequests(data.requests, data.requestParticipants);
     return data;
 }
 

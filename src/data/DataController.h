@@ -8,12 +8,14 @@
 #include "../models/Request.h"
 #include "../models/Allocation.h"
 #include "../models/UserBusySlot.h"
+#include "../models/RequestParticipant.h"
 
 struct SystemData {
     std::vector<User*> users;
     std::vector<Space*> spaces;
     std::vector<Request*> requests;
     std::vector<UserBusySlot> userBusySlots;
+    std::vector<RequestParticipant> requestParticipants;
 };
 
 class DataController {
