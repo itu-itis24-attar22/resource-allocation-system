@@ -5,6 +5,7 @@
 #include "../models/OneTimeRequest.h"
 #include "../models/RecurringRequest.h"
 #include "../models/ExamRequest.h"
+#include "../models/CommitteeMeetingRequest.h"
 #include "../models/Allocation.h"
 
 class AvailabilityRule {
@@ -15,6 +16,7 @@ public:
     bool check(const OneTimeRequest& request, const std::vector<Allocation>& existingAllocations) const;
     bool check(const RecurringRequest& request, const std::vector<Allocation>& existingAllocations) const;
     bool check(const ExamRequest& request, const std::vector<Allocation>& existingAllocations) const;
+    bool check(const CommitteeMeetingRequest& request, const std::vector<Allocation>& existingAllocations) const;
 };
 
 #endif

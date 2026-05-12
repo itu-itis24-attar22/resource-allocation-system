@@ -51,6 +51,10 @@ bool AllocationService::processRequest(ExamRequest& request) {
     return allocationStrategy->processRequest(request, allocations, ruleEngineFacade);
 }
 
+bool AllocationService::processRequest(CommitteeMeetingRequest& request) {
+    return allocationStrategy->processRequest(request, allocations, ruleEngineFacade);
+}
+
 void AllocationService::printAllocations() const {
     std::cout << "\nCurrent Allocations:\n";
     std::cout << "-----------------------------------\n";

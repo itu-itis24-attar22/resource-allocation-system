@@ -28,3 +28,7 @@ bool AvailabilityRule::check(const RecurringRequest& request, const std::vector<
 bool AvailabilityRule::check(const ExamRequest& request, const std::vector<Allocation>& existingAllocations) const {
     return isSpaceAvailable(request.getRequestedSpace(), request.getExamTimeSlot(), existingAllocations);
 }
+
+bool AvailabilityRule::check(const CommitteeMeetingRequest& request, const std::vector<Allocation>& existingAllocations) const {
+    return isSpaceAvailable(request.getRequestedSpace(), request.getPreferredTimeSlot(), existingAllocations);
+}

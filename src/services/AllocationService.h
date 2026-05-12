@@ -9,6 +9,7 @@
 #include "../models/OneTimeRequest.h"
 #include "../models/RecurringRequest.h"
 #include "../models/ExamRequest.h"
+#include "../models/CommitteeMeetingRequest.h"
 #include "../rules/RuleEngineFacade.h"
 #include "../strategies/IAllocationStrategy.h"
 
@@ -29,6 +30,7 @@ public:
     bool processRequest(OneTimeRequest& request);
     bool processRequest(RecurringRequest& request);
     bool processRequest(ExamRequest& request);
+    bool processRequest(CommitteeMeetingRequest& request);
     void printAllocations() const;
 };
 

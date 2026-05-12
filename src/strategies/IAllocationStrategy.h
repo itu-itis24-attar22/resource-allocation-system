@@ -7,6 +7,7 @@
 #include "../models/OneTimeRequest.h"
 #include "../models/RecurringRequest.h"
 #include "../models/ExamRequest.h"
+#include "../models/CommitteeMeetingRequest.h"
 #include "../models/Space.h"
 #include "../rules/RuleEngineFacade.h"
 
@@ -28,6 +29,10 @@ public:
                                 const RuleEngineFacade& ruleEngineFacade) const = 0;
 
     virtual bool processRequest(ExamRequest& request,
+                                std::vector<Allocation>& allocations,
+                                const RuleEngineFacade& ruleEngineFacade) const = 0;
+
+    virtual bool processRequest(CommitteeMeetingRequest& request,
                                 std::vector<Allocation>& allocations,
                                 const RuleEngineFacade& ruleEngineFacade) const = 0;
 };

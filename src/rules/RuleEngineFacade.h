@@ -30,6 +30,9 @@ public:
 
     RuleEvaluationResult evaluateRequest(ExamRequest& request,
                                          const std::vector<Allocation>& allocations) const;
+
+    RuleEvaluationResult evaluateRequest(CommitteeMeetingRequest& request,
+                                         const std::vector<Allocation>& allocations) const;
 };
 
 #endif

@@ -37,6 +37,10 @@ void GreedyAllocationStrategy::processRequests(const std::vector<Request*>& requ
             exam->addHistoryEvent("Greedy batch processing started");
             processRequest(*exam, allocations, ruleEngineFacade);
         }
+        else if (CommitteeMeetingRequest* committee = dynamic_cast<CommitteeMeetingRequest*>(request)) {
+            committee->addHistoryEvent("Greedy batch processing started");
+            processRequest(*committee, allocations, ruleEngineFacade);
+        }
         else if (InvalidRequest* invalid = dynamic_cast<InvalidRequest*>(request)) {
             invalid->addHistoryEvent("Greedy batch processing skipped invalid request");
         }
@@ -124,6 +128,32 @@ bool GreedyAllocationStrategy::processRequest(ExamRequest& request,
     Allocation allocation(allocationId, request.getId(),
                           request.getRequestedSpace(),
                           request.getExamTimeSlot(),
+                          request.getParticipantCount());
+    allocations.push_back(allocation);
+
+    return true;
+}
+
+bool GreedyAllocationStrategy::processRequest(CommitteeMeetingRequest& request,
+                                              std::vector<Allocation>& allocations,
+                                              const RuleEngineFacade& ruleEngineFacade) const {
+    request.addHistoryEvent("Greedy strategy started evaluation");
+    request.addHistoryEvent("evaluated");
+    RuleEvaluationResult result = ruleEngineFacade.evaluateRequest(request, allocations);
+
+    if (!result.isPassed()) {
+        request.addHistoryEvent("Greedy strategy rejected request: " + result.getFailureReason());
+        request.markRejected(result.getFailureReason());
+        return false;
+    }
+
+    request.addHistoryEvent("Greedy strategy approved request");
+    request.markApproved();
+
+    int allocationId = nextAllocationId(allocations);
+    Allocation allocation(allocationId, request.getId(),
+                          request.getRequestedSpace(),
+                          request.getPreferredTimeSlot(),
                           request.getParticipantCount());
     allocations.push_back(allocation);
 

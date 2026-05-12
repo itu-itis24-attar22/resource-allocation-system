@@ -55,6 +55,10 @@ void MultiRoomExamGreedyStrategy::processRequests(const std::vector<Request*>& r
                 processRequest(*exam, allocations, ruleEngineFacade);
             }
         }
+        else if (CommitteeMeetingRequest* committee = dynamic_cast<CommitteeMeetingRequest*>(request)) {
+            committee->addHistoryEvent("Multi-room exam greedy batch processing started");
+            processRequest(*committee, allocations, ruleEngineFacade);
+        }
         else if (InvalidRequest* invalid = dynamic_cast<InvalidRequest*>(request)) {
             invalid->addHistoryEvent("Multi-room exam greedy skipped invalid request");
         }
@@ -74,6 +78,12 @@ bool MultiRoomExamGreedyStrategy::processRequest(RecurringRequest& request,
 }
 
 bool MultiRoomExamGreedyStrategy::processRequest(ExamRequest& request,
+                                                 std::vector<Allocation>& allocations,
+                                                 const RuleEngineFacade& ruleEngineFacade) const {
+    return greedyStrategy.processRequest(request, allocations, ruleEngineFacade);
+}
+
+bool MultiRoomExamGreedyStrategy::processRequest(CommitteeMeetingRequest& request,
                                                  std::vector<Allocation>& allocations,
                                                  const RuleEngineFacade& ruleEngineFacade) const {
     return greedyStrategy.processRequest(request, allocations, ruleEngineFacade);

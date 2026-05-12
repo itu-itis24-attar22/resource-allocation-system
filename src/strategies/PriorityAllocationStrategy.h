@@ -21,6 +21,10 @@ public:
     bool processRequest(ExamRequest& request,
                         std::vector<Allocation>& allocations,
                         const RuleEngineFacade& ruleEngineFacade) const override;
+
+    bool processRequest(CommitteeMeetingRequest& request,
+                        std::vector<Allocation>& allocations,
+                        const RuleEngineFacade& ruleEngineFacade) const override;
 };
 
 #endif

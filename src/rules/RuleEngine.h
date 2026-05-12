@@ -8,6 +8,7 @@
 #include "../models/OneTimeRequest.h"
 #include "../models/RecurringRequest.h"
 #include "../models/ExamRequest.h"
+#include "../models/CommitteeMeetingRequest.h"
 #include "../models/Allocation.h"
 
 class RuleEngine {
@@ -25,6 +26,9 @@ public:
                                   const std::vector<Allocation>& allocations) const;
 
     RuleEvaluationResult evaluate(ExamRequest& request,
+                                  const std::vector<Allocation>& allocations) const;
+
+    RuleEvaluationResult evaluate(CommitteeMeetingRequest& request,
                                   const std::vector<Allocation>& allocations) const;
 };
 
