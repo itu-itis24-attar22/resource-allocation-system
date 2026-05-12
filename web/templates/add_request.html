@@ -30,7 +30,7 @@
             <div class="form-grid">
                 <label>
                     Request type
-                    <select name="requestType" required>
+                    <select name="requestType" id="requestTypeSelect" required>
                         {% for request_type in request_types %}
                         <option value="{{ request_type }}" {% if form_data.get("requestType", "OneTime") == request_type %}selected{% endif %}>
                             {{ request_type }}
@@ -114,9 +114,9 @@
             </div>
         </div>
 
-        <div class="form-section">
-            <h3>OneTime / Exam Time</h3>
-            <p>Used when request type is <strong>OneTime</strong> or <strong>Exam</strong>.</p>
+        <div class="form-section" data-request-section="OneTime Exam CommitteeMeeting">
+            <h3>OneTime / Exam / Committee Meeting Time</h3>
+            <p>Used when request type is <strong>OneTime</strong>, <strong>Exam</strong>, or <strong>CommitteeMeeting</strong>.</p>
             <div class="form-grid">
                 <label>
                     Day
@@ -138,7 +138,7 @@
             </div>
         </div>
 
-        <div class="form-section">
+        <div class="form-section" data-request-section="Recurring">
             <h3>Recurring Time</h3>
             <p>Used only when request type is <strong>Recurring</strong>. Examples: <code>2-9-10;4-9-10</code> or <code>2-09:00-10:30;4-13:15-14:00</code>.</p>
             <label>
@@ -148,7 +148,7 @@
             </label>
         </div>
 
-        <div class="form-section">
+        <div class="form-section" data-request-section="Exam">
             <h3>Exam Details</h3>
             <p>Used only when request type is <strong>Exam</strong>.</p>
             <div class="form-grid">
@@ -185,10 +185,57 @@
             </div>
         </div>
 
+        <div class="form-section" data-request-section="CommitteeMeeting">
+            <h3>Committee Meeting Participants</h3>
+            <p>
+                Used only when request type is <strong>CommitteeMeeting</strong>.
+                Flask writes these rows to <code>data/request_participants.csv</code>;
+                participant availability is checked later by the C++ backend.
+            </p>
+
+            {% set selected_participants = form_data.get("requiredParticipantIds", []) %}
+            <div class="participant-picker">
+                {% for participant in committee_participants %}
+                {% set participant_id = participant.userId %}
+                <label class="participant-option">
+                    <span>
+                        <input type="checkbox" name="requiredParticipantIds" value="{{ participant_id }}"
+                               {% if participant_id in selected_participants %}checked{% endif %}>
+                        <strong>{{ participant.name }}</strong>
+                        <small>{{ participant_id }} - {{ participant.role }}{% if participant.email %} - {{ participant.email }}{% endif %}</small>
+                    </span>
+                    <input type="text"
+                           name="participantRole_{{ participant_id }}"
+                           placeholder="Participant role, e.g. Supervisor"
+                           value="{{ form_data.get('participantRole_' ~ participant_id, 'Participant') }}">
+                </label>
+                {% else %}
+                <p>No instructor, teaching assistant, staff, or administrator users are available for selection.</p>
+                {% endfor %}
+            </div>
+        </div>
+
         <div class="form-actions">
             <button type="submit">Add Request</button>
             <a href="{{ url_for('requests') }}">View Requests</a>
         </div>
     </form>
 </section>
+
+<script>
+    const requestTypeSelect = document.getElementById("requestTypeSelect");
+    const requestSections = document.querySelectorAll("[data-request-section]");
+
+    function updateRequestSections() {
+        const selectedType = requestTypeSelect.value;
+
+        requestSections.forEach((section) => {
+            const visibleTypes = section.dataset.requestSection.split(" ");
+            section.hidden = !visibleTypes.includes(selectedType);
+        });
+    }
+
+    requestTypeSelect.addEventListener("change", updateRequestSections);
+    updateRequestSections();
+</script>
 {% endblock %}

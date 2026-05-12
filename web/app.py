@@ -43,8 +43,30 @@ REQUEST_HEADERS = [
 
 EXAM_TYPES = ["Midterm", "Final", "Quiz", "General"]
 FEATURE_OPTIONS = ["None", "Projector", "Whiteboard", "Computers"]
-PURPOSE_OPTIONS = ["Meeting", "Lecture", "Lab", "Exam", "General", "Other"]
-REQUEST_TYPE_OPTIONS = ["OneTime", "Recurring", "Exam"]
+PURPOSE_OPTIONS = [
+    "Meeting",
+    "Lecture",
+    "Lab",
+    "Exam",
+    "Presentation",
+    "Thesis Defense",
+    "Project Review",
+    "Committee Meeting",
+    "General",
+    "Other",
+]
+REQUEST_TYPE_OPTIONS = ["OneTime", "Recurring", "Exam", "CommitteeMeeting"]
+COMMITTEE_PARTICIPANT_ROLES = {
+    "Instructor",
+    "TeachingAssistant",
+    "Staff",
+    "Administrator",
+}
+REQUEST_PARTICIPANT_HEADERS = [
+    "requestId",
+    "userId",
+    "participantRole",
+]
 USER_ROLE_OPTIONS = [
     "All",
     "Student",
@@ -176,6 +198,34 @@ def get_next_request_id():
     return max_request_id + 1
 
 
+def build_committee_participant_options(users):
+    options = []
+
+    for user in users:
+        role = (user.get("role") or "").strip()
+        user_id = (user.get("userId") or "").strip()
+
+        if role not in COMMITTEE_PARTICIPANT_ROLES or not user_id:
+            continue
+
+        label_parts = [
+            user_id,
+            display_value(user.get("name")),
+            f"({role})",
+        ]
+        options.append(
+            {
+                "userId": user_id,
+                "name": display_value(user.get("name")),
+                "role": role,
+                "email": display_value(user.get("email"), ""),
+                "label": " - ".join(label_parts[:2]) + f" {label_parts[2]}",
+            }
+        )
+
+    return options
+
+
 def get_request_row(request_id):
     request_id = str(request_id)
 
@@ -184,6 +234,17 @@ def get_request_row(request_id):
             return row
 
     return None
+
+
+def get_request_participant_rows(request_id):
+    request_id = str(request_id)
+    table = read_csv_table("request_participants.csv")
+
+    return [
+        row
+        for row in table["rows"]
+        if (row.get("requestId") or "").strip() == request_id
+    ]
 
 
 def get_building_options(spaces):
@@ -622,6 +683,7 @@ def validate_request_form(form_data, users, spaces):
     errors = []
     user_ids = {(user.get("userId") or "").strip() for user in users}
     space_ids = {(space.get("spaceId") or "").strip() for space in spaces}
+    selected_participant_ids = form_data.get("requiredParticipantIds", [])
 
     request_type = form_data.get("requestType", "").strip()
     user_id = form_data.get("userId", "").strip()
@@ -634,7 +696,7 @@ def validate_request_form(form_data, users, spaces):
     time_data = ""
 
     if request_type not in REQUEST_TYPE_OPTIONS:
-        errors.append("Request type must be OneTime, Recurring, or Exam.")
+        errors.append("Request type must be OneTime, Recurring, Exam, or CommitteeMeeting.")
 
     if user_id not in user_ids:
         errors.append("Selected requester does not exist.")
@@ -648,7 +710,7 @@ def validate_request_form(form_data, users, spaces):
     if not purpose:
         errors.append("Purpose is required.")
 
-    if request_type in {"OneTime", "Exam"}:
+    if request_type in {"OneTime", "Exam", "CommitteeMeeting"}:
         day, start_time, end_time = parse_time_fields(form_data, errors)
         if day is not None and start_time and end_time:
             time_data = f"{day}-{start_time}-{end_time}"
@@ -680,8 +742,44 @@ def validate_request_form(form_data, users, spaces):
         if can_split not in {"true", "false"}:
             errors.append("Can split across rooms must be true or false.")
 
+    participant_rows = []
+    if request_type == "CommitteeMeeting":
+        if isinstance(selected_participant_ids, str):
+            selected_participant_ids = [selected_participant_ids]
+
+        selected_participant_ids = [
+            participant_id.strip()
+            for participant_id in selected_participant_ids
+            if participant_id.strip()
+        ]
+
+        if not selected_participant_ids:
+            errors.append("At least one required committee participant must be selected.")
+
+        for participant_id in selected_participant_ids:
+            if participant_id not in user_ids:
+                errors.append(f"Required participant {participant_id} does not exist.")
+                continue
+
+            participant_role = form_data.get(
+                f"participantRole_{participant_id}",
+                "",
+            ).strip() or "Participant"
+
+            participant_rows.append(
+                {
+                    "userId": participant_id,
+                    "participantRole": participant_role,
+                }
+            )
+
+        course_code = ""
+        course_name = ""
+        exam_type = ""
+        can_split = "false"
+
     if errors:
-        return None, errors
+        return None, [], errors
 
     row = {
         "requestId": str(get_next_request_id()),
@@ -704,7 +802,10 @@ def validate_request_form(form_data, users, spaces):
         "canSplitAcrossRooms": can_split,
     }
 
-    return row, []
+    for participant_row in participant_rows:
+        participant_row["requestId"] = row["requestId"]
+
+    return row, participant_rows, []
 
 
 def append_request_row(row):
@@ -728,6 +829,41 @@ def append_request_row(row):
             writer.writeheader()
 
         writer.writerow({header: row.get(header, "") for header in headers})
+
+
+def append_request_participant_rows(rows):
+    if not rows:
+        return
+
+    participants_path = DATA_DIR / "request_participants.csv"
+    write_header = not participants_path.exists() or participants_path.stat().st_size == 0
+    needs_leading_newline = False
+
+    if participants_path.exists() and participants_path.stat().st_size > 0:
+        with participants_path.open("rb") as file:
+            file.seek(-1, 2)
+            needs_leading_newline = file.read(1) not in {b"\n", b"\r"}
+
+    with participants_path.open("a", encoding="utf-8", newline="") as file:
+        if needs_leading_newline:
+            file.write("\n")
+
+        writer = csv.DictWriter(
+            file,
+            fieldnames=REQUEST_PARTICIPANT_HEADERS,
+            extrasaction="ignore",
+        )
+
+        if write_header:
+            writer.writeheader()
+
+        for row in rows:
+            writer.writerow(
+                {
+                    header: row.get(header, "")
+                    for header in REQUEST_PARTICIPANT_HEADERS
+                }
+            )
 
 
 def is_exam_request(row):
@@ -756,6 +892,28 @@ def group_by_field(rows, field_name):
             grouped.setdefault(key, []).append(row)
 
     return grouped
+
+
+def is_committee_request(row):
+    return (row.get("requestType") or "").strip() == "CommitteeMeeting"
+
+
+def build_committee_participant_display(participant_rows, users_by_id):
+    participants = []
+
+    for participant_row in participant_rows:
+        user_id = (participant_row.get("userId") or "").strip()
+        user = users_by_id.get(user_id, {})
+        participants.append(
+            {
+                "user_id": user_id,
+                "name": display_value(user.get("name"), f"User {user_id}"),
+                "role": display_value(participant_row.get("participantRole"), "Participant"),
+                "user_role": display_value(user.get("role")),
+            }
+        )
+
+    return participants
 
 
 def get_room_capacity(space):
@@ -795,11 +953,13 @@ def build_allocation_summary():
     allocations_table = read_csv_table("allocations.csv")
     spaces_table = read_csv_table("spaces.csv")
     users_table = read_csv_table("users.csv")
+    participants_table = read_csv_table("request_participants.csv")
 
     results_by_request = index_by_field(results_table["rows"], "requestId")
     allocations_by_request = group_by_field(allocations_table["rows"], "requestId")
     spaces_by_id = index_by_field(spaces_table["rows"], "spaceId")
     users_by_id = index_by_field(users_table["rows"], "userId")
+    participants_by_request = group_by_field(participants_table["rows"], "requestId")
 
     summaries = []
 
@@ -811,6 +971,10 @@ def build_allocation_summary():
         request_type = display_value(
             result_row.get("requestType") or request_row.get("requestType"),
             "Unknown",
+        )
+        committee_participants = build_committee_participant_display(
+            participants_by_request.get(request_id, []),
+            users_by_id,
         )
         status = display_value(result_row.get("status"), "Pending")
 
@@ -837,6 +1001,7 @@ def build_allocation_summary():
                 "request_id": request_id,
                 "request_type": request_type,
                 "is_exam": request_type == "Exam" or is_exam_request(request_row),
+                "is_committee": request_type == "CommitteeMeeting" or is_committee_request(request_row),
                 "title": display_value(
                     request_row.get("title") or result_row.get("title"),
                     "Untitled Request",
@@ -853,6 +1018,7 @@ def build_allocation_summary():
                 "exam_type": display_value(
                     request_row.get("examType") or result_row.get("examType")
                 ),
+                "committee_participants": committee_participants,
                 "participant_count": participant_count,
                 "participant_display": (
                     participant_count if participant_count is not None else "N/A"
@@ -1281,13 +1447,16 @@ def add_request():
     form_data = request.form.to_dict() if request.method == "POST" else {
         "requestType": request.args.get("type", "OneTime"),
     }
+    if request.method == "POST":
+        form_data["requiredParticipantIds"] = request.form.getlist("requiredParticipantIds")
     errors = []
 
     if request.method == "POST":
-        row, errors = validate_request_form(form_data, users, spaces)
+        row, participant_rows, errors = validate_request_form(form_data, users, spaces)
 
         if not errors:
             append_request_row(row)
+            append_request_participant_rows(participant_rows)
             return redirect(url_for("request_added", request_id=row["requestId"]))
 
     return render_template(
@@ -1297,6 +1466,7 @@ def add_request():
         request_types=REQUEST_TYPE_OPTIONS,
         purpose_options=PURPOSE_OPTIONS,
         exam_types=EXAM_TYPES,
+        committee_participants=build_committee_participant_options(users),
         feature_options=FEATURE_OPTIONS,
         building_options=get_building_options(spaces),
         form_data=form_data,
@@ -1308,6 +1478,8 @@ def add_request():
 def request_added(request_id):
     row = get_request_row(request_id)
     display_row = dict(row) if row else None
+    participant_rows = get_request_participant_rows(request_id)
+    users_by_id = index_by_field(read_csv_table("users.csv")["rows"], "userId")
 
     if display_row and "timeData" in display_row:
         display_row["timeData"] = format_time_data(display_row.get("timeData"))
@@ -1316,6 +1488,10 @@ def request_added(request_id):
         "request_added.html",
         request_id=request_id,
         request_row=display_row,
+        committee_participants=build_committee_participant_display(
+            participant_rows,
+            users_by_id,
+        ),
     )
 
 
