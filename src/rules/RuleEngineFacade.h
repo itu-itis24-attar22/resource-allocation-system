@@ -8,10 +8,12 @@
 #include "LocationRule.h"
 #include "UserRoleRule.h"
 #include "RequestTypeRule.h"
+#include "ParticipantAvailabilityRule.h"
 
 class RuleEngineFacade {
 private:
     RequestTypeRule requestTypeRule;
+    ParticipantAvailabilityRule participantAvailabilityRule;
     CapacityRule capacityRule;
     FeatureRule featureRule;
     StatusRule statusRule;
@@ -21,6 +23,8 @@ private:
 
 public:
     RuleEngineFacade();
+    RuleEngineFacade(const std::vector<User*>& users,
+                     const std::vector<UserBusySlot>& userBusySlots);
 
     RuleEvaluationResult evaluateRequest(OneTimeRequest& request,
                                          const std::vector<Allocation>& allocations) const;

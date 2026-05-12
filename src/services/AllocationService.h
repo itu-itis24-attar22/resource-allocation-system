@@ -6,6 +6,8 @@
 #include "../models/Allocation.h"
 #include "../models/Request.h"
 #include "../models/Space.h"
+#include "../models/User.h"
+#include "../models/UserBusySlot.h"
 #include "../models/OneTimeRequest.h"
 #include "../models/RecurringRequest.h"
 #include "../models/ExamRequest.h"
@@ -22,6 +24,9 @@ private:
 public:
     AllocationService();
     explicit AllocationService(const std::string& strategyName);
+    AllocationService(const std::string& strategyName,
+                      const std::vector<User*>& users,
+                      const std::vector<UserBusySlot>& userBusySlots);
     const std::vector<Allocation>& getAllocations() const;
     void addExistingAllocation(const Allocation& allocation);
     void processRequests(const std::vector<Request*>& requests);

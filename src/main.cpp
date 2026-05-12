@@ -30,7 +30,7 @@ int main() {
         return 1;
     }
 
-    AllocationService allocationService(strategyName);
+    AllocationService allocationService(strategyName, data.users, data.userBusySlots);
 
     Allocation existingClassroomAllocation(100, 999, data.spaces[0], TimeSlot(1, 10, 12),
                                            data.spaces[0]->getCapacity());
