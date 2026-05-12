@@ -5,6 +5,7 @@
 #include "models/OneTimeRequest.h"
 #include "models/RecurringRequest.h"
 #include "models/ExamRequest.h"
+#include "models/CommitteeMeetingRequest.h"
 #include "models/InvalidRequest.h"
 #include "models/Allocation.h"
 #include "services/AllocationService.h"
@@ -65,6 +66,15 @@ int main() {
                 *exam,
                 result,
                 "Exam request loaded from external CSV source"
+            );
+        }
+        else if (CommitteeMeetingRequest* committee = dynamic_cast<CommitteeMeetingRequest*>(request)) {
+            bool result = committee->getStatus() == RequestStatus::Approved;
+            printCommitteeMeetingResult(
+                label,
+                *committee,
+                result,
+                "Committee meeting request loaded from external CSV source"
             );
         }
         else if (InvalidRequest* invalid = dynamic_cast<InvalidRequest*>(request)) {

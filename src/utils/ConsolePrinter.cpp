@@ -153,6 +153,59 @@ void printExamResult(
     std::cout << "-----------------------------------\n";
 }
 
+void printCommitteeMeetingResult(
+    const std::string& label,
+    const CommitteeMeetingRequest& request,
+    bool result,
+    const std::string& explanation
+) {
+    std::cout << label << "\n";
+    std::cout << "Request type: CommitteeMeetingRequest\n";
+    std::cout << "Title: " << request.getTitle() << "\n";
+    std::cout << "Purpose: " << request.getPurpose() << "\n";
+    std::cout << "Meeting topic: " << request.getMeetingTopic() << "\n";
+    std::cout << "Duration minutes: " << request.getDurationMinutes() << "\n";
+    std::cout << "Requester: " << request.getRequester()->getName() << "\n";
+    std::cout << "Requester role: " << request.getRequester()->getRoleName() << "\n";
+    std::cout << "Priority: " << request.getPriority() << "\n";
+    std::cout << "Requested type: " << request.getRequestedSpace()->getType() << "\n";
+    std::cout << "Requested space: " << request.getRequestedSpace()->getName() << "\n";
+    std::cout << "Space building: " << request.getRequestedSpace()->getBuilding() << "\n";
+    std::cout << "Required building: "
+              << (request.getRequiredBuilding().empty() ? "None" : request.getRequiredBuilding()) << "\n";
+    std::cout << "Space status: " << availabilityToString(request.getRequestedSpace()->getIsAvailable()) << "\n";
+    std::cout << "Required feature: "
+              << (request.getRequiredFeature().empty() ? "None" : request.getRequiredFeature()) << "\n";
+    std::cout << "Status: " << requestStatusToString(request.getStatus()) << "\n";
+    std::cout << "Participants: " << request.getParticipantCount() << "\n";
+    std::cout << "Required committee participants: "
+              << request.getRequiredParticipantIds().size() << "\n";
+
+    const std::vector<int>& participantIds = request.getRequiredParticipantIds();
+    const std::vector<std::string>& participantRoles = request.getParticipantRoles();
+    for (size_t i = 0; i < participantIds.size(); i++) {
+        std::cout << "  Participant " << i + 1 << ": user "
+                  << participantIds[i] << " ("
+                  << (i < participantRoles.size() ? participantRoles[i] : "Participant")
+                  << ")\n";
+    }
+
+    std::cout << "Preferred time: "
+              << dayToString(request.getPreferredTimeSlot().getDay()) << ", "
+              << request.getPreferredTimeSlot().getStartTimeString() << " - "
+              << request.getPreferredTimeSlot().getEndTimeString() << "\n";
+
+    if (result) {
+        std::cout << "Allocation created.\n";
+    } else {
+        std::cout << "Committee meeting request rejected.\n";
+        std::cout << "Rejection reason: " << request.getRejectionReason() << "\n";
+    }
+
+    std::cout << "Case: " << explanation << "\n";
+    std::cout << "-----------------------------------\n";
+}
+
 void printInvalidResult(
     const std::string& label,
     const InvalidRequest& request,

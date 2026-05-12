@@ -4,6 +4,7 @@
 #include "../models/OneTimeRequest.h"
 #include "../models/RecurringRequest.h"
 #include "../models/ExamRequest.h"
+#include "../models/CommitteeMeetingRequest.h"
 #include "../models/InvalidRequest.h"
 
 namespace {
@@ -96,6 +97,14 @@ namespace {
                    slot.getEndTimeString();
         }
 
+        if (const CommitteeMeetingRequest* committee =
+                dynamic_cast<const CommitteeMeetingRequest*>(request)) {
+            TimeSlot slot = committee->getPreferredTimeSlot();
+            return dayToString(slot.getDay()) + " " +
+                   slot.getStartTimeString() + "-" +
+                   slot.getEndTimeString();
+        }
+
         if (const InvalidRequest* invalid = dynamic_cast<const InvalidRequest*>(request)) {
             return invalid->getRawTimeInfo().empty() ? "None" : invalid->getRawTimeInfo();
         }
@@ -107,6 +116,7 @@ namespace {
         if (dynamic_cast<const OneTimeRequest*>(request)) return "OneTime";
         if (dynamic_cast<const RecurringRequest*>(request)) return "Recurring";
         if (dynamic_cast<const ExamRequest*>(request)) return "Exam";
+        if (dynamic_cast<const CommitteeMeetingRequest*>(request)) return "CommitteeMeeting";
         if (const InvalidRequest* invalid = dynamic_cast<const InvalidRequest*>(request)) {
             return invalid->getRequestTypeLabel();
         }
@@ -140,6 +150,35 @@ namespace {
         }
         return "None";
     }
+
+    std::string committeeParticipantsToString(const Request* request) {
+        const CommitteeMeetingRequest* committee =
+            dynamic_cast<const CommitteeMeetingRequest*>(request);
+
+        if (!committee) {
+            return "None";
+        }
+
+        const std::vector<int>& participantIds = committee->getRequiredParticipantIds();
+        const std::vector<std::string>& participantRoles = committee->getParticipantRoles();
+
+        if (participantIds.empty()) {
+            return "None";
+        }
+
+        std::string result;
+        for (size_t i = 0; i < participantIds.size(); i++) {
+            result += std::to_string(participantIds[i]);
+            result += ":";
+            result += i < participantRoles.size() ? participantRoles[i] : "Participant";
+
+            if (i + 1 < participantIds.size()) {
+                result += " | ";
+            }
+        }
+
+        return result;
+    }
 }
 
 void RequestResultWriter::writeRequestResults(const std::string& filename,
@@ -151,7 +190,7 @@ void RequestResultWriter::writeRequestResults(const std::string& filename,
         return;
     }
 
-    file << "requestId,requestType,title,purpose,courseCode,courseName,examType,canSplitAcrossRooms,requesterName,requesterRole,priority,spaceName,spaceType,spaceBuilding,requiredBuilding,requiredFeature,participants,status,rejectionReason,timeInfo,lifecycleHistory\n";
+    file << "requestId,requestType,title,purpose,courseCode,courseName,examType,canSplitAcrossRooms,committeeParticipants,requesterName,requesterRole,priority,spaceName,spaceType,spaceBuilding,requiredBuilding,requiredFeature,participants,status,rejectionReason,timeInfo,lifecycleHistory\n";
 
     for (Request* request : requests) {
         request->addHistoryEvent("exported");
@@ -164,6 +203,7 @@ void RequestResultWriter::writeRequestResults(const std::string& filename,
              << escapeCsv(examCourseNameToString(request)) << ","
              << escapeCsv(examTypeToString(request)) << ","
              << escapeCsv(canSplitAcrossRoomsToString(request)) << ","
+             << escapeCsv(committeeParticipantsToString(request)) << ","
              << escapeCsv(request->getRequester()->getName()) << ","
              << escapeCsv(request->getRequester()->getRoleName()) << ","
              << request->getPriority() << ","
