@@ -1,11 +1,15 @@
 #include "MeetingTimeSuggestionService.h"
 
+#include <algorithm>
+#include <cstdlib>
+
 namespace {
     constexpr int Monday = 1;
     constexpr int Friday = 5;
     constexpr int WorkingDayStartMinutes = 9 * 60;
     constexpr int WorkingDayEndMinutes = 17 * 60;
     constexpr int ScanStepMinutes = 30;
+    constexpr int MinutesPerDay = 24 * 60;
 }
 
 bool MeetingTimeSuggestionService::areParticipantsAvailable(
@@ -51,6 +55,30 @@ bool MeetingTimeSuggestionService::isRequestedSpaceAvailable(
     return true;
 }
 
+MeetingTimeSuggestion MeetingTimeSuggestionService::buildSuggestion(
+    const CommitteeMeetingRequest& request,
+    const TimeSlot& candidateSlot,
+    const Space* requestedSpace
+) const {
+    const TimeSlot requestedSlot = request.getPreferredTimeSlot();
+    const int requestedStart =
+        requestedSlot.getDay() * MinutesPerDay + requestedSlot.getStartMinutes();
+    const int candidateStart =
+        candidateSlot.getDay() * MinutesPerDay + candidateSlot.getStartMinutes();
+    const int timeDistanceMinutes = std::abs(candidateStart - requestedStart);
+    const int dayDistance = std::abs(candidateSlot.getDay() - requestedSlot.getDay());
+
+    return MeetingTimeSuggestion(
+        candidateSlot,
+        requestedSpace->getId(),
+        "Least-change valid slot",
+        timeDistanceMinutes,
+        timeDistanceMinutes,
+        dayDistance,
+        0
+    );
+}
+
 std::vector<MeetingTimeSuggestion> MeetingTimeSuggestionService::suggestTimes(
     const CommitteeMeetingRequest& request,
     Space* requestedSpace,
@@ -70,6 +98,8 @@ std::vector<MeetingTimeSuggestion> MeetingTimeSuggestionService::suggestTimes(
         return suggestions;
     }
 
+    const TimeSlot requestedSlot = request.getPreferredTimeSlot();
+
     for (int day = Monday; day <= Friday; ++day) {
         for (int startMinutes = WorkingDayStartMinutes;
              startMinutes + durationMinutes <= WorkingDayEndMinutes;
@@ -86,16 +116,42 @@ std::vector<MeetingTimeSuggestion> MeetingTimeSuggestionService::suggestTimes(
                 continue;
             }
 
-            suggestions.emplace_back(
-                candidateSlot,
-                requestedSpace->getId(),
-                "All required participants and requested room are available"
-            );
-
-            if (static_cast<int>(suggestions.size()) >= maxSuggestions) {
-                return suggestions;
-            }
+            suggestions.push_back(buildSuggestion(request, candidateSlot, requestedSpace));
         }
+    }
+
+    std::sort(
+        suggestions.begin(),
+        suggestions.end(),
+        [&requestedSlot](const MeetingTimeSuggestion& left,
+                         const MeetingTimeSuggestion& right) {
+            if (left.getScore() != right.getScore()) {
+                return left.getScore() < right.getScore();
+            }
+
+            const TimeSlot leftSlot = left.getTimeSlot();
+            const TimeSlot rightSlot = right.getTimeSlot();
+            const bool leftSameDay = leftSlot.getDay() == requestedSlot.getDay();
+            const bool rightSameDay = rightSlot.getDay() == requestedSlot.getDay();
+
+            if (leftSameDay != rightSameDay) {
+                return leftSameDay;
+            }
+
+            if (leftSlot.getDay() != rightSlot.getDay()) {
+                return leftSlot.getDay() < rightSlot.getDay();
+            }
+
+            if (leftSlot.getStartMinutes() != rightSlot.getStartMinutes()) {
+                return leftSlot.getStartMinutes() < rightSlot.getStartMinutes();
+            }
+
+            return left.getSpaceId() < right.getSpaceId();
+        }
+    );
+
+    if (static_cast<int>(suggestions.size()) > maxSuggestions) {
+        suggestions.erase(suggestions.begin() + maxSuggestions, suggestions.end());
     }
 
     return suggestions;

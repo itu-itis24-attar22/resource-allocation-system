@@ -25,6 +25,12 @@ private:
         const std::vector<Allocation>& allocations
     ) const;
 
+    MeetingTimeSuggestion buildSuggestion(
+        const CommitteeMeetingRequest& request,
+        const TimeSlot& candidateSlot,
+        const Space* requestedSpace
+    ) const;
+
 public:
     std::vector<MeetingTimeSuggestion> suggestTimes(
         const CommitteeMeetingRequest& request,

@@ -99,14 +99,18 @@ void AllocationService::appendMeetingTimeSuggestions(
     }
 
     std::ostringstream message;
-    message << "Suggested alternative times: ";
+    message << "Suggested least-change alternative times: ";
 
     for (size_t i = 0; i < suggestions.size(); ++i) {
         TimeSlot slot = suggestions[i].getTimeSlot();
-        message << dayToString(slot.getDay()) << " "
+        message << (i + 1) << ") "
+                << dayToString(slot.getDay()) << " "
                 << slot.getStartTimeString() << "-"
                 << slot.getEndTimeString()
-                << " in space " << suggestions[i].getSpaceId();
+                << " in space " << suggestions[i].getSpaceId()
+                << " (distance: "
+                << suggestions[i].getTimeDistanceMinutes()
+                << " minutes)";
 
         if (i + 1 < suggestions.size()) {
             message << "; ";
