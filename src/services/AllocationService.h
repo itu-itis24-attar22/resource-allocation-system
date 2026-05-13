@@ -12,14 +12,22 @@
 #include "../models/RecurringRequest.h"
 #include "../models/ExamRequest.h"
 #include "../models/CommitteeMeetingRequest.h"
+#include "MeetingTimeSuggestionService.h"
 #include "../rules/RuleEngineFacade.h"
 #include "../strategies/IAllocationStrategy.h"
 
 class AllocationService {
 private:
     std::vector<Allocation> allocations;
+    std::vector<UserBusySlot> userBusySlots;
+    MeetingTimeSuggestionService meetingTimeSuggestionService;
     RuleEngineFacade ruleEngineFacade;
     const IAllocationStrategy* allocationStrategy;
+
+    void appendMeetingTimeSuggestions(CommitteeMeetingRequest& request) const;
+    void appendMeetingTimeSuggestionsForRejectedCommitteeRequests(
+        const std::vector<Request*>& requests
+    ) const;
 
 public:
     AllocationService();

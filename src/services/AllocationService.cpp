@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include "AllocationService.h"
 #include "../strategies/AllocationStrategyFactory.h"
 
@@ -6,7 +7,9 @@ AllocationService::AllocationService()
     : AllocationService("greedy") {}
 
 AllocationService::AllocationService(const std::string& strategyName)
-    : ruleEngineFacade(),
+    : userBusySlots(),
+      meetingTimeSuggestionService(),
+      ruleEngineFacade(),
       allocationStrategy(AllocationStrategyFactory::getInstance().getStrategy(strategyName)) {}
 
 AllocationService::AllocationService(
@@ -14,7 +17,9 @@ AllocationService::AllocationService(
     const std::vector<User*>& users,
     const std::vector<UserBusySlot>& userBusySlots
 )
-    : ruleEngineFacade(users, userBusySlots),
+    : userBusySlots(userBusySlots),
+      meetingTimeSuggestionService(),
+      ruleEngineFacade(users, userBusySlots),
       allocationStrategy(AllocationStrategyFactory::getInstance().getStrategy(strategyName)) {}
 
 const std::vector<Allocation>& AllocationService::getAllocations() const {
@@ -46,6 +51,7 @@ void AllocationService::processRequests(const std::vector<Request*>& requests) {
 void AllocationService::processRequests(const std::vector<Request*>& requests,
                                         const std::vector<Space*>& spaces) {
     allocationStrategy->processRequests(requests, spaces, allocations, ruleEngineFacade);
+    appendMeetingTimeSuggestionsForRejectedCommitteeRequests(requests);
 }
 
 bool AllocationService::processRequest(OneTimeRequest& request) {
@@ -61,7 +67,67 @@ bool AllocationService::processRequest(ExamRequest& request) {
 }
 
 bool AllocationService::processRequest(CommitteeMeetingRequest& request) {
-    return allocationStrategy->processRequest(request, allocations, ruleEngineFacade);
+    const bool approved =
+        allocationStrategy->processRequest(request, allocations, ruleEngineFacade);
+
+    if (!approved) {
+        appendMeetingTimeSuggestions(request);
+    }
+
+    return approved;
+}
+
+void AllocationService::appendMeetingTimeSuggestions(
+    CommitteeMeetingRequest& request
+) const {
+    if (request.getStatus() != RequestStatus::Rejected) {
+        return;
+    }
+
+    const std::vector<MeetingTimeSuggestion> suggestions =
+        meetingTimeSuggestionService.suggestTimes(
+            request,
+            request.getRequestedSpace(),
+            userBusySlots,
+            allocations,
+            3
+        );
+
+    if (suggestions.empty()) {
+        request.addHistoryEvent("No available alternative time found.");
+        return;
+    }
+
+    std::ostringstream message;
+    message << "Suggested alternative times: ";
+
+    for (size_t i = 0; i < suggestions.size(); ++i) {
+        TimeSlot slot = suggestions[i].getTimeSlot();
+        message << dayToString(slot.getDay()) << " "
+                << slot.getStartTimeString() << "-"
+                << slot.getEndTimeString()
+                << " in space " << suggestions[i].getSpaceId();
+
+        if (i + 1 < suggestions.size()) {
+            message << "; ";
+        }
+    }
+
+    request.addHistoryEvent(message.str());
+}
+
+void AllocationService::appendMeetingTimeSuggestionsForRejectedCommitteeRequests(
+    const std::vector<Request*>& requests
+) const {
+    for (Request* request : requests) {
+        CommitteeMeetingRequest* committeeRequest =
+            dynamic_cast<CommitteeMeetingRequest*>(request);
+
+        if (committeeRequest &&
+            committeeRequest->getStatus() == RequestStatus::Rejected) {
+            appendMeetingTimeSuggestions(*committeeRequest);
+        }
+    }
 }
 
 void AllocationService::printAllocations() const {
