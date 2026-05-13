@@ -98,6 +98,10 @@
                 <dd>{{ item.title }}</dd>
             </div>
             <div>
+                <dt>Preferred time</dt>
+                <dd>{{ item.time_data }}</dd>
+            </div>
+            <div>
                 <dt>Required participants</dt>
                 <dd>{{ item.committee_participants|length }}</dd>
             </div>
@@ -131,7 +135,16 @@
 
         {% if item.meeting_suggestions %}
         <div class="suggestion-box">
-            <strong>Meeting time suggestions:</strong> {{ item.meeting_suggestions }}
+            <strong>{{ item.meeting_suggestions["heading"] }}:</strong>
+            {% if item.meeting_suggestions["items"] %}
+            <ol class="suggestion-list">
+                {% for suggestion in item.meeting_suggestions["items"] %}
+                <li>{{ suggestion }}</li>
+                {% endfor %}
+            </ol>
+            {% else %}
+            <p>{{ item.meeting_suggestions["empty_message"] or item.meeting_suggestions["raw"] }}</p>
+            {% endif %}
         </div>
         {% endif %}
 

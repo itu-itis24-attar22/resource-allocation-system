@@ -40,7 +40,7 @@
                 </label>
 
                 <label>
-                    Requester
+                    <span data-label-default="Requester" data-label-committee="Requester / Organizer">Requester</span>
                     <select name="userId" required>
                         <option value="">Choose a requester</option>
                         {% for user in users %}
@@ -53,7 +53,7 @@
                 </label>
 
                 <label>
-                    Requested / reference space
+                    <span data-label-default="Requested / reference space" data-label-committee="Preferred Room">Requested / reference space</span>
                     <select name="spaceId" required>
                         <option value="">Choose a space</option>
                         {% for space in spaces %}
@@ -67,7 +67,7 @@
                 </label>
 
                 <label>
-                    Participant count
+                    <span data-label-default="Participant count" data-label-committee="Expected Attendee Count">Participant count</span>
                     <input type="number" name="participantCount" min="1" required
                            value="{{ form_data.get('participantCount', '') }}">
                 </label>
@@ -95,7 +95,7 @@
                 </label>
 
                 <label class="form-wide">
-                    Title
+                    <span data-label-default="Title" data-label-committee="Meeting title">Title</span>
                     <input type="text" name="title" required
                            value="{{ form_data.get('title', '') }}">
                 </label>
@@ -114,12 +114,39 @@
             </div>
         </div>
 
+        <div class="form-section committee-guide" data-request-section="CommitteeMeeting">
+            <h3>Committee Meeting Details</h3>
+            <p>
+                Use this section for thesis presentations, project reviews, jury meetings,
+                and academic committee meetings that require several people at the same time.
+            </p>
+            <div class="committee-guide-grid">
+                <div>
+                    <strong>Preferred Meeting Time</strong>
+                    <span>Choose the day, start time, and end time below.</span>
+                </div>
+                <div>
+                    <strong>Preferred Room</strong>
+                    <span>The backend checks this room after Run Allocation is clicked.</span>
+                </div>
+                <div>
+                    <strong>Required Professors / Participants</strong>
+                    <span>Select one or more people and assign roles such as Supervisor or CommitteeMember.</span>
+                </div>
+            </div>
+            <p class="form-note">
+                Committee meeting requests are checked against required participant availability
+                only after <strong>Run Allocation</strong> is clicked. Flask writes CSV rows;
+                the C++ backend approves, rejects, and generates suggestions.
+            </p>
+        </div>
+
         <div class="form-section" data-request-section="OneTime Exam CommitteeMeeting">
-            <h3>OneTime / Exam / Committee Meeting Time</h3>
-            <p>Used when request type is <strong>OneTime</strong>, <strong>Exam</strong>, or <strong>CommitteeMeeting</strong>.</p>
+            <h3 data-label-default="OneTime / Exam / Committee Meeting Time" data-label-committee="Preferred Meeting Time">OneTime / Exam / Committee Meeting Time</h3>
+            <p data-label-default="Used when request type is OneTime, Exam, or CommitteeMeeting." data-label-committee="Select the exact requested time. If the backend rejects the meeting, it may export least-change alternative suggestions.">Used when request type is <strong>OneTime</strong>, <strong>Exam</strong>, or <strong>CommitteeMeeting</strong>.</p>
             <div class="form-grid">
                 <label>
-                    Day
+                    Preferred day
                     <input type="number" name="day" min="1" max="7"
                            value="{{ form_data.get('day', '') }}">
                 </label>
@@ -186,11 +213,10 @@
         </div>
 
         <div class="form-section" data-request-section="CommitteeMeeting">
-            <h3>Committee Meeting Participants</h3>
+            <h3>Required Professors / Participants</h3>
             <p>
-                Used only when request type is <strong>CommitteeMeeting</strong>.
-                Flask writes these rows to <code>data/request_participants.csv</code>;
-                participant availability is checked later by the C++ backend.
+                Select at least one required participant. The role field is written to
+                <code>data/request_participants.csv</code> beside the selected user.
             </p>
 
             {% set selected_participants = form_data.get("requiredParticipantIds", []) %}
@@ -217,6 +243,7 @@
 
         <div class="form-actions">
             <button type="submit">Add Request</button>
+            <a href="{{ url_for('schedules') }}">View Schedules</a>
             <a href="{{ url_for('requests') }}">View Requests</a>
         </div>
     </form>
@@ -228,10 +255,17 @@
 
     function updateRequestSections() {
         const selectedType = requestTypeSelect.value;
+        const isCommittee = selectedType === "CommitteeMeeting";
 
         requestSections.forEach((section) => {
             const visibleTypes = section.dataset.requestSection.split(" ");
             section.hidden = !visibleTypes.includes(selectedType);
+        });
+
+        document.querySelectorAll("[data-label-default]").forEach((element) => {
+            element.textContent = isCommittee
+                ? element.dataset.labelCommittee
+                : element.dataset.labelDefault;
         });
     }
 
