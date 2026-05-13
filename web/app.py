@@ -1,5 +1,6 @@
 from pathlib import Path
 import csv
+import re
 import subprocess
 
 from flask import Flask, redirect, render_template, request, url_for
@@ -933,6 +934,45 @@ def extract_meeting_suggestion_text(lifecycle_history):
     return ""
 
 
+def extract_meeting_suggestions(lifecycle_history):
+    suggestion_text = extract_meeting_suggestion_text(lifecycle_history)
+    if not suggestion_text:
+        return None
+
+    if suggestion_text == "No available alternative time found.":
+        return {
+            "heading": "Suggested alternative times",
+            "items": [],
+            "empty_message": suggestion_text,
+            "raw": suggestion_text,
+        }
+
+    heading, separator, body = suggestion_text.partition(":")
+    if not separator:
+        return {
+            "heading": "Suggested alternative times",
+            "items": [],
+            "empty_message": "",
+            "raw": suggestion_text,
+        }
+
+    items = []
+    for part in body.split(";"):
+        cleaned = part.strip()
+        if not cleaned:
+            continue
+
+        cleaned = re.sub(r"^\d+\)\s*", "", cleaned)
+        items.append(cleaned)
+
+    return {
+        "heading": heading.strip(),
+        "items": items,
+        "empty_message": "" if items else body.strip(),
+        "raw": suggestion_text,
+    }
+
+
 def get_room_capacity(space):
     if not space:
         return None
@@ -1056,7 +1096,7 @@ def build_allocation_summary():
                     result_row.get("rejectionReason"),
                     "",
                 ),
-                "meeting_suggestions": extract_meeting_suggestion_text(
+                "meeting_suggestions": extract_meeting_suggestions(
                     result_row.get("lifecycleHistory")
                 ),
                 "assigned_rooms": assigned_rooms,
@@ -1500,14 +1540,21 @@ def request_added(request_id):
     display_row = dict(row) if row else None
     participant_rows = get_request_participant_rows(request_id)
     users_by_id = index_by_field(read_csv_table("users.csv")["rows"], "userId")
+    spaces_by_id = index_by_field(read_csv_table("spaces.csv")["rows"], "spaceId")
+    requester = {}
+    requested_space = {}
 
     if display_row and "timeData" in display_row:
+        requester = users_by_id.get((display_row.get("userId") or "").strip(), {})
+        requested_space = spaces_by_id.get((display_row.get("spaceId") or "").strip(), {})
         display_row["timeData"] = format_time_data(display_row.get("timeData"))
 
     return render_template(
         "request_added.html",
         request_id=request_id,
         request_row=display_row,
+        requester=requester,
+        requested_space=requested_space,
         committee_participants=build_committee_participant_display(
             participant_rows,
             users_by_id,

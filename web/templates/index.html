@@ -30,6 +30,10 @@
         <form class="run-form" method="post" action="{{ url_for('run_allocation') }}">
             <button type="submit">Run Allocation</button>
         </form>
+
+        <a class="hero-action-link" href="{{ url_for('add_request', type='CommitteeMeeting') }}">
+            Create Committee Meeting
+        </a>
     </div>
 </section>
 

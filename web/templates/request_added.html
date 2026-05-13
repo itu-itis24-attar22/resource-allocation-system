@@ -14,13 +14,14 @@
     </p>
 
     {% if request_row %}
+    {% set is_committee = request_row.get("requestType") == "CommitteeMeeting" %}
     <dl class="confirmation-details">
         <div>
             <dt>Type</dt>
             <dd>{{ request_row.get("requestType", "N/A") }}</dd>
         </div>
         <div>
-            <dt>Title</dt>
+            <dt>{{ "Meeting title" if is_committee else "Title" }}</dt>
             <dd>{{ request_row.get("title", "N/A") }}</dd>
         </div>
         <div>
@@ -28,10 +29,45 @@
             <dd>{{ request_row.get("purpose", "N/A") }}</dd>
         </div>
         <div>
-            <dt>Time Data</dt>
+            <dt>{{ "Preferred time" if is_committee else "Time Data" }}</dt>
             <dd>{{ request_row.get("timeData", "N/A") }}</dd>
         </div>
+        <div>
+            <dt>Requester</dt>
+            <dd>
+                {{ request_row.get("userId", "N/A") }}
+                {% if requester %}- {{ requester.get("name", "Unknown") }} ({{ requester.get("role", "Unknown") }}){% endif %}
+            </dd>
+        </div>
+        <div>
+            <dt>{{ "Preferred room" if is_committee else "Requested space" }}</dt>
+            <dd>
+                {{ request_row.get("spaceId", "N/A") }}
+                {% if requested_space %}
+                - {{ requested_space.get("name", "Unknown") }}
+                ({{ requested_space.get("type", "Unknown") }}, cap. {{ requested_space.get("capacity", "?") }})
+                {% endif %}
+            </dd>
+        </div>
+        <div>
+            <dt>{{ "Expected attendee count" if is_committee else "Participant count" }}</dt>
+            <dd>{{ request_row.get("participantCount", "N/A") }}</dd>
+        </div>
+        <div>
+            <dt>Required building / feature</dt>
+            <dd>{{ request_row.get("requiredBuilding", "N/A") }} / {{ request_row.get("requiredFeature", "N/A") }}</dd>
+        </div>
     </dl>
+
+    {% if is_committee %}
+    <div class="page-message">
+        <p>
+            This committee meeting is pending. Click <strong>Run Allocation Now</strong>
+            to let the C++ backend check participant availability, room rules, and
+            least-change suggestions if the requested time is rejected.
+        </p>
+    </div>
+    {% endif %}
     {% endif %}
 
     {% if committee_participants %}
@@ -50,7 +86,8 @@
     {% endif %}
 
     <div class="confirmation-actions">
-        <a href="{{ url_for('add_request') }}">Add Another Request</a>
+        <a href="{{ url_for('add_request', type='CommitteeMeeting') if request_row and request_row.get('requestType') == 'CommitteeMeeting' else url_for('add_request') }}">Add Another Request</a>
+        <a href="{{ url_for('allocation_summary', highlight=request_id) }}">View Allocation Summary</a>
         <a href="{{ url_for('requests') }}">View Requests</a>
         <form method="post" action="{{ url_for('run_allocation_now', request_id=request_id) }}">
             <button type="submit">Run Allocation Now</button>
