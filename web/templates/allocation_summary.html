@@ -129,6 +129,12 @@
         </div>
         {% endif %}
 
+        {% if item.meeting_suggestions %}
+        <div class="suggestion-box">
+            <strong>Meeting time suggestions:</strong> {{ item.meeting_suggestions }}
+        </div>
+        {% endif %}
+
         {% if item.assigned_rooms %}
         <div class="assigned-rooms">
             <h3>Related Allocations</h3>

@@ -701,6 +701,14 @@ tr:nth-child(even) td {
     margin: 1rem 0;
 }
 
+.suggestion-box {
+    border: 1px solid rgba(47, 111, 94, 0.35);
+    border-radius: 16px;
+    background: #f2fbf6;
+    padding: 0.9rem;
+    margin: 1rem 0;
+}
+
 .committee-participants {
     border: 1px solid #ece4d6;
     border-radius: 18px;

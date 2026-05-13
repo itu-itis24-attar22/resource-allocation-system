@@ -916,6 +916,21 @@ def build_committee_participant_display(participant_rows, users_by_id):
     return participants
 
 
+def extract_meeting_suggestion_text(lifecycle_history):
+    history = (lifecycle_history or "").strip()
+    if not history:
+        return ""
+
+    for event in history.split(" | "):
+        event = event.strip()
+        if event.startswith("Suggested alternative times:"):
+            return event
+        if event == "No available alternative time found.":
+            return event
+
+    return ""
+
+
 def get_room_capacity(space):
     if not space:
         return None
@@ -1038,6 +1053,9 @@ def build_allocation_summary():
                 "rejection_reason": display_value(
                     result_row.get("rejectionReason"),
                     "",
+                ),
+                "meeting_suggestions": extract_meeting_suggestion_text(
+                    result_row.get("lifecycleHistory")
                 ),
                 "assigned_rooms": assigned_rooms,
                 "total_assigned": total_assigned,
