@@ -39,6 +39,17 @@ static std::string dayToString(int day) {
     }
 }
 
+static bool isTimeSuggestionRelevant(const CommitteeMeetingRequest& request) {
+    const std::string reason = request.getRejectionReason();
+
+    if (reason == "Time slot unavailable") {
+        return true;
+    }
+
+    return reason.find("Required participant ") == 0 &&
+           reason.find(" is not available at ") != std::string::npos;
+}
+
 void AllocationService::addExistingAllocation(const Allocation& allocation) {
     allocations.push_back(allocation);
 }
@@ -81,6 +92,10 @@ void AllocationService::appendMeetingTimeSuggestions(
     CommitteeMeetingRequest& request
 ) const {
     if (request.getStatus() != RequestStatus::Rejected) {
+        return;
+    }
+
+    if (!isTimeSuggestionRelevant(request)) {
         return;
     }
 
