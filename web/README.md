@@ -143,6 +143,8 @@ The Add Request page shows instructor, teaching assistant, staff, and administra
 
 Flask does not check whether committee participants are free. It only writes `requests.csv` and `request_participants.csv`. After `Run Allocation`, the C++ backend creates the `CommitteeMeetingRequest`, attaches participants, and uses `ParticipantAvailabilityRule` with `user_busy_slots.csv` to approve or reject the request.
 
+When a committee meeting is rejected because the requested time is not workable, the C++ backend may add first-available alternative time suggestions to the request lifecycle history. These suggestions scan Monday-Friday working hours in 30-minute increments, keep the original meeting duration, check required participant availability, and check the requested room's existing allocations. The Allocation Summary page displays this exported suggestion text when it is present.
+
 Day numbers use this mapping:
 
 - `1` = Monday
