@@ -923,6 +923,8 @@ def extract_meeting_suggestion_text(lifecycle_history):
 
     for event in history.split(" | "):
         event = event.strip()
+        if event.startswith("Suggested least-change alternative times:"):
+            return event
         if event.startswith("Suggested alternative times:"):
             return event
         if event == "No available alternative time found.":
