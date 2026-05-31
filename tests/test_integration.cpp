@@ -266,12 +266,22 @@ TEST_CASE("DataController loads custom auxiliary busy-slot and request-participa
 TEST_CASE("Backend smoke artifacts from main data exist after backend run") {
     const bool allocationsReady = fileExistsAndNotEmpty("data/allocations.csv");
     const bool resultsReady = fileExistsAndNotEmpty("data/request_results.csv");
+    const bool requestSummariesReady = fileExistsAndNotEmpty("data/request_summaries.csv");
+    const bool allocationSummariesReady = fileExistsAndNotEmpty("data/allocation_summaries.csv");
 
-    if (!allocationsReady || !resultsReady) {
+    if (!allocationsReady ||
+        !resultsReady ||
+        !requestSummariesReady ||
+        !allocationSummariesReady) {
         std::cout << "[INFO] Backend smoke artifacts are missing. "
                   << "Run the normal backend executable to create them.\n";
     }
 
     CHECK(allocationsReady);
     CHECK(resultsReady);
+    CHECK(requestSummariesReady);
+    CHECK(allocationSummariesReady);
+    CHECK_FILE_CONTAINS("data/request_summaries.csv", "requestId");
+    CHECK_FILE_CONTAINS("data/request_summaries.csv", "status");
+    CHECK_FILE_CONTAINS("data/allocation_summaries.csv", "assignedParticipants");
 }
