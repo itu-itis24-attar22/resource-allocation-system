@@ -67,6 +67,58 @@ TEST_CASE("AllocationService approves a valid recurring request with two allocat
     CHECK_EQ(service.getAllocations().size(), static_cast<size_t>(2));
 }
 
+TEST_CASE("AllocationService rejects recurring request with internal self-conflict") {
+    Student student(1, "Student");
+    MeetingRoom room(301, "M301", 12, true, true, false, true, "AdminBuilding");
+    AllocationService service;
+
+    RecurringRequest request(
+        4,
+        &student,
+        &room,
+        {TimeSlot(2, 9, 11), TimeSlot(2, 10, 12)},
+        8,
+        "Overlapping Recurring",
+        "Meeting",
+        "Projector",
+        "AdminBuilding"
+    );
+
+    bool approved = service.processRequest(request);
+
+    CHECK(!approved);
+    CHECK(request.getStatus() == RequestStatus::Rejected);
+    CHECK_EQ(request.getRejectionReason(),
+             std::string("Self-conflicting recurring request"));
+    CHECK(service.getAllocations().empty());
+}
+
+TEST_CASE("AllocationService rejects recurring request with one external conflict") {
+    Student student(1, "Student");
+    MeetingRoom room(301, "M301", 12, true, true, false, true, "AdminBuilding");
+    AllocationService service;
+    service.addExistingAllocation(Allocation(99, 999, &room, TimeSlot(4, 9, 10), 4));
+
+    RecurringRequest request(
+        5,
+        &student,
+        &room,
+        {TimeSlot(2, 9, 10), TimeSlot(4, 9, 10)},
+        8,
+        "Externally Conflicting Recurring",
+        "Meeting",
+        "Projector",
+        "AdminBuilding"
+    );
+
+    bool approved = service.processRequest(request);
+
+    CHECK(!approved);
+    CHECK(request.getStatus() == RequestStatus::Rejected);
+    CHECK_EQ(request.getRejectionReason(), std::string("Time slot unavailable"));
+    CHECK_EQ(allocationCountForRequest(service.getAllocations(), 5), 0);
+}
+
 TEST_CASE("AllocationService approves committee meeting when participants are free") {
     Student student(1, "Student");
     Instructor professor(2, "Dr. Free");

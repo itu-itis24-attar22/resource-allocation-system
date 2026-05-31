@@ -41,17 +41,21 @@ TEST_CASE("DataController loads allocation strategy from config with safe fallba
     writeTextFile(greedyConfig, "allocation_strategy=greedy\n");
     writeTextFile(emptyConfig, "# no strategy here\n");
     writeTextFile(invalidConfig, "allocation_strategy=does_not_exist\n");
+    const std::string emptyValueConfig = "tests/tmp_empty_value_config.txt";
+    writeTextFile(emptyValueConfig, "allocation_strategy=\n");
 
     CHECK_EQ(controller.loadAllocationStrategyName(priorityConfig), std::string("priority"));
     CHECK_EQ(controller.loadAllocationStrategyName(greedyConfig), std::string("greedy"));
     CHECK_EQ(controller.loadAllocationStrategyName(emptyConfig), std::string("greedy"));
     CHECK_EQ(controller.loadAllocationStrategyName(invalidConfig), std::string("greedy"));
+    CHECK_EQ(controller.loadAllocationStrategyName(emptyValueConfig), std::string("greedy"));
     CHECK_EQ(controller.loadAllocationStrategyName("tests/missing_config.txt"), std::string("greedy"));
 
     std::remove(priorityConfig.c_str());
     std::remove(greedyConfig.c_str());
     std::remove(emptyConfig.c_str());
     std::remove(invalidConfig.c_str());
+    std::remove(emptyValueConfig.c_str());
 }
 
 TEST_CASE("Greedy strategy processes conflicting requests in input order") {

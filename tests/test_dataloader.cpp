@@ -69,3 +69,93 @@ TEST_CASE("DataLoader handles missing optional request participants file") {
 
     CHECK(participants.empty());
 }
+
+TEST_CASE("DataLoader handles missing and empty required CSV files safely") {
+    const std::string emptyUsers = "tests/tmp_empty_users.csv";
+    const std::string emptySpaces = "tests/tmp_empty_spaces.csv";
+    writeFile(emptyUsers, "");
+    writeFile(emptySpaces, "");
+
+    std::vector<User*> missingUsers =
+        DataLoader::loadUsers("tests/does_not_exist_users.csv");
+    std::vector<Space*> missingSpaces =
+        DataLoader::loadSpaces("tests/does_not_exist_spaces.csv");
+    std::vector<User*> emptyLoadedUsers = DataLoader::loadUsers(emptyUsers);
+    std::vector<Space*> emptyLoadedSpaces = DataLoader::loadSpaces(emptySpaces);
+
+    CHECK(missingUsers.empty());
+    CHECK(missingSpaces.empty());
+    CHECK(emptyLoadedUsers.empty());
+    CHECK(emptyLoadedSpaces.empty());
+
+    std::remove(emptyUsers.c_str());
+    std::remove(emptySpaces.c_str());
+}
+
+TEST_CASE("DataLoader skips unknown user roles and unknown space types") {
+    const std::string usersPath = "tests/tmp_unknown_roles.csv";
+    const std::string spacesPath = "tests/tmp_unknown_spaces.csv";
+    writeFile(
+        usersPath,
+        "userId,name,role\n"
+        "1,Alice,Student\n"
+        "2,Bob,Dean\n"
+        "3,Carol,TeachingAssistant\n"
+    );
+    writeFile(
+        spacesPath,
+        "spaceId,type,name,capacity,hasProjector,hasWhiteboard,hasComputers,isAvailable,building\n"
+        "101,Classroom,B201,40,1,1,0,1,Engineering\n"
+        "999,Auditorium,A1,100,1,1,0,1,Main\n"
+    );
+
+    std::vector<User*> users = DataLoader::loadUsers(usersPath);
+    std::vector<Space*> spaces = DataLoader::loadSpaces(spacesPath);
+
+    CHECK_EQ(users.size(), static_cast<size_t>(2));
+    CHECK_EQ(users[0]->getRoleName(), std::string("Student"));
+    CHECK_EQ(users[1]->getRoleName(), std::string("TeachingAssistant"));
+    CHECK_EQ(spaces.size(), static_cast<size_t>(1));
+    CHECK_EQ(spaces[0]->getType(), std::string("Classroom"));
+
+    for (User* user : users) {
+        delete user;
+    }
+    for (Space* space : spaces) {
+        delete space;
+    }
+    std::remove(usersPath.c_str());
+    std::remove(spacesPath.c_str());
+}
+
+TEST_CASE("DataLoader currently allows duplicate user and space IDs") {
+    const std::string usersPath = "tests/tmp_duplicate_users.csv";
+    const std::string spacesPath = "tests/tmp_duplicate_spaces.csv";
+    writeFile(
+        usersPath,
+        "userId,name,role\n"
+        "1,Alice,Student\n"
+        "1,Duplicate Alice,Student\n"
+    );
+    writeFile(
+        spacesPath,
+        "spaceId,type,name,capacity,hasProjector,hasWhiteboard,hasComputers,isAvailable,building\n"
+        "101,Classroom,B201,40,1,1,0,1,Engineering\n"
+        "101,Classroom,B201 Duplicate,30,1,1,0,1,Engineering\n"
+    );
+
+    std::vector<User*> users = DataLoader::loadUsers(usersPath);
+    std::vector<Space*> spaces = DataLoader::loadSpaces(spacesPath);
+
+    CHECK_EQ(users.size(), static_cast<size_t>(2));
+    CHECK_EQ(spaces.size(), static_cast<size_t>(2));
+
+    for (User* user : users) {
+        delete user;
+    }
+    for (Space* space : spaces) {
+        delete space;
+    }
+    std::remove(usersPath.c_str());
+    std::remove(spacesPath.c_str());
+}
