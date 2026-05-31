@@ -1,4 +1,5 @@
 #include "ResourceAllocationSession.h"
+#include "../data/SummaryWriter.h"
 
 namespace {
     const std::vector<Allocation>& emptyAllocations() {
@@ -84,8 +85,32 @@ void ResourceAllocationSession::exportResults(
     const std::string& allocationsFile,
     const std::string& requestResultsFile
 ) const {
+    exportResults(
+        allocationsFile,
+        requestResultsFile,
+        "data/request_summaries.csv",
+        "data/allocation_summaries.csv"
+    );
+}
+
+void ResourceAllocationSession::exportResults(
+    const std::string& allocationsFile,
+    const std::string& requestResultsFile,
+    const std::string& requestSummariesFile,
+    const std::string& allocationSummariesFile
+) const {
     dataController.exportAllocations(allocationsFile, getAllocations());
     dataController.exportRequestResults(requestResultsFile, systemData.requests);
+    SummaryWriter::writeRequestSummaries(
+        requestSummariesFile,
+        systemData.requests,
+        getAllocations()
+    );
+    SummaryWriter::writeAllocationSummaries(
+        allocationSummariesFile,
+        systemData.requests,
+        getAllocations()
+    );
 }
 
 void ResourceAllocationSession::printAllocations() const {
