@@ -43,10 +43,10 @@
             <div>
                 <p class="eyebrow">Request {{ item.request_id }}</p>
                 <h2>{{ item.title }}</h2>
-                <p>{{ item.request_type }} request - {{ item.purpose }}</p>
+                <p>{{ item.request_type_label }} request - {{ item.purpose }}</p>
             </div>
             <div class="exam-badges">
-                <span class="badge">{{ item.request_type }}</span>
+                <span class="badge">{{ item.request_type_label }}</span>
                 <span class="badge badge-{{ item.status_class }}">{{ item.status }}</span>
                 {% if item.is_exam %}
                 <span class="badge">{{ "Splittable" if item.can_split == "true" else "Non-splittable" }}</span>
@@ -79,8 +79,12 @@
                 <dd>{{ item.time_data }}</dd>
             </div>
             <div>
+                <dt>Requested space</dt>
+                <dd>{{ item.requested_space_name }} ({{ item.requested_space_id }}, {{ item.requested_space_type }})</dd>
+            </div>
+            <div>
                 <dt>Requester</dt>
-                <dd>{{ item.user_id }} - {{ item.requester_name }}</dd>
+                <dd>{{ item.user_id }} - {{ item.requester_name }} ({{ item.requester_role }})</dd>
             </div>
             {% if item.is_exam %}
             <div>
@@ -107,6 +111,13 @@
             </div>
             {% endif %}
         </dl>
+
+        <div class="card-actions">
+            <a class="button-secondary" href="{{ url_for('request_detail', request_id=item.request_id) }}">View request</a>
+            {% if item.assigned_rooms %}
+            <a class="button-secondary" href="{{ url_for('schedules', type='space', id=item.assigned_rooms[0].space_id) }}">View room schedule</a>
+            {% endif %}
+        </div>
 
         {% if item.is_committee %}
         <div class="committee-participants">
@@ -171,7 +182,11 @@
                             <td>{{ room.building }}</td>
                             <td>{{ room.capacity_display }}</td>
                             <td>{{ room.assigned }}</td>
-                            <td>{{ room.time }}</td>
+                            <td>
+                                {{ room.time }}
+                                <br>
+                                <a href="{{ url_for('schedules', type='space', id=room.space_id) }}">Schedule</a>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>

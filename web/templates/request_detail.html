@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Request {{ request_id }} | Resource Allocation System{% endblock %}
+{% block page_heading %}Request {{ request_id }}{% endblock %}
+
+{% block content %}
+{% if run_message %}
+<section class="page-message page-message-{{ run_message.status }}">
+    <p>{{ run_message.text }}</p>
+</section>
+{% endif %}
+
+{% if not item %}
+<section class="empty-state">
+    <h2>Request not found</h2>
+    <p>No request with ID <code>{{ request_id }}</code> was found in <code>requests.csv</code>.</p>
+    <a class="button-secondary" href="{{ url_for('requests') }}">Back to Requests</a>
+</section>
+{% else %}
+<section class="request-detail-card request-card-highlight">
+    <div class="request-card-header">
+        <div>
+            <p class="eyebrow">{{ item.request_type_label }}</p>
+            <h2>{{ item.title }}</h2>
+            <p>{{ item.purpose }} · {{ item.time_data }}</p>
+        </div>
+        <div class="exam-badges">
+            <span class="badge">{{ item.request_type_label }}</span>
+            <span class="badge badge-{{ item.status_class }}">{{ item.status }}</span>
+        </div>
+    </div>
+
+    <div class="detail-actions">
+        <form method="post" action="{{ url_for('run_allocation_now', request_id=item.request_id) }}">
+            <button class="button-primary" type="submit">Run Allocation Now</button>
+        </form>
+        <a class="button-secondary" href="{{ url_for('allocation_summary', highlight=item.request_id) }}">Open in Allocation Summary</a>
+        <a class="button-secondary" href="{{ url_for('requests', highlight=item.request_id) }}">Back to Requests</a>
+    </div>
+
+    {% if item.status == "Pending" or not results_available %}
+    <div class="page-message">
+        <p>This request is saved but does not have a current backend result yet. Run allocation to approve, reject, or generate suggestions.</p>
+    </div>
+    {% endif %}
+
+    <dl class="exam-details">
+        <div>
+            <dt>Requester</dt>
+            <dd>{{ item.user_id }} - {{ item.requester_name }} ({{ item.requester_role }})</dd>
+        </div>
+        <div>
+            <dt>Requested / preferred space</dt>
+            <dd>{{ item.requested_space_name }} ({{ item.requested_space_id }}, {{ item.requested_space_type }})</dd>
+        </div>
+        <div>
+            <dt>Building / feature</dt>
+            <dd>{{ item.required_building }} / {{ item.required_feature }}</dd>
+        </div>
+        <div>
+            <dt>Expected participants</dt>
+            <dd>{{ item.participant_display }}</dd>
+        </div>
+        {% if item.is_exam %}
+        <div>
+            <dt>Course</dt>
+            <dd>{{ item.course_code }} - {{ item.course_name }}</dd>
+        </div>
+        <div>
+            <dt>Exam type</dt>
+            <dd>{{ item.exam_type }} · {{ "Splittable" if item.can_split == "true" else "Non-splittable" }}</dd>
+        </div>
+        {% endif %}
+    </dl>
+
+    {% if item.is_committee %}
+    <div class="committee-participants">
+        <h3>Required Professors / Participants</h3>
+        {% if item.committee_participants %}
+        <div class="committee-participant-list">
+            {% for participant in item.committee_participants %}
+            <div>
+                <strong>{{ participant.name }}</strong>
+                <span>{{ participant.role }}</span>
+                <small>User {{ participant.user_id }} - {{ participant.user_role }}</small>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p>No required participants were found for this committee meeting.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if item.rejection_reason %}
+    <div class="rejection-box">
+        <strong>Rejection reason:</strong> {{ item.rejection_reason }}
+    </div>
+    {% endif %}
+
+    {% if item.meeting_suggestions %}
+    <div class="suggestion-box">
+        <strong>{{ item.meeting_suggestions.heading }}:</strong>
+        {% if item.meeting_suggestions["items"] %}
+        <ol class="suggestion-list">
+            {% for suggestion in item.meeting_suggestions["items"] %}
+            <li>{{ suggestion }}</li>
+            {% endfor %}
+        </ol>
+        {% else %}
+        <p>{{ item.meeting_suggestions["empty_message"] or item.meeting_suggestions["raw"] }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if item.assigned_rooms %}
+    <div class="assigned-rooms">
+        <h3>Approved Allocations</h3>
+        <div class="assignment-grid">
+            {% for room in item.assigned_rooms %}
+            <article>
+                <strong>{{ room.name }} ({{ room.space_id }})</strong>
+                <span>{{ room.time }}</span>
+                <small>{{ room.type }} · {{ room.building }} · assigned {{ room.assigned }}</small>
+                <a href="{{ url_for('schedules', type='space', id=room.space_id) }}">View room schedule</a>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <p class="no-rooms">No allocation rows are available for this request yet.</p>
+    {% endif %}
+</section>
+{% endif %}
+{% endblock %}

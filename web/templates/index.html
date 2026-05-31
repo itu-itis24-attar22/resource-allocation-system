@@ -1,89 +1,108 @@
 {% extends "base.html" %}
 
 {% block title %}Dashboard | Resource Allocation System{% endblock %}
-{% block page_heading %}Allocation Dashboard{% endblock %}
+{% block page_heading %}Dashboard{% endblock %}
 
 {% block content %}
-<section class="hero-card">
-    <p class="eyebrow">Current Allocation Strategy</p>
-    <h2>{{ strategy }}</h2>
-    <p>
-        This dashboard displays CSV data and coordinates demo actions. Strategy
-        selection only updates the config file, and Run Allocation delegates to
-        the compiled C++ backend.
-    </p>
-    <div class="action-grid">
-        <form class="strategy-form" method="post" action="{{ url_for('set_strategy') }}">
-            <label for="strategy">Select strategy</label>
-            <div class="strategy-controls">
-                <select id="strategy" name="strategy">
-                    {% for option in strategies %}
-                    <option value="{{ option.value }}" {% if option.value == strategy %}selected{% endif %}>
-                        {{ option.label }}
-                    </option>
-                    {% endfor %}
-                </select>
-                <button type="submit">Save Strategy</button>
-            </div>
-        </form>
-
-        <form class="run-form" method="post" action="{{ url_for('run_allocation') }}">
-            <button type="submit">Run Allocation</button>
-        </form>
-
-        <a class="hero-action-link" href="{{ url_for('add_request', type='CommitteeMeeting') }}">
-            Create Committee Meeting
-        </a>
+<section class="dashboard-hero">
+    <div class="hero-copy">
+        <p class="eyebrow">C++ Backend Controlled Dashboard</p>
+        <h2>Plan requests first. Run allocation when you are ready.</h2>
+        <p>
+            Requests are saved to CSV first. <strong>Run Allocation</strong>
+            processes all saved requests using the compiled C++ backend, selected
+            strategy, rules, participant availability, and meeting-time suggestions.
+        </p>
+        <div class="hero-actions">
+            <form method="post" action="{{ url_for('run_allocation') }}">
+                <button class="button-primary" type="submit">Run Allocation</button>
+            </form>
+            <a class="button-secondary" href="{{ url_for('add_request') }}">Add Request</a>
+            <a class="button-secondary" href="{{ url_for('add_request', type='CommitteeMeeting') }}">Create Committee Meeting</a>
+        </div>
     </div>
+
+    <aside class="strategy-card">
+        <p class="eyebrow">Selected Strategy</p>
+        <h3>{{ strategy_label }}</h3>
+        <p class="muted">Current config value: <code>{{ strategy }}</code></p>
+        <form class="strategy-form" method="post" action="{{ url_for('set_strategy') }}">
+            <label for="strategy">Change strategy</label>
+            <select id="strategy" name="strategy">
+                {% for option in strategies %}
+                <option value="{{ option.value }}" {% if option.value == strategy %}selected{% endif %}>
+                    {{ option.label }}
+                </option>
+                {% endfor %}
+            </select>
+            <button type="submit">Save Strategy</button>
+        </form>
+    </aside>
 </section>
 
 {% if strategy_message %}
-<section class="strategy-message strategy-message-{{ strategy_message.status }}">
+<section class="page-message page-message-{{ strategy_message.status }}">
     <p>{{ strategy_message.text }}</p>
 </section>
 {% endif %}
 
-{% if run_result %}
-<section class="run-result run-result-{{ run_result.status }}">
-    <h2>{{ run_result.message }}</h2>
-    {% if run_result.status == "success" %}
-    <p>
-        View the updated <a href="{{ url_for('allocations') }}">allocations</a>
-        and <a href="{{ url_for('results') }}">request results</a>.
-    </p>
-    {% endif %}
-
-    {% if run_result.stdout %}
-    <details>
-        <summary>Backend output</summary>
-        <pre>{{ run_result.stdout }}</pre>
-    </details>
-    {% endif %}
-
-    {% if run_result.stderr %}
-    <details>
-        <summary>Backend warnings/errors</summary>
-        <pre>{{ run_result.stderr }}</pre>
-    </details>
-    {% endif %}
-</section>
-{% endif %}
-
-<section class="cards-grid" aria-label="System counts">
+<section class="stats-grid" aria-label="Request and allocation statistics">
     {% for stat in stats %}
-    <article class="stat-card">
-        <p>{{ stat.label }}</p>
+    <article class="stat-card stat-card-{{ stat.tone|default('neutral') }}">
+        <span>{{ stat.label }}</span>
         <strong>{{ stat.value }}</strong>
     </article>
     {% endfor %}
 </section>
 
-<section class="info-panel">
-    <h2>Demo Notes</h2>
-    <p>
-        Use the navigation links to inspect users, spaces, requests, allocations,
-        and request results. If output files are missing, the relevant pages show
-        a friendly message instead of failing.
-    </p>
+<section class="dashboard-grid">
+    <article class="panel-card">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Newest First</p>
+                <h2>Recent Requests</h2>
+            </div>
+            <a href="{{ url_for('requests') }}">View all</a>
+        </div>
+
+        {% if not requests_available %}
+        <div class="empty-state compact">
+            <h3>No requests file</h3>
+            <p><code>requests.csv</code> is not available yet.</p>
+        </div>
+        {% elif recent_requests|length == 0 %}
+        <div class="empty-state compact">
+            <h3>No requests yet</h3>
+            <p>Add a request to start the allocation workflow.</p>
+        </div>
+        {% else %}
+        <div class="mini-request-list">
+            {% for item in recent_requests %}
+            <a class="mini-request" href="{{ url_for('request_detail', request_id=item.request_id) }}">
+                <span class="badge badge-{{ item.status_class }}">{{ item.status }}</span>
+                <strong>#{{ item.request_id }} {{ item.title }}</strong>
+                <small>{{ item.request_type_label }} · {{ item.time_data }}</small>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </article>
+
+    <article class="panel-card">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Demo Flow</p>
+                <h2>Quick Paths</h2>
+            </div>
+        </div>
+        <div class="quick-link-grid">
+            <a href="{{ url_for('add_request') }}">Save a request only</a>
+            <a href="{{ url_for('add_request', type='CommitteeMeeting') }}">Submit a committee meeting</a>
+            <a href="{{ url_for('allocation_summary') }}">Review allocation results</a>
+            <a href="{{ url_for('schedules', type='space') }}">Check space schedules</a>
+            <a href="{{ url_for('schedules', type='user') }}">Check participant schedules</a>
+            <a href="{{ url_for('raw_data') }}">Inspect raw CSV data</a>
+        </div>
+    </article>
 </section>
 {% endblock %}

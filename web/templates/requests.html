@@ -1,1 +1,78 @@
-{% extends "table.html" %}
+{% extends "base.html" %}
+
+{% block title %}Requests | Resource Allocation System{% endblock %}
+{% block page_heading %}Requests{% endblock %}
+
+{% block content %}
+<section class="panel-card">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Newest First</p>
+            <h2>Request Queue</h2>
+        </div>
+        <a class="button-secondary" href="{{ url_for('add_request') }}">Add Request</a>
+    </div>
+    <p class="muted">
+        This page focuses on workflow status. Raw <code>requests.csv</code> is still available under Raw Data.
+    </p>
+
+    <form class="filter-form filters-panel" method="get" action="{{ url_for('requests') }}">
+        <label>
+            Search
+            <input type="search" name="q" placeholder="ID, title, requester, course, room..." value="{{ query }}">
+        </label>
+        <label>
+            Type
+            <select name="type">
+                {% for request_type in type_options %}
+                <option value="{{ request_type }}" {% if request_type == type_filter %}selected{% endif %}>
+                    {{ request_type_labels.get(request_type, request_type) }}
+                </option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            Status
+            <select name="status">
+                {% for status in status_options %}
+                <option value="{{ status }}" {% if status == status_filter %}selected{% endif %}>{{ status }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <div class="filter-actions">
+            <button type="submit">Apply</button>
+            <a href="{{ url_for('requests') }}">Clear</a>
+        </div>
+    </form>
+</section>
+
+{% if not requests_available %}
+<section class="empty-state">
+    <h2>Requests file is missing</h2>
+    <p>No request queue can be shown because <code>requests.csv</code> is not available.</p>
+</section>
+{% elif items|length == 0 %}
+<section class="empty-state">
+    <h2>No matching requests</h2>
+    <p>Try changing the search text or filters.</p>
+</section>
+{% else %}
+<section class="request-list">
+    {% for item in items %}
+    <article id="request-{{ item.request_id }}" class="request-row-card {% if item.request_id == highlight_id %}request-card-highlight{% endif %}">
+        <div>
+            <p class="eyebrow">Request {{ item.request_id }}</p>
+            <h2>{{ item.title }}</h2>
+            <p>{{ item.request_type_label }} · {{ item.purpose }} · {{ item.time_data }}</p>
+        </div>
+        <div class="request-row-meta">
+            <span class="badge badge-{{ item.status_class }}">{{ item.status }}</span>
+            <span>{{ item.requester_name }}</span>
+            <span>{{ item.requested_space_name }}</span>
+            <a class="button-secondary" href="{{ url_for('request_detail', request_id=item.request_id) }}">View</a>
+        </div>
+    </article>
+    {% endfor %}
+</section>
+{% endif %}
+{% endblock %}

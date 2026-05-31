@@ -6,11 +6,11 @@
 {% block content %}
 <section class="form-card">
     <p class="eyebrow">Request Entry</p>
-    <h2>Create a request row</h2>
+    <h2>Create a request</h2>
     <p>
-        This form only appends a row to <code>data/requests.csv</code>. The C++
-        backend still creates request objects, evaluates rules, and performs
-        allocation when Run Allocation is used.
+        Save many requests for batch processing, or use <strong>Submit and Run</strong>
+        to add one request and immediately focus its backend-generated result.
+        Flask writes CSV rows only; the C++ backend still evaluates and allocates.
     </p>
 
     {% if errors %}
@@ -33,7 +33,7 @@
                     <select name="requestType" id="requestTypeSelect" required>
                         {% for request_type in request_types %}
                         <option value="{{ request_type }}" {% if form_data.get("requestType", "OneTime") == request_type %}selected{% endif %}>
-                            {{ request_type }}
+                            {{ request_type_labels.get(request_type, request_type) }}
                         </option>
                         {% endfor %}
                     </select>
@@ -147,22 +147,41 @@
             <div class="form-grid">
                 <label>
                     Preferred day
-                    <input type="number" name="day" min="1" max="7"
-                           value="{{ form_data.get('day', '') }}">
+                    <select name="day">
+                        <option value="">Choose a day</option>
+                        {% for day in day_options %}
+                        <option value="{{ day.value }}" {% if form_data.get('day', '') == day.value %}selected{% endif %}>
+                            {{ day.label }}
+                        </option>
+                        {% endfor %}
+                    </select>
                 </label>
 
                 <label>
                     Start time
-                    <input type="time" name="startTime"
-                           value="{{ form_data.get('startTime', '') }}">
+                    <select name="startTime">
+                        <option value="">Choose start</option>
+                        {% for time in time_options %}
+                        <option value="{{ time.value }}" {% if form_data.get('startTime', '') == time.value %}selected{% endif %}>
+                            {{ time.label }}
+                        </option>
+                        {% endfor %}
+                    </select>
                 </label>
 
                 <label>
                     End time
-                    <input type="time" name="endTime"
-                           value="{{ form_data.get('endTime', '') }}">
+                    <select name="endTime">
+                        <option value="">Choose end</option>
+                        {% for time in time_options %}
+                        <option value="{{ time.value }}" {% if form_data.get('endTime', '') == time.value %}selected{% endif %}>
+                            {{ time.label }}
+                        </option>
+                        {% endfor %}
+                    </select>
                 </label>
             </div>
+            <p class="field-help">Form choices are limited to Monday-Friday and 08:00-17:00 in 30-minute steps. The backend still performs the final rule checks.</p>
         </div>
 
         <div class="form-section" data-request-section="Recurring">
@@ -242,7 +261,8 @@
         </div>
 
         <div class="form-actions">
-            <button type="submit">Add Request</button>
+            <button type="submit" name="submitAction" value="save">Save Request Only</button>
+            <button class="button-strong" type="submit" name="submitAction" value="save_run">Submit and Run</button>
             <a href="{{ url_for('schedules') }}">View Schedules</a>
             <a href="{{ url_for('requests') }}">View Requests</a>
         </div>

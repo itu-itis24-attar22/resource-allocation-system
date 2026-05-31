@@ -7,3 +7,4 @@ userId,name,role,email,status,primaryUnit,assignedRoles,studentNo,program,yearLe
 6,Lina,Instructor,lina@university.edu,active,Engineering Department,Instructor,,,,Associate Professor,E-208,,,
 7,Ahmet,Student,ahmet@student.university.edu,active,Science Faculty,Student,S2024003,Information Systems,3,,,,,
 8,Omar Teaching Assistant,TeachingAssistant,omar.ta@university.edu,active,Engineering Department,TeachingAssistant,,,,,E-112,Graduate TA,,
+9,feza buzluca,Instructor,buzluca@itu.edu.tr,active,Engineering Department,Instructor,,,,Doç.Dr.,E-208,,,

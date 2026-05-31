@@ -6,3 +6,5 @@ spaceId,type,name,capacity,hasProjector,hasWhiteboard,hasComputers,isAvailable,b
 301,MeetingRoom,M301,10,1,0,0,1,AdminBuilding
 104,Classroom,B204,10,0,1,0,1,Engineering
 105,Classroom,S401,100,0,1,0,1,SharedExamBuilding
+106,Classroom,S402,100,0,1,0,1,SharedExamBuilding
+107,Classroom,S403,40,0,1,0,1,SharedExamBuilding

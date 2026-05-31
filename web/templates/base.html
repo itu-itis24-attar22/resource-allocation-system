@@ -13,15 +13,14 @@
             <h1>{% block page_heading %}Dashboard{% endblock %}</h1>
         </div>
         <nav class="nav-links" aria-label="Main navigation">
-            <a href="{{ url_for('index') }}">Home</a>
-            <a href="{{ url_for('users') }}">Users</a>
-            <a href="{{ url_for('spaces') }}">Spaces</a>
-            <a href="{{ url_for('requests') }}">Requests</a>
+            <a href="{{ url_for('index') }}">Dashboard</a>
             <a href="{{ url_for('add_request') }}">Add Request</a>
+            <a href="{{ url_for('requests') }}">Requests</a>
             <a href="{{ url_for('allocation_summary') }}">Allocation Summary</a>
             <a href="{{ url_for('schedules') }}">Schedules</a>
-            <a href="{{ url_for('allocations') }}">Allocations</a>
-            <a href="{{ url_for('results') }}">Results</a>
+            <a href="{{ url_for('users') }}">Users</a>
+            <a href="{{ url_for('spaces') }}">Spaces</a>
+            <a href="{{ url_for('raw_data') }}">Raw Data</a>
         </nav>
     </header>
 
