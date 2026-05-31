@@ -98,23 +98,100 @@ TEST_CASE("DataController converts invalid request rows into InvalidRequest obje
         "3,OneTime,1,999,5,Projector,AdminBuilding,1-10-11\n"
         "4,OneTime,1,301,5,Projector,AdminBuilding,bad-time\n"
         "5,UnknownType,1,301,5,Projector,AdminBuilding,1-10-11\n"
+        "5,OneTime,1,301,5,Projector,AdminBuilding,1-12-13\n"
+        "bad,row\n"
     );
 
     DataController controller;
     SystemData data = controller.loadAllData(usersPath, spacesPath, requestsPath);
 
-    CHECK_EQ(data.requests.size(), static_cast<size_t>(5));
+    CHECK_EQ(data.requests.size(), static_cast<size_t>(7));
     CHECK(dynamic_cast<InvalidRequest*>(data.requests[0]) == nullptr);
     CHECK(dynamic_cast<InvalidRequest*>(data.requests[1]) != nullptr);
     CHECK(dynamic_cast<InvalidRequest*>(data.requests[2]) != nullptr);
     CHECK(dynamic_cast<InvalidRequest*>(data.requests[3]) != nullptr);
     CHECK(dynamic_cast<InvalidRequest*>(data.requests[4]) != nullptr);
+    CHECK(dynamic_cast<InvalidRequest*>(data.requests[5]) != nullptr);
+    CHECK(dynamic_cast<InvalidRequest*>(data.requests[6]) != nullptr);
     CHECK_EQ(data.requests[1]->getRejectionReason(), std::string("Invalid user reference"));
     CHECK_EQ(data.requests[2]->getRejectionReason(), std::string("Invalid space reference"));
     CHECK_EQ(data.requests[3]->getRejectionReason(), std::string("Malformed input"));
+    CHECK_EQ(data.requests[5]->getRejectionReason(), std::string("Duplicate request ID"));
+    CHECK_EQ(data.requests[6]->getRejectionReason(), std::string("Malformed input"));
 
     CHECK_EQ(data.requests[0]->getTitle(), std::string("Untitled Request"));
     CHECK_EQ(data.requests[0]->getPurpose(), std::string("General"));
+
+    controller.cleanupData(data);
+    std::remove(usersPath.c_str());
+    std::remove(spacesPath.c_str());
+    std::remove(requestsPath.c_str());
+}
+
+TEST_CASE("DataController handles missing and empty request CSV files safely") {
+    const std::string usersPath = "tests/tmp_missing_requests_users.csv";
+    const std::string spacesPath = "tests/tmp_missing_requests_spaces.csv";
+    const std::string emptyRequestsPath = "tests/tmp_empty_requests.csv";
+
+    writeCsv(
+        usersPath,
+        "userId,name,role\n"
+        "1,Student One,Student\n"
+    );
+    writeCsv(
+        spacesPath,
+        "spaceId,type,name,capacity,hasProjector,hasWhiteboard,hasComputers,isAvailable,building\n"
+        "301,MeetingRoom,M301,10,1,0,0,1,AdminBuilding\n"
+    );
+    writeCsv(emptyRequestsPath, "");
+
+    DataController controller;
+    SystemData missingData =
+        controller.loadAllData(usersPath, spacesPath, "tests/does_not_exist_requests.csv");
+    SystemData emptyData =
+        controller.loadAllData(usersPath, spacesPath, emptyRequestsPath);
+
+    CHECK_EQ(missingData.users.size(), static_cast<size_t>(1));
+    CHECK_EQ(missingData.spaces.size(), static_cast<size_t>(1));
+    CHECK(missingData.requests.empty());
+    CHECK_EQ(emptyData.users.size(), static_cast<size_t>(1));
+    CHECK_EQ(emptyData.spaces.size(), static_cast<size_t>(1));
+    CHECK(emptyData.requests.empty());
+
+    controller.cleanupData(missingData);
+    controller.cleanupData(emptyData);
+    std::remove(usersPath.c_str());
+    std::remove(spacesPath.c_str());
+    std::remove(emptyRequestsPath.c_str());
+}
+
+TEST_CASE("DataController tolerates extra request columns after current schema") {
+    const std::string usersPath = "tests/tmp_extra_users.csv";
+    const std::string spacesPath = "tests/tmp_extra_spaces.csv";
+    const std::string requestsPath = "tests/tmp_extra_requests.csv";
+
+    writeCsv(
+        usersPath,
+        "userId,name,role\n"
+        "1,Student One,Student\n"
+    );
+    writeCsv(
+        spacesPath,
+        "spaceId,type,name,capacity,hasProjector,hasWhiteboard,hasComputers,isAvailable,building\n"
+        "301,MeetingRoom,M301,10,1,0,0,1,AdminBuilding\n"
+    );
+    writeCsv(
+        requestsPath,
+        "requestId,requestType,userId,spaceId,participantCount,requiredFeature,requiredBuilding,timeData,title,purpose,courseCode,courseName,examType,canSplitAcrossRooms,extra\n"
+        "1,OneTime,1,301,5,Projector,AdminBuilding,1-10-11,Extra Column Request,Meeting,,,,false,ignored\n"
+    );
+
+    DataController controller;
+    SystemData data = controller.loadAllData(usersPath, spacesPath, requestsPath);
+
+    CHECK_EQ(data.requests.size(), static_cast<size_t>(1));
+    CHECK(dynamic_cast<InvalidRequest*>(data.requests[0]) == nullptr);
+    CHECK_EQ(data.requests[0]->getTitle(), std::string("Extra Column Request"));
 
     controller.cleanupData(data);
     std::remove(usersPath.c_str());
