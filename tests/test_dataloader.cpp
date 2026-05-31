@@ -128,7 +128,7 @@ TEST_CASE("DataLoader skips unknown user roles and unknown space types") {
     std::remove(spacesPath.c_str());
 }
 
-TEST_CASE("DataLoader currently allows duplicate user and space IDs") {
+TEST_CASE("DataLoader skips duplicate user and space IDs while preserving first valid row") {
     const std::string usersPath = "tests/tmp_duplicate_users.csv";
     const std::string spacesPath = "tests/tmp_duplicate_spaces.csv";
     writeFile(
@@ -147,8 +147,10 @@ TEST_CASE("DataLoader currently allows duplicate user and space IDs") {
     std::vector<User*> users = DataLoader::loadUsers(usersPath);
     std::vector<Space*> spaces = DataLoader::loadSpaces(spacesPath);
 
-    CHECK_EQ(users.size(), static_cast<size_t>(2));
-    CHECK_EQ(spaces.size(), static_cast<size_t>(2));
+    CHECK_EQ(users.size(), static_cast<size_t>(1));
+    CHECK_EQ(spaces.size(), static_cast<size_t>(1));
+    CHECK_EQ(users[0]->getName(), std::string("Alice"));
+    CHECK_EQ(spaces[0]->getName(), std::string("B201"));
 
     for (User* user : users) {
         delete user;

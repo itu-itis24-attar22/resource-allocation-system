@@ -1,6 +1,7 @@
 #include "test_framework.h"
 #include "test_helpers.h"
 #include "../src/data/DataController.h"
+#include "../src/models/CommitteeMeetingRequest.h"
 #include "../src/models/InvalidRequest.h"
 #include "../src/services/AllocationService.h"
 #include <cstdio>
@@ -197,6 +198,69 @@ TEST_CASE("DataController tolerates extra request columns after current schema")
     std::remove(usersPath.c_str());
     std::remove(spacesPath.c_str());
     std::remove(requestsPath.c_str());
+}
+
+TEST_CASE("DataController loads custom auxiliary busy-slot and request-participant paths") {
+    const std::string usersPath = "tests/tmp_aux_users.csv";
+    const std::string spacesPath = "tests/tmp_aux_spaces.csv";
+    const std::string requestsPath = "tests/tmp_aux_requests.csv";
+    const std::string busySlotsPath = "tests/tmp_aux_user_busy_slots.csv";
+    const std::string participantsPath = "tests/tmp_aux_request_participants.csv";
+
+    writeCsv(
+        usersPath,
+        "userId,name,role\n"
+        "1,Student One,Student\n"
+        "2,Dr Aux,Instructor\n"
+    );
+    writeCsv(
+        spacesPath,
+        "spaceId,type,name,capacity,hasProjector,hasWhiteboard,hasComputers,isAvailable,building\n"
+        "301,MeetingRoom,M301,10,1,0,0,1,AdminBuilding\n"
+    );
+    writeCsv(
+        requestsPath,
+        "requestId,requestType,userId,spaceId,participantCount,requiredFeature,requiredBuilding,timeData,title,purpose,courseCode,courseName,examType,canSplitAcrossRooms\n"
+        "40,CommitteeMeeting,1,301,5,Projector,AdminBuilding,5-13:00-14:00,Aux Committee,Presentation,,,,false\n"
+    );
+    writeCsv(
+        busySlotsPath,
+        "userId,day,startTime,endTime,reason\n"
+        "2,1,10:00,11:00,Lecture\n"
+    );
+    writeCsv(
+        participantsPath,
+        "requestId,userId,participantRole\n"
+        "40,2,Supervisor\n"
+    );
+
+    DataController controller;
+    SystemData data = controller.loadAllData(
+        usersPath,
+        spacesPath,
+        requestsPath,
+        busySlotsPath,
+        participantsPath
+    );
+
+    CHECK_EQ(data.userBusySlots.size(), static_cast<size_t>(1));
+    CHECK_EQ(data.requestParticipants.size(), static_cast<size_t>(1));
+    CHECK_EQ(data.requests.size(), static_cast<size_t>(1));
+
+    CommitteeMeetingRequest* committee =
+        dynamic_cast<CommitteeMeetingRequest*>(data.requests[0]);
+    REQUIRE(committee);
+    CHECK_EQ(committee->getRequiredParticipantIds().size(), static_cast<size_t>(1));
+    CHECK_EQ(committee->getRequiredParticipantIds()[0], 2);
+    CHECK_EQ(committee->getParticipantRoles()[0], std::string("Supervisor"));
+    CHECK(historyContains(*committee, "Loaded 1 required committee participant"));
+
+    controller.cleanupData(data);
+    std::remove(usersPath.c_str());
+    std::remove(spacesPath.c_str());
+    std::remove(requestsPath.c_str());
+    std::remove(busySlotsPath.c_str());
+    std::remove(participantsPath.c_str());
 }
 
 TEST_CASE("Backend smoke artifacts from main data exist after backend run") {
