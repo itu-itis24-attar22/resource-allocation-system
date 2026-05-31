@@ -22,6 +22,8 @@ int main() {
     )) {
         std::remove("data/allocations.csv");
         std::remove("data/request_results.csv");
+        std::remove("data/request_summaries.csv");
+        std::remove("data/allocation_summaries.csv");
         std::cout << "Error: Failed to load system data.\n";
         std::cout << "Stale output files were cleared.\n";
         session.cleanup();
@@ -86,9 +88,16 @@ int main() {
 
     session.printAllocations();
 
-    session.exportResults("data/allocations.csv", "data/request_results.csv");
+    session.exportResults(
+        "data/allocations.csv",
+        "data/request_results.csv",
+        "data/request_summaries.csv",
+        "data/allocation_summaries.csv"
+    );
     std::cout << "\nAllocations exported to data/allocations.csv\n";
     std::cout << "Request results exported to data/request_results.csv\n";
+    std::cout << "Request summaries exported to data/request_summaries.csv\n";
+    std::cout << "Allocation summaries exported to data/allocation_summaries.csv\n";
 
     session.cleanup();
     return 0;

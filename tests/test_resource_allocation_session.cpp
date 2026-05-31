@@ -24,6 +24,8 @@ TEST_CASE("ResourceAllocationSession loads, runs, exports, and cleans up backend
     const std::string participantsPath = "tests/tmp_session_participants.csv";
     const std::string allocationsPath = "tests/tmp_session_allocations.csv";
     const std::string resultsPath = "tests/tmp_session_results.csv";
+    const std::string requestSummariesPath = "tests/tmp_session_request_summaries.csv";
+    const std::string allocationSummariesPath = "tests/tmp_session_allocation_summaries.csv";
 
     writeSessionCsv(configPath, "allocation_strategy=priority\n");
     writeSessionCsv(
@@ -61,11 +63,25 @@ TEST_CASE("ResourceAllocationSession loads, runs, exports, and cleans up backend
     CHECK_EQ(session.getAllocations().size(), static_cast<size_t>(1));
     CHECK(session.getSystemData().requests[0]->getStatus() == RequestStatus::Approved);
 
-    session.exportResults(allocationsPath, resultsPath);
+    session.exportResults(
+        allocationsPath,
+        resultsPath,
+        requestSummariesPath,
+        allocationSummariesPath
+    );
     CHECK(sessionFileExistsAndNotEmpty(allocationsPath));
     CHECK(sessionFileExistsAndNotEmpty(resultsPath));
+    CHECK(sessionFileExistsAndNotEmpty(requestSummariesPath));
+    CHECK(sessionFileExistsAndNotEmpty(allocationSummariesPath));
     CHECK_FILE_CONTAINS(resultsPath, "Facade Request");
     CHECK_FILE_CONTAINS(resultsPath, "Approved");
+    CHECK_FILE_CONTAINS(requestSummariesPath, "Facade Request");
+    CHECK_FILE_CONTAINS(requestSummariesPath, "Facade workflow test");
+    CHECK_FILE_CONTAINS(requestSummariesPath, "Approved");
+    CHECK_FILE_CONTAINS(requestSummariesPath, "90");
+    CHECK_FILE_CONTAINS(allocationSummariesPath, "Facade Request");
+    CHECK_FILE_CONTAINS(allocationSummariesPath, "assignedParticipants");
+    CHECK_FILE_CONTAINS(allocationSummariesPath, "5");
 
     session.cleanup();
     CHECK(!session.isDataLoaded());
@@ -80,6 +96,8 @@ TEST_CASE("ResourceAllocationSession loads, runs, exports, and cleans up backend
     std::remove(participantsPath.c_str());
     std::remove(allocationsPath.c_str());
     std::remove(resultsPath.c_str());
+    std::remove(requestSummariesPath.c_str());
+    std::remove(allocationSummariesPath.c_str());
 }
 
 TEST_CASE("ResourceAllocationSession reports failed loads without running allocation") {
