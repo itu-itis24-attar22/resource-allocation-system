@@ -434,13 +434,15 @@ std::string DataController::loadAllocationStrategyName(const std::string& config
 
 SystemData DataController::loadAllData(const std::string& usersFile,
                                        const std::string& spacesFile,
-                                       const std::string& requestsFile) const {
+                                       const std::string& requestsFile,
+                                       const std::string& userBusySlotsFile,
+                                       const std::string& requestParticipantsFile) const {
     SystemData data;
     data.users = DataLoader::loadUsers(usersFile);
     data.spaces = DataLoader::loadSpaces(spacesFile);
     data.requests = loadRequestsFromCsv(requestsFile, data.users, data.spaces);
-    data.userBusySlots = DataLoader::loadUserBusySlots("data/user_busy_slots.csv");
-    data.requestParticipants = DataLoader::loadRequestParticipants("data/request_participants.csv");
+    data.userBusySlots = DataLoader::loadUserBusySlots(userBusySlotsFile);
+    data.requestParticipants = DataLoader::loadRequestParticipants(requestParticipantsFile);
     attachParticipantsToCommitteeRequests(data.requests, data.requestParticipants);
     return data;
 }
