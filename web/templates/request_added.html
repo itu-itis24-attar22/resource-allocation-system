@@ -86,9 +86,10 @@
     {% endif %}
 
     <div class="confirmation-actions">
+        <a href="{{ url_for('request_detail', request_id=request_id) }}">View Request</a>
         <a href="{{ url_for('add_request', type='CommitteeMeeting') if request_row and request_row.get('requestType') == 'CommitteeMeeting' else url_for('add_request') }}">Add Another Request</a>
         <a href="{{ url_for('allocation_summary', highlight=request_id) }}">View Allocation Summary</a>
-        <a href="{{ url_for('requests') }}">View Requests</a>
+        <a href="{{ url_for('requests', highlight=request_id) }}">View Requests</a>
         <form method="post" action="{{ url_for('run_allocation_now', request_id=request_id) }}">
             <button type="submit">Run Allocation Now</button>
         </form>

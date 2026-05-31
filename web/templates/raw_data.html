@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Raw Data | Resource Allocation System{% endblock %}
+{% block page_heading %}Raw Data{% endblock %}
+
+{% block content %}
+<section class="panel-card">
+    <p class="eyebrow">Technical CSV View</p>
+    <h2>{{ selected_label }}</h2>
+    <p class="muted">
+        Raw data stays available for debugging, but the demo flow should use Dashboard,
+        Requests, Allocation Summary, and Schedules.
+    </p>
+
+    <div class="raw-tabs">
+        {% for file in files %}
+        <a class="{% if file.filename == selected_file %}active{% endif %}"
+           href="{{ url_for('raw_data', file=file.filename) }}">
+            {{ file.label }}
+        </a>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="table-card">
+    {% if page_message %}
+    <div class="page-message page-message-{{ page_message.status }}">
+        <p>{{ page_message.text }}</p>
+    </div>
+    {% endif %}
+
+    {% if raw_text %}
+    <pre class="raw-text">{{ raw_text }}</pre>
+    {% elif not table.exists %}
+    <div class="empty-state">
+        <h2>Nothing to show yet</h2>
+        <p>{{ table.message }}</p>
+    </div>
+    {% elif table.rows|length == 0 %}
+    <div class="empty-state">
+        <h2>No rows found</h2>
+        <p>{{ selected_file }} exists but has no data rows.</p>
+    </div>
+    {% else %}
+    <div class="table-summary">
+        <p>{{ table.rows|length }} row(s) loaded from <code>{{ selected_file }}</code>.</p>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    {% for header in table.headers %}
+                    <th>{{ header }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in table.rows %}
+                <tr>
+                    {% for header in table.headers %}
+                    <td>{{ row.get(header, "") }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

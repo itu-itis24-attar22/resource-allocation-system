@@ -57,6 +57,12 @@ PURPOSE_OPTIONS = [
     "Other",
 ]
 REQUEST_TYPE_OPTIONS = ["OneTime", "Recurring", "Exam", "CommitteeMeeting"]
+REQUEST_TYPE_LABELS = {
+    "OneTime": "One-Time",
+    "Recurring": "Recurring",
+    "Exam": "Exam",
+    "CommitteeMeeting": "Committee Meeting",
+}
 COMMITTEE_PARTICIPANT_ROLES = {
     "Instructor",
     "TeachingAssistant",
@@ -88,6 +94,36 @@ SCHEDULE_DAYS = [1, 2, 3, 4, 5]
 SCHEDULE_BLOCKS = [
     (hour * 60, (hour + 1) * 60)
     for hour in range(9, 17)
+]
+FORM_DAY_OPTIONS = [
+    {"value": str(day), "label": DAY_NAME}
+    for day, DAY_NAME in [
+        (1, "Monday"),
+        (2, "Tuesday"),
+        (3, "Wednesday"),
+        (4, "Thursday"),
+        (5, "Friday"),
+    ]
+]
+FORM_START_MINUTES = 8 * 60
+FORM_END_MINUTES = 17 * 60
+FORM_STEP_MINUTES = 30
+FORM_TIME_OPTIONS = [
+    {
+        "value": f"{minutes // 60:02d}:{minutes % 60:02d}",
+        "label": f"{minutes // 60:02d}:{minutes % 60:02d}",
+    }
+    for minutes in range(FORM_START_MINUTES, FORM_END_MINUTES + 1, FORM_STEP_MINUTES)
+]
+RAW_DATA_FILES = [
+    {"filename": "requests.csv", "label": "Raw Requests"},
+    {"filename": "allocations.csv", "label": "Raw Allocations"},
+    {"filename": "request_results.csv", "label": "Raw Request Results"},
+    {"filename": "request_participants.csv", "label": "Request Participants"},
+    {"filename": "user_busy_slots.csv", "label": "User Busy Slots"},
+    {"filename": "users.csv", "label": "Users CSV"},
+    {"filename": "spaces.csv", "label": "Spaces CSV"},
+    {"filename": "config.txt", "label": "Strategy Config"},
 ]
 
 DAY_NAMES = {
@@ -267,6 +303,18 @@ def display_value(value, fallback="N/A"):
     if not stripped or stripped == "None":
         return fallback
     return stripped
+
+
+def request_type_label(request_type):
+    return REQUEST_TYPE_LABELS.get(request_type, display_value(request_type))
+
+
+def strategy_label(strategy_value):
+    labels = {
+        strategy["value"]: strategy["label"]
+        for strategy in SUPPORTED_STRATEGIES
+    }
+    return labels.get(strategy_value, strategy_value)
 
 
 def build_user_specific_details(user):
@@ -548,11 +596,20 @@ def parse_time_fields(form_data, errors):
         form_data, "endTime", "endHour", "End time", errors
     )
 
-    if day is not None and not 1 <= day <= 7:
-        errors.append("Day must be between 1 and 7.")
+    if day is not None and day not in {1, 2, 3, 4, 5}:
+        errors.append("Day must be Monday through Friday.")
 
-    if start_minutes is not None and start_minutes >= 24 * 60:
-        errors.append("Start time must be earlier than 24:00.")
+    if start_minutes is not None:
+        if start_minutes < FORM_START_MINUTES or start_minutes > FORM_END_MINUTES:
+            errors.append("Start time must be between 08:00 and 17:00.")
+        if start_minutes % FORM_STEP_MINUTES != 0:
+            errors.append("Start time must use 30-minute increments.")
+
+    if end_minutes is not None:
+        if end_minutes < FORM_START_MINUTES or end_minutes > FORM_END_MINUTES:
+            errors.append("End time must be between 08:00 and 17:00.")
+        if end_minutes % FORM_STEP_MINUTES != 0:
+            errors.append("End time must use 30-minute increments.")
 
     if start_minutes is not None and end_minutes is not None and start_minutes >= end_minutes:
         errors.append("Start time must be earlier than end time.")
@@ -1024,6 +1081,8 @@ def build_allocation_summary():
         request_id = (request_row.get("requestId") or "").strip()
         result_row = results_by_request.get(request_id, {})
         user = users_by_id.get((request_row.get("userId") or "").strip(), {})
+        requested_space_id = (request_row.get("spaceId") or "").strip()
+        requested_space = spaces_by_id.get(requested_space_id, {})
         participant_count = safe_int(request_row.get("participantCount"))
         request_type = display_value(
             result_row.get("requestType") or request_row.get("requestType"),
@@ -1057,6 +1116,7 @@ def build_allocation_summary():
             {
                 "request_id": request_id,
                 "request_type": request_type,
+                "request_type_label": request_type_label(request_type),
                 "is_exam": request_type == "Exam" or is_exam_request(request_row),
                 "is_committee": request_type == "CommitteeMeeting" or is_committee_request(request_row),
                 "title": display_value(
@@ -1088,8 +1148,16 @@ def build_allocation_summary():
                 "time_data": format_time_data(
                     request_row.get("timeData") or result_row.get("timeInfo")
                 ),
+                "raw_time_data": display_value(request_row.get("timeData"), ""),
                 "user_id": display_value(request_row.get("userId")),
                 "requester_name": display_value(user.get("name")),
+                "requester_role": display_value(user.get("role")),
+                "requested_space_id": display_value(requested_space_id),
+                "requested_space_name": display_value(requested_space.get("name")),
+                "requested_space_type": display_value(requested_space.get("type")),
+                "requested_space_building": display_value(requested_space.get("building")),
+                "required_feature": display_value(request_row.get("requiredFeature"), "None"),
+                "required_building": display_value(request_row.get("requiredBuilding"), "None"),
                 "status": status,
                 "status_class": status.lower(),
                 "rejection_reason": display_value(
@@ -1119,6 +1187,73 @@ def build_allocation_summary():
         "requests_available": requests_table["exists"],
         "results_available": results_table["exists"],
         "allocations_available": allocations_table["exists"],
+    }
+
+
+def get_request_summary(request_id):
+    request_id = str(request_id)
+    summary_context = build_allocation_summary()
+
+    for item in summary_context["summaries"]:
+        if item["request_id"] == request_id:
+            return item, summary_context
+
+    return None, summary_context
+
+
+def build_request_list_context():
+    summary_context = build_allocation_summary()
+    query = request.args.get("q", "").strip().lower()
+    type_filter = request.args.get("type", "All").strip() or "All"
+    status_filter = request.args.get("status", "All").strip() or "All"
+    highlight_id = request.args.get("highlight", "").strip()
+
+    items = list(summary_context["summaries"])
+    items.sort(
+        key=lambda item: safe_int(item.get("request_id")) or -1,
+        reverse=True,
+    )
+
+    if type_filter != "All":
+        items = [
+            item for item in items
+            if item["request_type"] == type_filter
+        ]
+
+    if status_filter != "All":
+        items = [
+            item for item in items
+            if item["status"].lower() == status_filter.lower()
+        ]
+
+    if query:
+        items = [
+            item for item in items
+            if query in item["request_id"].lower()
+            or query in item["request_type"].lower()
+            or query in item["title"].lower()
+            or query in item["purpose"].lower()
+            or query in item["requester_name"].lower()
+            or query in item["time_data"].lower()
+            or query in item["requested_space_name"].lower()
+            or query in item["course_code"].lower()
+            or query in item["course_name"].lower()
+        ]
+
+    status_options = ["All", "Pending", "Approved", "Rejected"]
+    type_options = ["All"] + REQUEST_TYPE_OPTIONS
+
+    return {
+        "items": items,
+        "query": request.args.get("q", "").strip(),
+        "type_filter": type_filter,
+        "status_filter": status_filter,
+        "type_options": type_options,
+        "status_options": status_options,
+        "request_type_labels": REQUEST_TYPE_LABELS,
+        "highlight_id": highlight_id,
+        "requests_available": summary_context["requests_available"],
+        "results_available": summary_context["results_available"],
     }
 
 
@@ -1197,6 +1332,7 @@ def build_space_schedule_events(space_id, allocations):
 
         events.append(
             {
+                "request_id": request_id,
                 "day": day,
                 "start": start_minutes,
                 "end": end_minutes,
@@ -1345,18 +1481,53 @@ def find_backend_executable():
 
 
 def build_dashboard_context(run_result=None, strategy_message=None):
+    requests_table = read_csv_table("requests.csv")
+    results_table = read_csv_table("request_results.csv")
+    allocations_table = read_csv_table("allocations.csv")
+    results_by_request = index_by_field(results_table["rows"], "requestId")
+
+    status_counts = {"Approved": 0, "Rejected": 0, "Pending": 0}
+    committee_count = 0
+    exam_count = 0
+
+    for request_row in requests_table["rows"]:
+        request_id = (request_row.get("requestId") or "").strip()
+        request_type = (request_row.get("requestType") or "").strip()
+        status = display_value(
+            results_by_request.get(request_id, {}).get("status"),
+            "Pending",
+        )
+        if status not in status_counts:
+            status_counts[status] = 0
+        status_counts[status] += 1
+
+        if request_type == "CommitteeMeeting":
+            committee_count += 1
+        if request_type == "Exam":
+            exam_count += 1
+
     stats = [
-        {"label": "Users", "value": len(read_csv_table("users.csv")["rows"])},
-        {"label": "Spaces", "value": len(read_csv_table("spaces.csv")["rows"])},
-        {"label": "Requests", "value": len(read_csv_table("requests.csv")["rows"])},
+        {"label": "Total Requests", "value": len(requests_table["rows"])},
+        {"label": "Approved", "value": status_counts.get("Approved", 0), "tone": "approved"},
+        {"label": "Rejected", "value": status_counts.get("Rejected", 0), "tone": "rejected"},
+        {"label": "Pending", "value": status_counts.get("Pending", 0), "tone": "pending"},
         {"label": "Allocations", "value": count_optional_file("allocations.csv")},
-        {"label": "Request Results", "value": count_optional_file("request_results.csv")},
+        {"label": "Committee Meetings", "value": committee_count},
+        {"label": "Exam Requests", "value": exam_count},
     ]
+    request_context = build_request_list_context()
+    recent_requests = request_context["items"][:5]
+    strategy = read_config_strategy()
 
     return {
-        "strategy": read_config_strategy(),
+        "strategy": strategy,
+        "strategy_label": strategy_label(strategy),
         "strategies": SUPPORTED_STRATEGIES,
         "stats": stats,
+        "recent_requests": recent_requests,
+        "requests_available": requests_table["exists"],
+        "results_available": results_table["exists"],
+        "allocations_available": allocations_table["exists"],
         "run_result": run_result,
         "strategy_message": strategy_message,
     }
@@ -1401,6 +1572,22 @@ def run_backend_allocation():
         "message": message,
         "stdout": truncate_output(completed.stdout),
         "stderr": truncate_output(completed.stderr),
+    }
+
+
+def read_text_file(filename):
+    file_path = DATA_DIR / filename
+    if not file_path.exists():
+        return {
+            "exists": False,
+            "content": "",
+            "message": f"{filename} is not available yet.",
+        }
+
+    return {
+        "exists": True,
+        "content": file_path.read_text(encoding="utf-8-sig"),
+        "message": "",
     }
 
 
@@ -1469,7 +1656,13 @@ def index():
 @app.post("/run-allocation")
 def run_allocation():
     run_result = run_backend_allocation()
-    return render_template("index.html", **build_dashboard_context(run_result))
+    return redirect(
+        url_for(
+            "allocation_summary",
+            run_status=run_result["status"],
+            run_message=run_result["message"],
+        )
+    )
 
 
 @app.post("/set-strategy")
@@ -1517,6 +1710,16 @@ def add_request():
         if not errors:
             append_request_row(row)
             append_request_participant_rows(participant_rows)
+            if request.form.get("submitAction") == "save_run":
+                run_result = run_backend_allocation()
+                return redirect(
+                    url_for(
+                        "request_detail",
+                        request_id=row["requestId"],
+                        run_status=run_result["status"],
+                        run_message=run_result["message"],
+                    )
+                )
             return redirect(url_for("request_added", request_id=row["requestId"]))
 
     return render_template(
@@ -1526,6 +1729,9 @@ def add_request():
         request_types=REQUEST_TYPE_OPTIONS,
         purpose_options=PURPOSE_OPTIONS,
         exam_types=EXAM_TYPES,
+        day_options=FORM_DAY_OPTIONS,
+        time_options=FORM_TIME_OPTIONS,
+        request_type_labels=REQUEST_TYPE_LABELS,
         committee_participants=build_committee_participant_options(users),
         feature_options=FEATURE_OPTIONS,
         building_options=get_building_options(spaces),
@@ -1568,11 +1774,36 @@ def run_allocation_now(request_id):
 
     return redirect(
         url_for(
-            "allocation_summary",
-            highlight=request_id,
+            "request_detail",
+            request_id=request_id,
             run_status=run_result["status"],
             run_message=run_result["message"],
         )
+    )
+
+
+@app.route("/request/<request_id>")
+def request_detail(request_id):
+    run_message = None
+    run_status = request.args.get("run_status", "")
+    message_text = request.args.get("run_message", "")
+
+    if run_status in {"success", "error"} and message_text:
+        run_message = {
+            "status": run_status,
+            "text": message_text,
+        }
+
+    item, summary_context = get_request_summary(request_id)
+
+    return render_template(
+        "request_detail.html",
+        item=item,
+        request_id=str(request_id),
+        run_message=run_message,
+        requests_available=summary_context["requests_available"],
+        results_available=summary_context["results_available"],
+        allocations_available=summary_context["allocations_available"],
     )
 
 
@@ -1650,27 +1881,53 @@ def spaces():
 
 @app.route("/requests")
 def requests():
-    return render_csv_page("requests.html", "Requests", "requests.csv", "No requests were found.")
+    return render_template("requests.html", **build_request_list_context())
+
+
+@app.route("/raw-data")
+def raw_data():
+    selected_file = request.args.get("file", "requests.csv").strip()
+    valid_files = {item["filename"] for item in RAW_DATA_FILES}
+    if selected_file not in valid_files:
+        selected_file = "requests.csv"
+
+    selected_label = next(
+        item["label"] for item in RAW_DATA_FILES
+        if item["filename"] == selected_file
+    )
+
+    if selected_file == "config.txt":
+        text_file = read_text_file(selected_file)
+        table = {
+            "exists": text_file["exists"],
+            "headers": [],
+            "rows": [],
+            "message": text_file["message"],
+        }
+        raw_text = text_file["content"]
+    else:
+        table = format_table_for_display(selected_file, read_csv_table(selected_file))
+        raw_text = ""
+
+    return render_template(
+        "raw_data.html",
+        files=RAW_DATA_FILES,
+        selected_file=selected_file,
+        selected_label=selected_label,
+        table=table,
+        raw_text=raw_text,
+        page_message=get_page_message(),
+    )
 
 
 @app.route("/allocations")
 def allocations():
-    return render_csv_page(
-        "allocations.html",
-        "Allocations",
-        "allocations.csv",
-        "No allocation results available yet. Run the C++ program first.",
-    )
+    return redirect(url_for("raw_data", file="allocations.csv"))
 
 
 @app.route("/results")
 def results():
-    return render_csv_page(
-        "results.html",
-        "Request Results",
-        "request_results.csv",
-        "No request results available yet. Run the C++ program first.",
-    )
+    return redirect(url_for("raw_data", file="request_results.csv"))
 
 
 if __name__ == "__main__":

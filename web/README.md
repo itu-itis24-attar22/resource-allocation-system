@@ -48,6 +48,19 @@ http://127.0.0.1:5000
 
 Click `Run Allocation` on the home page to run the compiled C++ backend executable. The web app uses a fixed executable lookup, runs it from the project root, and then displays the updated `allocations.csv` and `request_results.csv` files.
 
+## Dashboard Flow
+
+The dashboard is organized around a cleaner demo workflow:
+
+1. Add one or more requests from `Add Request`.
+2. Either choose `Save Request Only` for batch entry or `Submit and Run` to immediately process the newly added request.
+3. Use `Requests` to search, filter, and open a request detail page.
+4. Use `Allocation Summary` as the main result page for approvals, rejections, allocations, committee participants, and least-change suggestions.
+5. Use `Schedules` to confirm user busy slots or room allocations after allocation has run.
+6. Use `Raw Data` only when you need to inspect CSV files directly.
+
+The Flask app still does not compute allocation, participant availability, or suggestions. It writes CSV rows, runs the compiled C++ executable, and displays backend-generated CSV outputs.
+
 ## Recommended Demo Workflow
 
 1. Compile the C++ backend.
@@ -183,13 +196,14 @@ The form only performs basic input validation, such as valid user ID, valid spac
 
 Adding a request only appends it to `data/requests.csv`. It does not immediately approve or reject the request. Approval, rejection, allocations, and rejection reasons appear only after `Run Allocation` is clicked.
 
-After adding a request, the dashboard shows a confirmation page. The request is saved immediately, but it remains pending until allocation is run. From the confirmation page, the user can:
+After adding a request with `Save Request Only`, the dashboard shows a confirmation page. The request is saved immediately, but it remains pending until allocation is run. From the confirmation page, the user can:
 
 - add another request,
-- view the raw requests table,
+- view the request detail page,
+- view the request queue,
 - run allocation immediately.
 
-If `Run Allocation Now` is clicked, Flask runs the compiled C++ backend and redirects to `Allocation Summary` with the newly added request highlighted.
+If `Submit and Run` or `Run Allocation Now` is clicked, Flask runs the compiled C++ backend and redirects to `/request/<requestId>`. The detail page focuses on the newly added request and shows its current status, rejection reason, suggestions, allocations, committee participants, and schedule links when available.
 
 ## User Profiles
 
@@ -226,27 +240,64 @@ One-time requests show their assigned space when approved. Recurring requests sh
 
 If allocation outputs are missing, the page shows a friendly message asking the user to run allocation first.
 
+## Request Detail Page
+
+Each request can be opened at:
+
+```text
+/request/<requestId>
+```
+
+The detail page is useful after `Submit and Run` because it keeps the demo focused on the newly added request instead of forcing the user to search from the top of a long table.
+
+It shows:
+
+- request type, title, purpose, requester, requested room, and readable day/time,
+- current backend status from `request_results.csv`,
+- rejection reason if rejected,
+- committee participants and roles for `CommitteeMeeting`,
+- least-change suggestion text exported by the backend,
+- approved allocation rows and links to the room schedule.
+
 ## View Schedules
 
 Use the `Schedules` page to view user and space availability in a simple weekly table.
 
 - User schedules read `data/user_busy_slots.csv` and show busy/free time for instructors, teaching assistants, staff, and administrators.
 - Space schedules read `data/allocations.csv` and show allocated/free time for rooms after allocation has been run.
+- Space allocation events link back to `/request/<requestId>` so the user can jump from a scheduled room slot to the request result.
 - This page is visualization only. The C++ backend remains responsible for scheduling rules and allocation behavior.
+
+## Raw Data
+
+Use `Raw Data` for technical inspection of CSV files:
+
+- `requests.csv`
+- `allocations.csv`
+- `request_results.csv`
+- `request_participants.csv`
+- `user_busy_slots.csv`
+- `users.csv`
+- `spaces.csv`
+- `config.txt`
+
+The main navigation keeps raw technical tables under this section so the demo flow stays focused on Dashboard, Add Request, Requests, Allocation Summary, and Schedules.
 
 ## Pages
 
-- `/` shows the selected strategy and quick data counts.
+- `/` shows the selected strategy, run allocation action, quick stats, recent requests, and demo shortcuts.
 - `/users` shows `data/users.csv`.
 - `/spaces` shows `data/spaces.csv`.
-- `/requests` shows `data/requests.csv`.
+- `/requests` shows a searchable request queue with newest requests first.
+- `/request/<requestId>` shows one focused request result/detail page.
 - `/add-request` adds a new `OneTime`, `Recurring`, `Exam`, or `CommitteeMeeting` request row to `data/requests.csv`.
 - `/allocation-summary` groups all allocation results by request.
 - `/schedules` shows user busy slots and space allocation schedules.
+- `/raw-data` shows raw CSV/debug data.
 - `/add-one-time` redirects to `/add-request?type=OneTime`.
 - `/add-exam` redirects to `/add-request?type=Exam`.
 - `/exam-summary` redirects to `/allocation-summary`.
-- `/allocations` shows `data/allocations.csv` if it exists.
-- `/results` shows `data/request_results.csv` if it exists.
+- `/allocations` redirects to `/raw-data?file=allocations.csv`.
+- `/results` redirects to `/raw-data?file=request_results.csv`.
 
 If `allocations.csv` or `request_results.csv` is missing, the dashboard shows a friendly message instead of crashing.
