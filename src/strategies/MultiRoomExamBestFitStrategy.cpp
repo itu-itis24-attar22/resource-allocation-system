@@ -174,6 +174,10 @@ void MultiRoomExamBestFitStrategy::processRequests(const std::vector<Request*>& 
                 processRequest(*exam, allocations, ruleEngineFacade);
             }
         }
+        else if (CommitteeMeetingRequest* committee = dynamic_cast<CommitteeMeetingRequest*>(request)) {
+            committee->addHistoryEvent("Multi-room exam best-fit batch processing started");
+            processRequest(*committee, allocations, ruleEngineFacade);
+        }
         else if (InvalidRequest* invalid = dynamic_cast<InvalidRequest*>(request)) {
             invalid->addHistoryEvent("Multi-room exam best-fit skipped invalid request");
         }
@@ -193,6 +197,12 @@ bool MultiRoomExamBestFitStrategy::processRequest(RecurringRequest& request,
 }
 
 bool MultiRoomExamBestFitStrategy::processRequest(ExamRequest& request,
+                                                  std::vector<Allocation>& allocations,
+                                                  const RuleEngineFacade& ruleEngineFacade) const {
+    return greedyStrategy.processRequest(request, allocations, ruleEngineFacade);
+}
+
+bool MultiRoomExamBestFitStrategy::processRequest(CommitteeMeetingRequest& request,
                                                   std::vector<Allocation>& allocations,
                                                   const RuleEngineFacade& ruleEngineFacade) const {
     return greedyStrategy.processRequest(request, allocations, ruleEngineFacade);

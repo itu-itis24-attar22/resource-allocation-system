@@ -7,11 +7,15 @@
 #include "../models/Space.h"
 #include "../models/Request.h"
 #include "../models/Allocation.h"
+#include "../models/UserBusySlot.h"
+#include "../models/RequestParticipant.h"
 
 struct SystemData {
     std::vector<User*> users;
     std::vector<Space*> spaces;
     std::vector<Request*> requests;
+    std::vector<UserBusySlot> userBusySlots;
+    std::vector<RequestParticipant> requestParticipants;
 };
 
 class DataController {
@@ -20,7 +24,9 @@ public:
 
     SystemData loadAllData(const std::string& usersFile,
                            const std::string& spacesFile,
-                           const std::string& requestsFile) const;
+                           const std::string& requestsFile,
+                           const std::string& userBusySlotsFile = "data/user_busy_slots.csv",
+                           const std::string& requestParticipantsFile = "data/request_participants.csv") const;
 
     void exportAllocations(const std::string& allocationsFile,
                            const std::vector<Allocation>& allocations) const;

@@ -41,5 +41,6 @@ bool Student::canRequestSpaceType(const std::string& spaceType) const {
 bool Student::canSubmitRequestType(const std::string& requestType) const {
     return requestType == "OneTime" ||
            requestType == "Recurring" ||
+           requestType == "CommitteeMeeting" ||
            requestType == "Invalid";
 }

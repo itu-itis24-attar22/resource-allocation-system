@@ -6,6 +6,7 @@
 #include "OneTimeRequest.h"
 #include "RecurringRequest.h"
 #include "ExamRequest.h"
+#include "CommitteeMeetingRequest.h"
 #include "InvalidRequest.h"
 #include "TimeSlot.h"
 
@@ -319,6 +320,42 @@ Request* RequestFactory::createRequest(int requestId,
             requester,
             requestedSpace,
             slots,
+            participantCount,
+            title,
+            purpose,
+            requiredFeature,
+            requiredBuilding
+        );
+    }
+
+    if (requestType == "CommitteeMeeting") {
+        TimeSlot slot(1, 0, 1);
+        std::string errorReason;
+        if (!tryParseSingleTimeSlot(timeData, slot, errorReason)) {
+            return createInvalidRequest(
+                requestId,
+                requestType,
+                requester,
+                requestedSpace,
+                participantCount,
+                title,
+                purpose,
+                requiredFeature,
+                requiredBuilding,
+                timeData,
+                errorReason,
+                courseCode,
+                courseName,
+                examType,
+                canSplitAcrossRooms
+            );
+        }
+
+        return new CommitteeMeetingRequest(
+            requestId,
+            requester,
+            requestedSpace,
+            slot,
             participantCount,
             title,
             purpose,

@@ -7,6 +7,7 @@
 #include "PriorityAllocationStrategy.h"
 #include "MultiRoomExamGreedyStrategy.h"
 #include "MultiRoomExamBestFitStrategy.h"
+#include "SharedRoomExamBestFitStrategy.h"
 
 class AllocationStrategyFactory {
 private:
@@ -14,6 +15,7 @@ private:
     PriorityAllocationStrategy priorityStrategy;
     MultiRoomExamGreedyStrategy multiRoomExamGreedyStrategy;
     MultiRoomExamBestFitStrategy multiRoomExamBestFitStrategy;
+    SharedRoomExamBestFitStrategy sharedRoomExamBestFitStrategy;
 
     AllocationStrategyFactory() = default;
 

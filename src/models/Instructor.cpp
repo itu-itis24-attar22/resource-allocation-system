@@ -38,5 +38,6 @@ bool Instructor::canSubmitRequestType(const std::string& requestType) const {
     return requestType == "OneTime" ||
            requestType == "Recurring" ||
            requestType == "Exam" ||
+           requestType == "CommitteeMeeting" ||
            requestType == "Invalid";
 }

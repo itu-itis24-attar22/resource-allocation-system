@@ -1,0 +1,298 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{needspace}
+\usepackage{hyperref}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\setstretch{1.12}
+\setlength{\parskip}{6pt}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+\begin{center}
+    {\LARGE \textbf{Backend Testing and Verification Report}}\\[0.4cm]
+    {\large Resource Allocation System}\\[0.3cm]
+    Najib Attar\\
+    May 2026
+\end{center}
+
+\section{Introduction}
+
+This report summarizes the backend testing and verification phase for the C++ Resource Allocation System. The system supports users, spaces, requests, allocations, request metadata, lifecycle history, rule-based validation, strategy-based allocation, CSV input/output, and configuration-based strategy selection.
+
+The old \texttt{doctest}-based tests were no longer compatible with the current architecture because the source code had changed significantly. In particular, the user model became polymorphic, \texttt{User} became abstract, rule classes moved to an \texttt{evaluate(...)} interface, and request constructors were extended with metadata fields. Therefore, the outdated tests were replaced with a lightweight local test harness under the \texttt{tests/} directory.
+
+The purpose of this testing phase was not only to show that normal examples work, but also to test defect-prone cases, regression risks, malformed input, strategy behavior, CSV loading/exporting, and backend execution.
+
+\section{Testing Objective}
+
+The main objective was to perform defect-oriented backend testing after many architectural changes. The tests were designed to verify both small unit behavior and larger integration behavior.
+
+The testing goals were:
+
+\begin{itemize}
+    \item verify current backend behavior against the actual source code;
+    \item detect regressions caused by architectural refactoring;
+    \item test invalid and malformed data, not only happy paths;
+    \item verify strategy ordering behavior for Greedy and Priority strategies;
+    \item confirm CSV input and output behavior;
+    \item confirm that backend execution still produces allocation and result files;
+    \item identify remaining risks without claiming full mathematical correctness.
+\end{itemize}
+
+\section{Test Environment}
+
+The tests were executed in a Windows PowerShell environment using \texttt{g++} with C++17.
+
+\begin{center}
+\begin{tabularx}{\textwidth}{@{} p{4cm} X @{}}
+\toprule
+\textbf{Item} & \textbf{Value} \\
+\midrule
+Operating environment & Windows PowerShell \\
+Compiler & \texttt{g++} \\
+Language standard & \texttt{-std=c++17} \\
+Test runner & Local lightweight test harness in \texttt{tests/} \\
+External unit test dependency & None \\
+Main test command & \texttt{powershell -ExecutionPolicy Bypass -File tests\textbackslash run\_tests.ps1} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The local test framework is implemented in \texttt{tests/test\_framework.h}. It provides simple test registration, assertions, pass/fail output, and a summary of total passed and failed tests.
+
+\section{Testing Strategy}
+
+The testing strategy combines unit testing, integration testing, backend smoke testing, negative testing, and regression testing.
+
+\begin{center}
+\begin{tabularx}{\textwidth}{@{} p{4cm} X @{}}
+\toprule
+\textbf{Test type} & \textbf{Purpose} \\
+\midrule
+Unit tests & Verify isolated behavior of models, factories, rules, and services. \\
+Integration tests & Verify interaction between CSV loading, request processing, allocation, and CSV export. \\
+Backend smoke test & Compile and run the real backend executable and verify generated output files. \\
+Negative tests & Use malformed, missing, invalid, and conflicting data to try to break the system. \\
+Regression tests & Protect behavior introduced by previous iterations, such as metadata, lifecycle history, strategy selection, and invalid request handling. \\
+Compiler warning check & Compile with stronger warning flags to detect suspicious code. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Verified User Roles and Priorities}
+
+The current source code defines the following user roles and priorities:
+
+\begin{center}
+\begin{tabularx}{0.65\textwidth}{@{} X c @{}}
+\toprule
+\textbf{Role} & \textbf{Priority} \\
+\midrule
+Student & 1 \\
+TeachingAssistant & 2 \\
+Staff & 3 \\
+Instructor & 4 \\
+Administrator & 5 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The \texttt{TeachingAssistant} role is implemented in the source tree. It is supported by \texttt{UserFactory}, has its own priority and permissions, and appears in \texttt{data/users.csv}. This confirms that \texttt{TeachingAssistant} is not only a test assumption, but part of the actual system model.
+
+\section{Unit Testing}
+
+The unit tests verify individual backend components. These include \texttt{TimeSlot}, user subclasses, \texttt{UserFactory}, \texttt{RequestFactory}, rules, availability logic, and strategy factory behavior.
+
+Examples of unit-tested behavior include:
+
+\begin{itemize}
+    \item \texttt{TimeSlot} detects overlap on the same day;
+    \item boundary intervals such as 10:00--12:00 and 12:00--14:00 do not overlap;
+    \item invalid time ranges are rejected;
+    \item \texttt{UserFactory} creates supported user subclasses correctly;
+    \item unknown user roles are handled safely;
+    \item role priorities and permissions match the current implementation;
+    \item \texttt{RequestFactory} creates \texttt{OneTimeRequest}, \texttt{RecurringRequest}, \texttt{ExamRequest}, and \texttt{CommitteeMeetingRequest};
+    \item malformed request time data creates \texttt{InvalidRequest};
+    \item request title, purpose, and lifecycle history are preserved;
+    \item capacity, feature, status, location, role, and availability rules behave correctly.
+\end{itemize}
+
+\section{Integration Testing}
+
+Integration tests use temporary CSV files rather than relying only on the normal \texttt{data/} folder. This makes the tests reproducible and isolates them from manual demo data.
+
+The integration tests verify that:
+
+\begin{itemize}
+    \item users, spaces, and requests can be loaded through \texttt{DataController};
+    \item loaded requests can be processed through \texttt{AllocationService};
+    \item approved and rejected statuses are assigned correctly;
+    \item \texttt{allocations.csv} can be exported;
+    \item \texttt{request\_results.csv} can be exported;
+    \item exported results include title, purpose, requester role, priority, status, rejection reason, and lifecycle history;
+    \item invalid rows are represented as \texttt{InvalidRequest} objects rather than causing crashes.
+\end{itemize}
+
+\section{System / Backend Smoke Testing}
+
+The PowerShell runner also performs a backend smoke test before running the unit and integration test suite.
+
+The smoke test performs the following steps:
+
+\begin{enumerate}
+    \item compile all backend source files with \texttt{g++ -std=c++17};
+    \item run the generated backend executable;
+    \item check the backend exit code;
+    \item verify that \texttt{data/allocations.csv} exists and is not empty;
+    \item verify that \texttt{data/request\_results.csv} exists and is not empty.
+\end{enumerate}
+
+This confirms that the real executable still runs successfully using the current normal data files.
+
+\section{Negative and Regression Testing}
+
+The test suite includes defect-oriented cases designed to break hidden assumptions.
+
+The added negative and regression cases include:
+
+\begin{itemize}
+    \item missing users, spaces, and requests files;
+    \item empty users, spaces, and requests files;
+    \item unknown user roles;
+    \item unknown space types;
+    \item duplicate request IDs becoming \texttt{InvalidRequest};
+    \item malformed request rows becoming \texttt{InvalidRequest};
+    \item extra request CSV columns being tolerated;
+    \item zero-length time slots being rejected;
+    \item negative and reversed time data being rejected;
+    \item exact capacity passing;
+    \item one-over capacity failing;
+    \item empty feature and building preferences passing;
+    \item one-time external availability conflicts failing;
+    \item recurring external availability conflicts failing;
+    \item recurring internal self-conflicts failing;
+    \item empty configuration values falling back to the Greedy strategy.
+\end{itemize}
+
+\section{Test Coverage Matrix}
+
+\begin{longtable}{@{} p{5.2cm} p{2.2cm} p{7.0cm} @{}}
+\toprule
+\textbf{Feature / Module} & \textbf{Covered} & \textbf{Evidence} \\
+\midrule
+\endfirsthead
+
+\toprule
+\textbf{Feature / Module} & \textbf{Covered} & \textbf{Evidence} \\
+\midrule
+\endhead
+
+TimeSlot overlap, boundaries, invalid ranges & Yes & Same-day overlap, different-day non-overlap, half-open boundary behavior, invalid range rejection. \\
+UserFactory and polymorphic users & Yes & Student, TeachingAssistant, Staff, Instructor, and Administrator creation verified. \\
+TeachingAssistant support & Yes & Class, factory support, role name, priority, permissions, and data presence verified. \\
+User priorities and permissions & Yes & Role priorities and allowed/requested space types are tested. \\
+RequestFactory valid/invalid creation & Yes & Valid request subtypes and invalid malformed requests are tested. \\
+Request metadata and history & Yes & Title, purpose, default metadata, approval, rejection, and lifecycle events are tested. \\
+DataLoader missing/empty/malformed CSVs & Yes & Missing files, empty files, malformed rows, unknown roles, and unknown spaces are tested. \\
+DataController temporary CSV integration & Yes & Temporary users, spaces, requests, processing, and exports are tested. \\
+InvalidRequest behavior & Yes & Unknown request type, malformed row, invalid user, invalid space, and bad time data are tested. \\
+Capacity, Feature, Status, Location, UserRole rules & Yes & Pass and fail behavior for each rule category is tested. \\
+AvailabilityRule conflicts & Yes & One-time and recurring external conflicts are tested. \\
+RuleEngineFacade through AllocationService & Yes & Requests are processed through AllocationService, which uses RuleEngineFacade internally. \\
+Greedy strategy order & Yes & Conflicting requests verify input-order processing. \\
+Priority strategy order and stability & Yes & Descending priority and same-priority stable order are tested. \\
+AllocationStrategyFactory fallback & Yes & Greedy, Priority, uppercase input, empty input, and unknown strategy fallback are tested. \\
+Config loading fallback & Yes & Greedy, Priority, missing key, invalid value, empty value, and missing config are tested. \\
+CSV exports & Yes & Allocations and request results are exported and checked for expected content. \\
+Backend smoke execution & Yes & Real backend executable is compiled and run before the test suite. \\
+\bottomrule
+\end{longtable}
+
+\section{Test Results}
+
+The main test command was:
+
+\begin{verbatim}
+powershell -ExecutionPolicy Bypass -File tests\run_tests.ps1
+\end{verbatim}
+
+The result was:
+
+\begin{verbatim}
+Running 55 test(s)
+Result: 55 passed, 0 failed
+\end{verbatim}
+
+The runner also compiled and ran the backend smoke executable before running the unit and integration tests.
+
+\section{Compiler Warning Check}
+
+A compiler warning check was performed using:
+
+\begin{verbatim}
+g++ -std=c++17 -Wall -Wextra
+\end{verbatim}
+
+No compiler warnings were reported during this check.
+
+\section{AddressSanitizer Check}
+
+An AddressSanitizer build was attempted using:
+
+\begin{verbatim}
+-fsanitize=address
+\end{verbatim}
+
+However, AddressSanitizer was not available in the current MinGW environment because the linker could not find \texttt{-lasan}. Therefore, memory safety is not tool-verified in this testing phase.
+
+\section{Defects and Risks Found}
+
+No source-code defect requiring an immediate fix was found during this pass.
+
+However, several risks and design gaps were identified:
+
+\begin{itemize}
+    \item \texttt{DataLoader} currently allows duplicate user IDs and duplicate space IDs. This does not crash the system, but it can create ambiguous lookup behavior later.
+    \item \texttt{DataController::loadAllData(...)} accepts custom users, spaces, and requests paths, but still hardcodes some auxiliary paths such as user busy slots and request participants. This makes isolated integration testing less clean.
+    \item \texttt{TeachingAssistant} is implemented in code and appears in data, but documentation should be checked to make sure this role is consistently described.
+\end{itemize}
+
+These are not immediate test failures, but they are important risks for future maintenance.
+
+\section{Remaining Limitations}
+
+The current backend test suite is stronger than before, but it is not a proof of full correctness.
+
+Remaining limitations include:
+
+\begin{itemize}
+    \item no AddressSanitizer or memory-leak tooling is available in the current environment;
+    \item no fuzz testing is performed;
+    \item no exhaustive mathematical verification of allocation algorithms is performed;
+    \item future multi-room exam allocation edge cases may require additional specialized tests;
+    \item generated CSV files are verified for existence and key content, but not every column is exhaustively validated in every scenario.
+\end{itemize}
+
+\section{Summary}
+
+This backend testing phase replaced outdated tests with a working local test harness and expanded the suite into a defect-oriented regression test set. The current suite covers core models, factories, rules, strategies, configuration loading, CSV loading, CSV exporting, invalid request behavior, request metadata, lifecycle history, and backend smoke execution.
+
+The final test result was:
+
+\begin{center}
+\textbf{55 tests passed, 0 tests failed.}
+\end{center}
+
+No production source-code defect requiring a fix was found. The backend is ready for a formal testing report and demonstration, while still having clearly identified limitations related to duplicate identifiers, auxiliary path hardcoding, and unavailable memory-safety tooling.
+
+\end{document}

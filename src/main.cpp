@@ -5,37 +5,38 @@
 #include "models/OneTimeRequest.h"
 #include "models/RecurringRequest.h"
 #include "models/ExamRequest.h"
+#include "models/CommitteeMeetingRequest.h"
 #include "models/InvalidRequest.h"
 #include "models/Allocation.h"
-#include "services/AllocationService.h"
-#include "data/DataController.h"
+#include "services/ResourceAllocationSession.h"
 #include "utils/ConsolePrinter.h"
 
 int main() {
-    DataController dataController;
-    std::string strategyName = dataController.loadAllocationStrategyName("data/config.txt");
-    SystemData data = dataController.loadAllData(
+    ResourceAllocationSession session;
+    session.loadStrategyName("data/config.txt");
+
+    if (!session.loadSystemData(
         "data/users.csv",
         "data/spaces.csv",
         "data/requests.csv"
-    );
-
-    if (data.users.empty() || data.spaces.empty() || data.requests.empty()) {
+    )) {
         std::remove("data/allocations.csv");
         std::remove("data/request_results.csv");
+        std::remove("data/request_summaries.csv");
+        std::remove("data/allocation_summaries.csv");
         std::cout << "Error: Failed to load system data.\n";
         std::cout << "Stale output files were cleared.\n";
-        dataController.cleanupData(data);
+        session.cleanup();
         return 1;
     }
 
-    AllocationService allocationService(strategyName);
+    SystemData& data = session.getSystemData();
 
     Allocation existingClassroomAllocation(100, 999, data.spaces[0], TimeSlot(1, 10, 12),
                                            data.spaces[0]->getCapacity());
-    allocationService.addExistingAllocation(existingClassroomAllocation);
+    session.addExistingAllocation(existingClassroomAllocation);
 
-    allocationService.processRequests(data.requests, data.spaces);
+    session.runAllocation();
 
     for (Request* request : data.requests) {
         std::string label = "Request " + std::to_string(request->getId());
@@ -67,6 +68,15 @@ int main() {
                 "Exam request loaded from external CSV source"
             );
         }
+        else if (CommitteeMeetingRequest* committee = dynamic_cast<CommitteeMeetingRequest*>(request)) {
+            bool result = committee->getStatus() == RequestStatus::Approved;
+            printCommitteeMeetingResult(
+                label,
+                *committee,
+                result,
+                "Committee meeting request loaded from external CSV source"
+            );
+        }
         else if (InvalidRequest* invalid = dynamic_cast<InvalidRequest*>(request)) {
             printInvalidResult(
                 label,
@@ -76,14 +86,19 @@ int main() {
         }
     }
 
-    allocationService.printAllocations();
+    session.printAllocations();
 
-    dataController.exportAllocations("data/allocations.csv", allocationService.getAllocations());
+    session.exportResults(
+        "data/allocations.csv",
+        "data/request_results.csv",
+        "data/request_summaries.csv",
+        "data/allocation_summaries.csv"
+    );
     std::cout << "\nAllocations exported to data/allocations.csv\n";
-
-    dataController.exportRequestResults("data/request_results.csv", data.requests);
     std::cout << "Request results exported to data/request_results.csv\n";
+    std::cout << "Request summaries exported to data/request_summaries.csv\n";
+    std::cout << "Allocation summaries exported to data/allocation_summaries.csv\n";
 
-    dataController.cleanupData(data);
+    session.cleanup();
     return 0;
 }

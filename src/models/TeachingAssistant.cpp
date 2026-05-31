@@ -31,5 +31,6 @@ bool TeachingAssistant::canRequestSpaceType(const std::string& spaceType) const 
 bool TeachingAssistant::canSubmitRequestType(const std::string& requestType) const {
     return requestType == "OneTime" ||
            requestType == "Recurring" ||
+           requestType == "CommitteeMeeting" ||
            requestType == "Invalid";
 }

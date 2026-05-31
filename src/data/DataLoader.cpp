@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iostream>
 #include <unordered_map>
+#include <unordered_set>
 #include "../models/Classroom.h"
 #include "../models/Laboratory.h"
 #include "../models/MeetingRoom.h"
@@ -108,6 +109,14 @@ namespace {
         return firstCsvToken(line) == "spaceId";
     }
 
+    bool isUserBusySlotsHeader(const std::string& line) {
+        return firstCsvToken(line) == "userId";
+    }
+
+    bool isRequestParticipantsHeader(const std::string& line) {
+        return firstCsvToken(line) == "requestId";
+    }
+
     bool tryParseInt(const std::string& text, int& value) {
         try {
             size_t parsedLength = 0;
@@ -130,10 +139,50 @@ namespace {
         return false;
     }
 
+    bool tryParseTimeOfDay(const std::string& text, int& minutesFromMidnight) {
+        const std::string trimmed = trim(text);
+        const size_t colonPosition = trimmed.find(':');
+
+        if (colonPosition == std::string::npos) {
+            int hour = 0;
+            if (!tryParseInt(trimmed, hour)) {
+                return false;
+            }
+
+            if (hour < 0 || hour > 24) {
+                return false;
+            }
+
+            minutesFromMidnight = hour * 60;
+            return true;
+        }
+
+        const std::string hourText = trimmed.substr(0, colonPosition);
+        const std::string minuteText = trimmed.substr(colonPosition + 1);
+        int hour = 0;
+        int minute = 0;
+
+        if (!tryParseInt(hourText, hour) || !tryParseInt(minuteText, minute)) {
+            return false;
+        }
+
+        if (hour < 0 || hour > 24 || minute < 0 || minute > 59) {
+            return false;
+        }
+
+        if (hour == 24 && minute != 0) {
+            return false;
+        }
+
+        minutesFromMidnight = hour * 60 + minute;
+        return true;
+    }
+
 }
 
 std::vector<User*> DataLoader::loadUsers(const std::string& filename) {
     std::vector<User*> users;
+    std::unordered_set<int> acceptedUserIds;
     std::ifstream file(filename);
 
     if (!file.is_open()) {
@@ -169,6 +218,13 @@ std::vector<User*> DataLoader::loadUsers(const std::string& filename) {
             continue;
         }
 
+        if (acceptedUserIds.find(id) != acceptedUserIds.end()) {
+            std::cerr << "Warning: Duplicate user ID " << id
+                      << " on row " << lineNumber
+                      << ". Keeping first user and skipping duplicate row.\n";
+            continue;
+        }
+
         UserProfileData profile;
         profile.email = optionalColumnByName(columns, userHeaderIndex, "email", 3);
         profile.status = optionalColumnByName(columns, userHeaderIndex, "status", 4, "active");
@@ -194,6 +250,7 @@ std::vector<User*> DataLoader::loadUsers(const std::string& filename) {
             continue;
         }
 
+        acceptedUserIds.insert(id);
         users.push_back(user);
     }
 
@@ -202,6 +259,7 @@ std::vector<User*> DataLoader::loadUsers(const std::string& filename) {
 
 std::vector<Space*> DataLoader::loadSpaces(const std::string& filename) {
     std::vector<Space*> spaces;
+    std::unordered_set<int> acceptedSpaceIds;
     std::ifstream file(filename);
 
     if (!file.is_open()) {
@@ -256,22 +314,127 @@ std::vector<Space*> DataLoader::loadSpaces(const std::string& filename) {
             continue;
         }
 
+        if (acceptedSpaceIds.find(id) != acceptedSpaceIds.end()) {
+            std::cerr << "Warning: Duplicate space ID " << id
+                      << " on row " << lineNumber
+                      << ". Keeping first space and skipping duplicate row.\n";
+            continue;
+        }
+
+        Space* space = nullptr;
         if (type == "Classroom") {
-            spaces.push_back(new Classroom(id, name, capacity,
-                                           hasProjector, hasWhiteboard, hasComputers,
-                                           isAvailable, building));
+            space = new Classroom(id, name, capacity,
+                                  hasProjector, hasWhiteboard, hasComputers,
+                                  isAvailable, building);
         } else if (type == "Laboratory") {
-            spaces.push_back(new Laboratory(id, name, capacity,
-                                            hasProjector, hasWhiteboard, hasComputers,
-                                            isAvailable, building));
+            space = new Laboratory(id, name, capacity,
+                                   hasProjector, hasWhiteboard, hasComputers,
+                                   isAvailable, building);
         } else if (type == "MeetingRoom") {
-            spaces.push_back(new MeetingRoom(id, name, capacity,
-                                             hasProjector, hasWhiteboard, hasComputers,
-                                             isAvailable, building));
+            space = new MeetingRoom(id, name, capacity,
+                                    hasProjector, hasWhiteboard, hasComputers,
+                                    isAvailable, building);
         } else {
             std::cerr << "Warning: Skipping malformed space row " << lineNumber << ".\n";
+            continue;
         }
+
+        acceptedSpaceIds.insert(id);
+        spaces.push_back(space);
     }
 
     return spaces;
+}
+
+std::vector<UserBusySlot> DataLoader::loadUserBusySlots(const std::string& filename) {
+    std::vector<UserBusySlot> busySlots;
+    std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        std::cerr << "Warning: Could not open user busy slots file: " << filename
+                  << ". Continuing with no busy slots.\n";
+        return busySlots;
+    }
+
+    std::string line;
+    int lineNumber = 0;
+    while (std::getline(file, line)) {
+        lineNumber++;
+        if (line.empty()) continue;
+        if (lineNumber == 1 && isUserBusySlotsHeader(line)) continue;
+
+        const std::vector<std::string> columns = splitCsvLine(line);
+
+        if (columns.size() < 5) {
+            std::cerr << "Warning: Skipping malformed user busy slot row "
+                      << lineNumber << ".\n";
+            continue;
+        }
+
+        int userId = 0;
+        int day = 0;
+        int startMinutes = 0;
+        int endMinutes = 0;
+
+        if (!tryParseInt(columns[0], userId) ||
+            !tryParseInt(columns[1], day) ||
+            !tryParseTimeOfDay(columns[2], startMinutes) ||
+            !tryParseTimeOfDay(columns[3], endMinutes)) {
+            std::cerr << "Warning: Skipping malformed user busy slot row "
+                      << lineNumber << ".\n";
+            continue;
+        }
+
+        try {
+            TimeSlot slot = TimeSlot::fromMinutes(day, startMinutes, endMinutes);
+            busySlots.emplace_back(userId, slot, columns[4]);
+        } catch (...) {
+            std::cerr << "Warning: Skipping invalid user busy slot row "
+                      << lineNumber << ".\n";
+        }
+    }
+
+    return busySlots;
+}
+
+std::vector<RequestParticipant> DataLoader::loadRequestParticipants(const std::string& filename) {
+    std::vector<RequestParticipant> participants;
+    std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        std::cerr << "Warning: Could not open request participants file: " << filename
+                  << ". Continuing with no request participants.\n";
+        return participants;
+    }
+
+    std::string line;
+    int lineNumber = 0;
+    while (std::getline(file, line)) {
+        lineNumber++;
+        if (line.empty()) continue;
+        if (lineNumber == 1 && isRequestParticipantsHeader(line)) continue;
+
+        const std::vector<std::string> columns = splitCsvLine(line);
+
+        if (columns.size() < 3) {
+            std::cerr << "Warning: Skipping malformed request participant row "
+                      << lineNumber << ".\n";
+            continue;
+        }
+
+        int requestId = 0;
+        int userId = 0;
+
+        if (!tryParseInt(columns[0], requestId) ||
+            !tryParseInt(columns[1], userId) ||
+            columns[2].empty()) {
+            std::cerr << "Warning: Skipping malformed request participant row "
+                      << lineNumber << ".\n";
+            continue;
+        }
+
+        participants.emplace_back(requestId, userId, columns[2]);
+    }
+
+    return participants;
 }

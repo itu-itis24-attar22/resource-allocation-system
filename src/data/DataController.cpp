@@ -7,6 +7,7 @@
 #include "DataLoader.h"
 #include "AllocationWriter.h"
 #include "../models/RequestFactory.h"
+#include "../models/CommitteeMeetingRequest.h"
 #include "RequestResultWriter.h"
 
 namespace {
@@ -346,6 +347,40 @@ namespace {
 
         return requests;
     }
+
+    void attachParticipantsToCommitteeRequests(
+        std::vector<Request*>& requests,
+        const std::vector<RequestParticipant>& requestParticipants
+    ) {
+        for (Request* request : requests) {
+            CommitteeMeetingRequest* committeeRequest =
+                dynamic_cast<CommitteeMeetingRequest*>(request);
+
+            if (!committeeRequest) {
+                continue;
+            }
+
+            int attachedCount = 0;
+            for (const RequestParticipant& participant : requestParticipants) {
+                if (participant.getRequestId() == committeeRequest->getId()) {
+                    committeeRequest->addRequiredParticipant(
+                        participant.getUserId(),
+                        participant.getParticipantRole()
+                    );
+                    attachedCount++;
+                }
+            }
+
+            if (attachedCount == 0) {
+                committeeRequest->addHistoryEvent("No request participants loaded for committee meeting");
+            } else {
+                committeeRequest->addHistoryEvent(
+                    "Loaded " + std::to_string(attachedCount)
+                    + " required committee participant(s)"
+                );
+            }
+        }
+    }
 }
 
 std::string DataController::loadAllocationStrategyName(const std::string& configFile) const {
@@ -379,7 +414,8 @@ std::string DataController::loadAllocationStrategyName(const std::string& config
                 if (normalizedValue == "greedy" ||
                     normalizedValue == "priority" ||
                     normalizedValue == "multi_room_exam_greedy" ||
-                    normalizedValue == "multi_room_exam_best_fit") {
+                    normalizedValue == "multi_room_exam_best_fit" ||
+                    normalizedValue == "shared_room_exam_best_fit") {
                     return normalizedValue;
                 }
 
@@ -398,11 +434,16 @@ std::string DataController::loadAllocationStrategyName(const std::string& config
 
 SystemData DataController::loadAllData(const std::string& usersFile,
                                        const std::string& spacesFile,
-                                       const std::string& requestsFile) const {
+                                       const std::string& requestsFile,
+                                       const std::string& userBusySlotsFile,
+                                       const std::string& requestParticipantsFile) const {
     SystemData data;
     data.users = DataLoader::loadUsers(usersFile);
     data.spaces = DataLoader::loadSpaces(spacesFile);
     data.requests = loadRequestsFromCsv(requestsFile, data.users, data.spaces);
+    data.userBusySlots = DataLoader::loadUserBusySlots(userBusySlotsFile);
+    data.requestParticipants = DataLoader::loadRequestParticipants(requestParticipantsFile);
+    attachParticipantsToCommitteeRequests(data.requests, data.requestParticipants);
     return data;
 }
 

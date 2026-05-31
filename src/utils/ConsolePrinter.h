@@ -5,6 +5,7 @@
 #include "../models/OneTimeRequest.h"
 #include "../models/RecurringRequest.h"
 #include "../models/ExamRequest.h"
+#include "../models/CommitteeMeetingRequest.h"
 #include "../models/InvalidRequest.h"
 #include "../models/Status.h"
 
@@ -29,6 +30,13 @@ void printRecurringResult(
 void printExamResult(
     const std::string& label,
     const ExamRequest& request,
+    bool result,
+    const std::string& explanation
+);
+
+void printCommitteeMeetingResult(
+    const std::string& label,
+    const CommitteeMeetingRequest& request,
     bool result,
     const std::string& explanation
 );

@@ -29,5 +29,6 @@ bool Staff::canRequestSpaceType(const std::string& spaceType) const {
 bool Staff::canSubmitRequestType(const std::string& requestType) const {
     return requestType == "OneTime" ||
            requestType == "Recurring" ||
+           requestType == "CommitteeMeeting" ||
            requestType == "Invalid";
 }
