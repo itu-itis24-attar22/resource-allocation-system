@@ -22,7 +22,7 @@
         <div>
             <p class="eyebrow">{{ item.request_type_label }}</p>
             <h2>{{ item.title }}</h2>
-            <p>{{ item.purpose }} · {{ item.time_data }}</p>
+            <p>{{ item.purpose }} - {{ item.time_data }}</p>
         </div>
         <div class="exam-badges">
             <span class="badge">{{ item.request_type_label }}</span>
@@ -68,7 +68,7 @@
         </div>
         <div>
             <dt>Exam type</dt>
-            <dd>{{ item.exam_type }} · {{ "Splittable" if item.can_split == "true" else "Non-splittable" }}</dd>
+            <dd>{{ item.exam_type }} - {{ "Splittable" if item.can_split == "true" else "Non-splittable" }}</dd>
         </div>
         {% endif %}
     </dl>
@@ -121,7 +121,7 @@
             <article>
                 <strong>{{ room.name }} ({{ room.space_id }})</strong>
                 <span>{{ room.time }}</span>
-                <small>{{ room.type }} · {{ room.building }} · assigned {{ room.assigned }}</small>
+                <small>{{ room.type }} - {{ room.building }} - assigned {{ room.assigned }}</small>
                 <a href="{{ url_for('schedules', type='space', id=room.space_id) }}">View room schedule</a>
             </article>
             {% endfor %}

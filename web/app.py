@@ -105,7 +105,7 @@ FORM_DAY_OPTIONS = [
         (5, "Friday"),
     ]
 ]
-FORM_START_MINUTES = 8 * 60
+FORM_START_MINUTES = 9 * 60
 FORM_END_MINUTES = 17 * 60
 FORM_STEP_MINUTES = 30
 FORM_TIME_OPTIONS = [
@@ -119,6 +119,8 @@ RAW_DATA_FILES = [
     {"filename": "requests.csv", "label": "Raw Requests"},
     {"filename": "allocations.csv", "label": "Raw Allocations"},
     {"filename": "request_results.csv", "label": "Raw Request Results"},
+    {"filename": "request_summaries.csv", "label": "Request Summaries"},
+    {"filename": "allocation_summaries.csv", "label": "Allocation Summaries"},
     {"filename": "request_participants.csv", "label": "Request Participants"},
     {"filename": "user_busy_slots.csv", "label": "User Busy Slots"},
     {"filename": "users.csv", "label": "Users CSV"},
@@ -601,13 +603,13 @@ def parse_time_fields(form_data, errors):
 
     if start_minutes is not None:
         if start_minutes < FORM_START_MINUTES or start_minutes > FORM_END_MINUTES:
-            errors.append("Start time must be between 08:00 and 17:00.")
+            errors.append("Start time must be between 09:00 and 17:00.")
         if start_minutes % FORM_STEP_MINUTES != 0:
             errors.append("Start time must use 30-minute increments.")
 
     if end_minutes is not None:
         if end_minutes < FORM_START_MINUTES or end_minutes > FORM_END_MINUTES:
-            errors.append("End time must be between 08:00 and 17:00.")
+            errors.append("End time must be between 09:00 and 17:00.")
         if end_minutes % FORM_STEP_MINUTES != 0:
             errors.append("End time must use 30-minute increments.")
 
