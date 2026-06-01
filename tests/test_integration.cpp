@@ -200,6 +200,42 @@ TEST_CASE("DataController tolerates extra request columns after current schema")
     std::remove(requestsPath.c_str());
 }
 
+TEST_CASE("DataController converts negative request IDs into InvalidRequest objects") {
+    const std::string usersPath = "tests/tmp_negative_request_users.csv";
+    const std::string spacesPath = "tests/tmp_negative_request_spaces.csv";
+    const std::string requestsPath = "tests/tmp_negative_request_requests.csv";
+
+    writeCsv(
+        usersPath,
+        "userId,name,role\n"
+        "1,Student One,Student\n"
+    );
+    writeCsv(
+        spacesPath,
+        "spaceId,type,name,capacity,hasProjector,hasWhiteboard,hasComputers,isAvailable,building\n"
+        "301,MeetingRoom,M301,10,1,0,0,1,AdminBuilding\n"
+    );
+    writeCsv(
+        requestsPath,
+        "requestId,requestType,userId,spaceId,participantCount,requiredFeature,requiredBuilding,timeData,title,purpose,courseCode,courseName,examType,canSplitAcrossRooms\n"
+        "-7,OneTime,1,301,5,Projector,AdminBuilding,1-10-11,Negative Request,Meeting,,,,false\n"
+        "7,OneTime,1,301,5,Projector,AdminBuilding,1-11-12,Valid Request,Meeting,,,,false\n"
+    );
+
+    DataController controller;
+    SystemData data = controller.loadAllData(usersPath, spacesPath, requestsPath);
+
+    CHECK_EQ(data.requests.size(), static_cast<size_t>(2));
+    CHECK(dynamic_cast<InvalidRequest*>(data.requests[0]) != nullptr);
+    CHECK_EQ(data.requests[0]->getRejectionReason(), std::string("Invalid request ID"));
+    CHECK(dynamic_cast<InvalidRequest*>(data.requests[1]) == nullptr);
+
+    controller.cleanupData(data);
+    std::remove(usersPath.c_str());
+    std::remove(spacesPath.c_str());
+    std::remove(requestsPath.c_str());
+}
+
 TEST_CASE("DataController loads custom auxiliary busy-slot and request-participant paths") {
     const std::string usersPath = "tests/tmp_aux_users.csv";
     const std::string spacesPath = "tests/tmp_aux_spaces.csv";

@@ -213,7 +213,7 @@ std::vector<User*> DataLoader::loadUsers(const std::string& filename) {
         std::string roleString = columns[2];
         int id = 0;
 
-        if (!tryParseInt(idToken, id)) {
+        if (!tryParseInt(idToken, id) || id < 0) {
             std::cerr << "Warning: Skipping malformed user row " << lineNumber << ".\n";
             continue;
         }
@@ -309,7 +309,8 @@ std::vector<Space*> DataLoader::loadSpaces(const std::string& filename) {
             !tryParseFlag(projectorToken, hasProjector) ||
             !tryParseFlag(whiteboardToken, hasWhiteboard) ||
             !tryParseFlag(computersToken, hasComputers) ||
-            !tryParseFlag(availableToken, isAvailable)) {
+            !tryParseFlag(availableToken, isAvailable) ||
+            id < 0) {
             std::cerr << "Warning: Skipping malformed space row " << lineNumber << ".\n";
             continue;
         }
@@ -379,7 +380,8 @@ std::vector<UserBusySlot> DataLoader::loadUserBusySlots(const std::string& filen
         if (!tryParseInt(columns[0], userId) ||
             !tryParseInt(columns[1], day) ||
             !tryParseTimeOfDay(columns[2], startMinutes) ||
-            !tryParseTimeOfDay(columns[3], endMinutes)) {
+            !tryParseTimeOfDay(columns[3], endMinutes) ||
+            userId < 0) {
             std::cerr << "Warning: Skipping malformed user busy slot row "
                       << lineNumber << ".\n";
             continue;
@@ -427,7 +429,9 @@ std::vector<RequestParticipant> DataLoader::loadRequestParticipants(const std::s
 
         if (!tryParseInt(columns[0], requestId) ||
             !tryParseInt(columns[1], userId) ||
-            columns[2].empty()) {
+            columns[2].empty() ||
+            requestId < 0 ||
+            userId < 0) {
             std::cerr << "Warning: Skipping malformed request participant row "
                       << lineNumber << ".\n";
             continue;
