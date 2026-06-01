@@ -39,6 +39,11 @@ int main() {
     session.runAllocation();
 
     for (Request* request : data.requests) {
+        if (!request) {
+            std::cerr << "Warning: Skipping null request during console reporting.\n";
+            continue;
+        }
+
         std::string label = "Request " + std::to_string(request->getId());
 
         if (OneTimeRequest* oneTime = dynamic_cast<OneTimeRequest*>(request)) {

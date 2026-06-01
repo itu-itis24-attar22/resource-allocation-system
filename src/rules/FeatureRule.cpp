@@ -1,7 +1,12 @@
 #include "FeatureRule.h"
 
 RuleEvaluationResult FeatureRule::evaluate(Request& request) const {
-    if (request.getRequestedSpace()->hasFeature(request.getRequiredFeature())) {
+    const Space* requestedSpace = request.getRequestedSpace();
+    if (!requestedSpace) {
+        return RuleEvaluationResult(false, "Requested space missing");
+    }
+
+    if (requestedSpace->hasFeature(request.getRequiredFeature())) {
         return RuleEvaluationResult(true, "");
     }
 

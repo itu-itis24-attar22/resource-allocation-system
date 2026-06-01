@@ -1,7 +1,12 @@
 #include "CapacityRule.h"
 
 RuleEvaluationResult CapacityRule::evaluate(Request& request) const {
-    if (request.getRequestedSpace()->getCapacity() >= request.getParticipantCount()) {
+    const Space* requestedSpace = request.getRequestedSpace();
+    if (!requestedSpace) {
+        return RuleEvaluationResult(false, "Requested space missing");
+    }
+
+    if (requestedSpace->getCapacity() >= request.getParticipantCount()) {
         return RuleEvaluationResult(true, "");
     }
 
