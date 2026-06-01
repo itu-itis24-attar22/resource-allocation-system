@@ -47,10 +47,19 @@ namespace {
         const std::vector<Allocation>& allocations,
         const std::unordered_map<int, const Request*>& requestById
     ) {
+        if (!space) {
+            return 0;
+        }
+
         int usedExamCapacity = 0;
 
         for (const Allocation& allocation : allocations) {
-            const bool sameSpace = allocation.getSpace()->getId() == space->getId();
+            const Space* allocatedSpace = allocation.getSpace();
+            if (!allocatedSpace) {
+                continue;
+            }
+
+            const bool sameSpace = allocatedSpace->getId() == space->getId();
             const bool overlaps = allocation.getTimeSlot().overlapsWith(examTimeSlot);
 
             if (!sameSpace || !overlaps) {

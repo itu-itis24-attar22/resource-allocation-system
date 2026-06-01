@@ -63,12 +63,12 @@ TEST_CASE("ResourceAllocationSession loads, runs, exports, and cleans up backend
     CHECK_EQ(session.getAllocations().size(), static_cast<size_t>(1));
     CHECK(session.getSystemData().requests[0]->getStatus() == RequestStatus::Approved);
 
-    session.exportResults(
+    CHECK(session.exportResults(
         allocationsPath,
         resultsPath,
         requestSummariesPath,
         allocationSummariesPath
-    );
+    ));
     CHECK(sessionFileExistsAndNotEmpty(allocationsPath));
     CHECK(sessionFileExistsAndNotEmpty(resultsPath));
     CHECK(sessionFileExistsAndNotEmpty(requestSummariesPath));
@@ -98,6 +98,44 @@ TEST_CASE("ResourceAllocationSession loads, runs, exports, and cleans up backend
     std::remove(resultsPath.c_str());
     std::remove(requestSummariesPath.c_str());
     std::remove(allocationSummariesPath.c_str());
+}
+
+TEST_CASE("ResourceAllocationSession reports export failure") {
+    const std::string usersPath = "tests/tmp_session_export_users.csv";
+    const std::string spacesPath = "tests/tmp_session_export_spaces.csv";
+    const std::string requestsPath = "tests/tmp_session_export_requests.csv";
+
+    writeSessionCsv(
+        usersPath,
+        "userId,name,role\n"
+        "1,Student One,Student\n"
+    );
+    writeSessionCsv(
+        spacesPath,
+        "spaceId,type,name,capacity,hasProjector,hasWhiteboard,hasComputers,isAvailable,building\n"
+        "301,MeetingRoom,M301,10,1,0,0,1,AdminBuilding\n"
+    );
+    writeSessionCsv(
+        requestsPath,
+        "requestId,requestType,userId,spaceId,participantCount,requiredFeature,requiredBuilding,timeData,title,purpose,courseCode,courseName,examType,canSplitAcrossRooms\n"
+        "91,OneTime,1,301,5,Projector,AdminBuilding,1-09:00-10:00,Export Failure,Facade workflow test,,,,false\n"
+    );
+
+    ResourceAllocationSession session;
+    CHECK(session.loadSystemData(usersPath, spacesPath, requestsPath));
+    CHECK(session.runAllocation());
+
+    CHECK(!session.exportResults(
+        "tests/missing_export_dir/allocations.csv",
+        "tests/missing_export_dir/results.csv",
+        "tests/missing_export_dir/request_summaries.csv",
+        "tests/missing_export_dir/allocation_summaries.csv"
+    ));
+
+    session.cleanup();
+    std::remove(usersPath.c_str());
+    std::remove(spacesPath.c_str());
+    std::remove(requestsPath.c_str());
 }
 
 TEST_CASE("ResourceAllocationSession reports failed loads without running allocation") {

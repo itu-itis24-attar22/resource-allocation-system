@@ -7,7 +7,7 @@
 
 class RequestResultWriter {
 public:
-    static void writeRequestResults(const std::string& filename,
+    static bool writeRequestResults(const std::string& filename,
                                     const std::vector<Request*>& requests);
 };
 

@@ -121,7 +121,7 @@ namespace {
 
     User* findUserById(const std::vector<User*>& users, int userId) {
         for (User* user : users) {
-            if (user->getId() == userId) {
+            if (user && user->getId() == userId) {
                 return user;
             }
         }
@@ -130,7 +130,7 @@ namespace {
 
     Space* findSpaceById(const std::vector<Space*>& spaces, int spaceId) {
         for (Space* space : spaces) {
-            if (space->getId() == spaceId) {
+            if (space && space->getId() == spaceId) {
                 return space;
             }
         }
@@ -174,6 +174,14 @@ namespace {
                     -1, "Unknown", nullptr, nullptr, 0, "", "", "", "", "", "Malformed input"
                 ));
                 printRejectedRequestWarning(-1, "Malformed input");
+                continue;
+            }
+
+            if (requestId < 0) {
+                requests.push_back(RequestFactory::createInvalidRequest(
+                    requestId, "Unknown", nullptr, nullptr, 0, "", "", "", "", "", "Invalid request ID"
+                ));
+                printRejectedRequestWarning(requestId, "Invalid request ID");
                 continue;
             }
 
@@ -338,6 +346,26 @@ namespace {
                 optionalFields.examType,
                 optionalFields.canSplitAcrossRooms
             );
+            if (!request) {
+                request = RequestFactory::createInvalidRequest(
+                    requestId,
+                    requestType,
+                    user,
+                    space,
+                    participantCount,
+                    optionalFields.title,
+                    optionalFields.purpose,
+                    requiredFeature,
+                    requiredBuilding,
+                    timeData,
+                    "Malformed input",
+                    optionalFields.courseCode,
+                    optionalFields.courseName,
+                    optionalFields.examType,
+                    optionalFields.canSplitAcrossRooms
+                );
+            }
+
             requests.push_back(request);
 
             if (request->getStatus() == RequestStatus::Rejected) {
@@ -447,9 +475,9 @@ SystemData DataController::loadAllData(const std::string& usersFile,
     return data;
 }
 
-void DataController::exportAllocations(const std::string& allocationsFile,
+bool DataController::exportAllocations(const std::string& allocationsFile,
                                        const std::vector<Allocation>& allocations) const {
-    AllocationWriter::writeAllocations(allocationsFile, allocations);
+    return AllocationWriter::writeAllocations(allocationsFile, allocations);
 }
 
 void DataController::cleanupData(SystemData& data) const {
@@ -469,7 +497,7 @@ void DataController::cleanupData(SystemData& data) const {
     data.users.clear();
 }
 
-void DataController::exportRequestResults(const std::string& resultsFile,
+bool DataController::exportRequestResults(const std::string& resultsFile,
                                           const std::vector<Request*>& requests) const {
-    RequestResultWriter::writeRequestResults(resultsFile, requests);
+    return RequestResultWriter::writeRequestResults(resultsFile, requests);
 }

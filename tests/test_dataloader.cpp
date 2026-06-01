@@ -161,3 +161,63 @@ TEST_CASE("DataLoader skips duplicate user and space IDs while preserving first 
     std::remove(usersPath.c_str());
     std::remove(spacesPath.c_str());
 }
+
+TEST_CASE("DataLoader skips negative IDs in users spaces busy slots and participants") {
+    const std::string usersPath = "tests/tmp_negative_users.csv";
+    const std::string spacesPath = "tests/tmp_negative_spaces.csv";
+    const std::string busySlotsPath = "tests/tmp_negative_busy_slots.csv";
+    const std::string participantsPath = "tests/tmp_negative_participants.csv";
+
+    writeFile(
+        usersPath,
+        "userId,name,role\n"
+        "-1,Bad User,Student\n"
+        "1,Alice,Student\n"
+    );
+    writeFile(
+        spacesPath,
+        "spaceId,type,name,capacity,hasProjector,hasWhiteboard,hasComputers,isAvailable,building\n"
+        "-101,Classroom,Bad Room,40,1,1,0,1,Engineering\n"
+        "101,Classroom,B201,40,1,1,0,1,Engineering\n"
+    );
+    writeFile(
+        busySlotsPath,
+        "userId,day,startTime,endTime,reason\n"
+        "-2,1,09:00,10:00,Invalid user\n"
+        "2,1,10:00,11:00,Valid user\n"
+    );
+    writeFile(
+        participantsPath,
+        "requestId,userId,participantRole\n"
+        "-40,2,Invalid request\n"
+        "40,-2,Invalid user\n"
+        "40,2,Participant\n"
+    );
+
+    std::vector<User*> users = DataLoader::loadUsers(usersPath);
+    std::vector<Space*> spaces = DataLoader::loadSpaces(spacesPath);
+    std::vector<UserBusySlot> busySlots = DataLoader::loadUserBusySlots(busySlotsPath);
+    std::vector<RequestParticipant> participants =
+        DataLoader::loadRequestParticipants(participantsPath);
+
+    CHECK_EQ(users.size(), static_cast<size_t>(1));
+    CHECK_EQ(users[0]->getId(), 1);
+    CHECK_EQ(spaces.size(), static_cast<size_t>(1));
+    CHECK_EQ(spaces[0]->getId(), 101);
+    CHECK_EQ(busySlots.size(), static_cast<size_t>(1));
+    CHECK_EQ(busySlots[0].getUserId(), 2);
+    CHECK_EQ(participants.size(), static_cast<size_t>(1));
+    CHECK_EQ(participants[0].getRequestId(), 40);
+    CHECK_EQ(participants[0].getUserId(), 2);
+
+    for (User* user : users) {
+        delete user;
+    }
+    for (Space* space : spaces) {
+        delete space;
+    }
+    std::remove(usersPath.c_str());
+    std::remove(spacesPath.c_str());
+    std::remove(busySlotsPath.c_str());
+    std::remove(participantsPath.c_str());
+}

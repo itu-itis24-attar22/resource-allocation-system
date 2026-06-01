@@ -27,6 +27,34 @@ std::string availabilityToString(bool availability) {
     return availability ? "Available" : "UnderMaintenance";
 }
 
+namespace {
+    std::string requesterName(const Request& request) {
+        return request.getRequester() ? request.getRequester()->getName() : "Unknown";
+    }
+
+    std::string requesterRole(const Request& request) {
+        return request.getRequester() ? request.getRequester()->getRoleName() : "Unknown";
+    }
+
+    std::string requestedSpaceType(const Request& request) {
+        return request.getRequestedSpace() ? request.getRequestedSpace()->getType() : "Unknown";
+    }
+
+    std::string requestedSpaceName(const Request& request) {
+        return request.getRequestedSpace() ? request.getRequestedSpace()->getName() : "Unknown";
+    }
+
+    std::string requestedSpaceBuilding(const Request& request) {
+        return request.getRequestedSpace() ? request.getRequestedSpace()->getBuilding() : "Unknown";
+    }
+
+    std::string requestedSpaceAvailability(const Request& request) {
+        return request.getRequestedSpace()
+            ? availabilityToString(request.getRequestedSpace()->getIsAvailable())
+            : "Unknown";
+    }
+}
+
 void printOneTimeResult(
     const std::string& label,
     const OneTimeRequest& request,
@@ -37,15 +65,15 @@ void printOneTimeResult(
     std::cout << "Request type: OneTimeRequest\n";
     std::cout << "Title: " << request.getTitle() << "\n";
     std::cout << "Purpose: " << request.getPurpose() << "\n";
-    std::cout << "Requester: " << request.getRequester()->getName() << "\n";
-    std::cout << "Requester role: " << request.getRequester()->getRoleName() << "\n";
+    std::cout << "Requester: " << requesterName(request) << "\n";
+    std::cout << "Requester role: " << requesterRole(request) << "\n";
     std::cout << "Priority: " << request.getPriority() << "\n";
-    std::cout << "Requested type: " << request.getRequestedSpace()->getType() << "\n";
-    std::cout << "Requested space: " << request.getRequestedSpace()->getName() << "\n";
-    std::cout << "Space building: " << request.getRequestedSpace()->getBuilding() << "\n";
+    std::cout << "Requested type: " << requestedSpaceType(request) << "\n";
+    std::cout << "Requested space: " << requestedSpaceName(request) << "\n";
+    std::cout << "Space building: " << requestedSpaceBuilding(request) << "\n";
     std::cout << "Required building: "
               << (request.getRequiredBuilding().empty() ? "None" : request.getRequiredBuilding()) << "\n";
-    std::cout << "Space status: " << availabilityToString(request.getRequestedSpace()->getIsAvailable()) << "\n";
+    std::cout << "Space status: " << requestedSpaceAvailability(request) << "\n";
     std::cout << "Required feature: "
               << (request.getRequiredFeature().empty() ? "None" : request.getRequiredFeature()) << "\n";
     std::cout << "Status: " << requestStatusToString(request.getStatus()) << "\n";
@@ -76,15 +104,15 @@ void printRecurringResult(
     std::cout << "Request type: RecurringRequest\n";
     std::cout << "Title: " << request.getTitle() << "\n";
     std::cout << "Purpose: " << request.getPurpose() << "\n";
-    std::cout << "Requester: " << request.getRequester()->getName() << "\n";
-    std::cout << "Requester role: " << request.getRequester()->getRoleName() << "\n";
+    std::cout << "Requester: " << requesterName(request) << "\n";
+    std::cout << "Requester role: " << requesterRole(request) << "\n";
     std::cout << "Priority: " << request.getPriority() << "\n";
-    std::cout << "Requested type: " << request.getRequestedSpace()->getType() << "\n";
-    std::cout << "Requested space: " << request.getRequestedSpace()->getName() << "\n";
-    std::cout << "Space building: " << request.getRequestedSpace()->getBuilding() << "\n";
+    std::cout << "Requested type: " << requestedSpaceType(request) << "\n";
+    std::cout << "Requested space: " << requestedSpaceName(request) << "\n";
+    std::cout << "Space building: " << requestedSpaceBuilding(request) << "\n";
     std::cout << "Required building: "
               << (request.getRequiredBuilding().empty() ? "None" : request.getRequiredBuilding()) << "\n";
-    std::cout << "Space status: " << availabilityToString(request.getRequestedSpace()->getIsAvailable()) << "\n";
+    std::cout << "Space status: " << requestedSpaceAvailability(request) << "\n";
     std::cout << "Required feature: "
               << (request.getRequiredFeature().empty() ? "None" : request.getRequiredFeature()) << "\n";
     std::cout << "Status: " << requestStatusToString(request.getStatus()) << "\n";
@@ -124,15 +152,15 @@ void printExamResult(
     std::cout << "Course name: " << request.getCourseName() << "\n";
     std::cout << "Exam type: " << request.getExamType() << "\n";
     std::cout << "Can split across rooms: " << (request.getCanSplitAcrossRooms() ? "Yes" : "No") << "\n";
-    std::cout << "Requester: " << request.getRequester()->getName() << "\n";
-    std::cout << "Requester role: " << request.getRequester()->getRoleName() << "\n";
+    std::cout << "Requester: " << requesterName(request) << "\n";
+    std::cout << "Requester role: " << requesterRole(request) << "\n";
     std::cout << "Priority: " << request.getPriority() << "\n";
-    std::cout << "Requested type: " << request.getRequestedSpace()->getType() << "\n";
-    std::cout << "Requested space: " << request.getRequestedSpace()->getName() << "\n";
-    std::cout << "Space building: " << request.getRequestedSpace()->getBuilding() << "\n";
+    std::cout << "Requested type: " << requestedSpaceType(request) << "\n";
+    std::cout << "Requested space: " << requestedSpaceName(request) << "\n";
+    std::cout << "Space building: " << requestedSpaceBuilding(request) << "\n";
     std::cout << "Required building: "
               << (request.getRequiredBuilding().empty() ? "None" : request.getRequiredBuilding()) << "\n";
-    std::cout << "Space status: " << availabilityToString(request.getRequestedSpace()->getIsAvailable()) << "\n";
+    std::cout << "Space status: " << requestedSpaceAvailability(request) << "\n";
     std::cout << "Required feature: "
               << (request.getRequiredFeature().empty() ? "None" : request.getRequiredFeature()) << "\n";
     std::cout << "Status: " << requestStatusToString(request.getStatus()) << "\n";
@@ -165,15 +193,15 @@ void printCommitteeMeetingResult(
     std::cout << "Purpose: " << request.getPurpose() << "\n";
     std::cout << "Meeting topic: " << request.getMeetingTopic() << "\n";
     std::cout << "Duration minutes: " << request.getDurationMinutes() << "\n";
-    std::cout << "Requester: " << request.getRequester()->getName() << "\n";
-    std::cout << "Requester role: " << request.getRequester()->getRoleName() << "\n";
+    std::cout << "Requester: " << requesterName(request) << "\n";
+    std::cout << "Requester role: " << requesterRole(request) << "\n";
     std::cout << "Priority: " << request.getPriority() << "\n";
-    std::cout << "Requested type: " << request.getRequestedSpace()->getType() << "\n";
-    std::cout << "Requested space: " << request.getRequestedSpace()->getName() << "\n";
-    std::cout << "Space building: " << request.getRequestedSpace()->getBuilding() << "\n";
+    std::cout << "Requested type: " << requestedSpaceType(request) << "\n";
+    std::cout << "Requested space: " << requestedSpaceName(request) << "\n";
+    std::cout << "Space building: " << requestedSpaceBuilding(request) << "\n";
     std::cout << "Required building: "
               << (request.getRequiredBuilding().empty() ? "None" : request.getRequiredBuilding()) << "\n";
-    std::cout << "Space status: " << availabilityToString(request.getRequestedSpace()->getIsAvailable()) << "\n";
+    std::cout << "Space status: " << requestedSpaceAvailability(request) << "\n";
     std::cout << "Required feature: "
               << (request.getRequiredFeature().empty() ? "None" : request.getRequiredFeature()) << "\n";
     std::cout << "Status: " << requestStatusToString(request.getStatus()) << "\n";
@@ -215,12 +243,12 @@ void printInvalidResult(
     std::cout << "Request type: InvalidRequest\n";
     std::cout << "Title: " << request.getTitle() << "\n";
     std::cout << "Purpose: " << request.getPurpose() << "\n";
-    std::cout << "Requester: " << request.getRequester()->getName() << "\n";
-    std::cout << "Requester role: " << request.getRequester()->getRoleName() << "\n";
+    std::cout << "Requester: " << requesterName(request) << "\n";
+    std::cout << "Requester role: " << requesterRole(request) << "\n";
     std::cout << "Priority: " << request.getPriority() << "\n";
-    std::cout << "Requested type: " << request.getRequestedSpace()->getType() << "\n";
-    std::cout << "Requested space: " << request.getRequestedSpace()->getName() << "\n";
-    std::cout << "Space building: " << request.getRequestedSpace()->getBuilding() << "\n";
+    std::cout << "Requested type: " << requestedSpaceType(request) << "\n";
+    std::cout << "Requested space: " << requestedSpaceName(request) << "\n";
+    std::cout << "Space building: " << requestedSpaceBuilding(request) << "\n";
     std::cout << "Required building: "
               << (request.getRequiredBuilding().empty() ? "None" : request.getRequiredBuilding()) << "\n";
     std::cout << "Required feature: "

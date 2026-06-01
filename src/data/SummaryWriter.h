@@ -8,11 +8,11 @@
 
 class SummaryWriter {
 public:
-    static void writeRequestSummaries(const std::string& filename,
+    static bool writeRequestSummaries(const std::string& filename,
                                       const std::vector<Request*>& requests,
                                       const std::vector<Allocation>& allocations);
 
-    static void writeAllocationSummaries(const std::string& filename,
+    static bool writeAllocationSummaries(const std::string& filename,
                                          const std::vector<Request*>& requests,
                                          const std::vector<Allocation>& allocations);
 };

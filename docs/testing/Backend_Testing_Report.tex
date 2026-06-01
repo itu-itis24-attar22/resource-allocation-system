@@ -203,8 +203,8 @@ TeachingAssistant support & Yes & Class, factory support, role name, priority, p
 User priorities and permissions & Yes & Role priorities and allowed/requested space types are tested. \\
 RequestFactory valid/invalid creation & Yes & Valid request subtypes and invalid malformed requests are tested. \\
 Request metadata and history & Yes & Title, purpose, default metadata, approval, rejection, and lifecycle events are tested. \\
-DataLoader missing/empty/malformed CSVs & Yes & Missing files, empty files, malformed rows, unknown roles, and unknown spaces are tested. \\
-DataController temporary CSV integration & Yes & Temporary users, spaces, requests, processing, and exports are tested. \\
+DataLoader missing/empty/malformed CSVs & Yes & Missing files, empty files, malformed rows, unknown roles, unknown spaces, and duplicate user/space IDs are tested. \\
+DataController temporary CSV integration & Yes & Temporary users, spaces, requests, auxiliary busy-slot paths, auxiliary participant paths, processing, and exports are tested. \\
 InvalidRequest behavior & Yes & Unknown request type, malformed row, invalid user, invalid space, and bad time data are tested. \\
 Capacity, Feature, Status, Location, UserRole rules & Yes & Pass and fail behavior for each rule category is tested. \\
 AvailabilityRule conflicts & Yes & One-time and recurring external conflicts are tested. \\
@@ -229,8 +229,8 @@ powershell -ExecutionPolicy Bypass -File tests\run_tests.ps1
 The result was:
 
 \begin{verbatim}
-Running 55 test(s)
-Result: 55 passed, 0 failed
+Running 56 test(s)
+Result: 56 passed, 0 failed
 \end{verbatim}
 
 The runner also compiled and ran the backend smoke executable before running the unit and integration tests.
@@ -257,17 +257,25 @@ However, AddressSanitizer was not available in the current MinGW environment bec
 
 \section{Defects and Risks Found}
 
-No source-code defect requiring an immediate fix was found during this pass.
+No allocation-behavior defect requiring an immediate redesign was found during this pass.
 
-However, several risks and design gaps were identified:
+The testing phase originally identified several maintenance risks:
 
 \begin{itemize}
-    \item \texttt{DataLoader} currently allows duplicate user IDs and duplicate space IDs. This does not crash the system, but it can create ambiguous lookup behavior later.
-    \item \texttt{DataController::loadAllData(...)} accepts custom users, spaces, and requests paths, but still hardcodes some auxiliary paths such as user busy slots and request participants. This makes isolated integration testing less clean.
-    \item \texttt{TeachingAssistant} is implemented in code and appears in data, but documentation should be checked to make sure this role is consistently described.
+    \item \texttt{DataLoader} allowed duplicate user IDs and duplicate space IDs. This did not crash the system, but it could create ambiguous lookup behavior.
+    \item \texttt{DataController::loadAllData(...)} accepted custom users, spaces, and requests paths, but still hardcoded auxiliary paths such as user busy slots and request participants.
+    \item \texttt{TeachingAssistant} was implemented in code and appeared in data, but some documentation did not consistently describe this role.
 \end{itemize}
 
-These are not immediate test failures, but they are important risks for future maintenance.
+After the report, a small data-loading robustness cleanup addressed the first two risks:
+
+\begin{itemize}
+    \item duplicate user IDs are now skipped with a clear warning while preserving the first valid user;
+    \item duplicate space IDs are now skipped with a clear warning while preserving the first valid space;
+    \item \texttt{DataController::loadAllData(...)} now accepts configurable auxiliary paths for user busy slots and request participants while preserving default paths for normal backend execution.
+\end{itemize}
+
+The remaining documentation risk is addressed by updating the project README to reflect the current roles, request types, rules, strategies, committee meeting support, and testing location.
 
 \section{Remaining Limitations}
 
@@ -290,9 +298,9 @@ This backend testing phase replaced outdated tests with a working local test har
 The final test result was:
 
 \begin{center}
-\textbf{55 tests passed, 0 tests failed.}
+\textbf{56 tests passed, 0 tests failed.}
 \end{center}
 
-No production source-code defect requiring a fix was found. The backend is ready for a formal testing report and demonstration, while still having clearly identified limitations related to duplicate identifiers, auxiliary path hardcoding, and unavailable memory-safety tooling.
+No production source-code defect requiring an allocation-behavior redesign was found. The backend is ready for formal testing reporting and demonstration, while still having clearly identified limitations related to unavailable memory-safety tooling, lack of fuzz testing, and non-exhaustive mathematical verification.
 
 \end{document}

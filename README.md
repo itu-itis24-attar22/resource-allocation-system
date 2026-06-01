@@ -1,48 +1,47 @@
 # Resource Allocation System (Iterative Prototype)
 
-This repository contains an iterative C++ prototype for a university resource allocation system, with a small Flask web dashboard for demonstration.
+This repository contains an iterative C++ prototype for a university resource allocation system, with a Flask web dashboard for demonstration.
 
-The project focuses on gradually developing a flexible allocation system for resources such as classrooms, laboratories, and meeting rooms. The implementation follows an iterative software design approach, where each iteration introduces one or more new concepts into the prototype.
+The project focuses on gradually developing a flexible allocation system for resources such as classrooms, laboratories, meeting rooms, exams, and committee meetings. The implementation follows an iterative software design approach, where each iteration introduces one or more new concepts into the prototype.
+
+The latest implemented iteration is Iteration 37, with a small post-Iteration-37 cleanup for data-loading robustness.
 
 ## Current Prototype Features
 
 The current prototype supports:
 
 - abstract `Request` base class with inheritance
-- `OneTimeRequest`, `RecurringRequest`, `ExamRequest`, and `InvalidRequest`
-- request creation through `RequestFactory`
-- invalid request capture for malformed or unresolved request rows
-- allocation of multiple space types:
-  - Classroom
-  - Laboratory
-  - MeetingRoom
-- rule-based request evaluation
-- centralized rule evaluation using:
-  - `RuleEngine`
-  - `RuleEngineFacade`
-- request priority values
-- user polymorphism:
-  - Student
-  - Instructor
-  - Staff
-  - Administrator
-- user creation through `UserFactory`
-- space-type authorization using `UserRoleRule`
-- request-type authorization using `RequestTypeRule`
-- external CSV-based loading of:
-  - users
-  - spaces
-  - requests
-- centralized data loading and exporting through `DataController`
-- CSV export of:
-  - allocations
-  - request results
+- request types:
+  - `OneTimeRequest`
+  - `RecurringRequest`
+  - `ExamRequest`
+  - `CommitteeMeetingRequest`
+  - `InvalidRequest`
+- request title and purpose metadata
 - request lifecycle history logging:
   - created
   - evaluated
   - approved or rejected
   - exported
-- allocation strategy support using:
+- request creation through `RequestFactory`
+- invalid request capture for malformed rows, duplicate request IDs, unresolved users, unresolved spaces, and invalid time data
+- allocation of multiple space types:
+  - `Classroom`
+  - `Laboratory`
+  - `MeetingRoom`
+- user polymorphism through `UserFactory`:
+  - `Student`
+  - `TeachingAssistant`
+  - `Staff`
+  - `Instructor`
+  - `Administrator`
+- role-based request priority values
+- space-type authorization through `UserRoleRule`
+- request-type authorization through `RequestTypeRule`
+- rule-based request evaluation using:
+  - `RuleEngine`
+  - `RuleEngineFacade`
+- strategy-based allocation using:
   - `IAllocationStrategy`
   - `GreedyAllocationStrategy`
   - `PriorityAllocationStrategy`
@@ -50,43 +49,85 @@ The current prototype supports:
   - `MultiRoomExamBestFitStrategy`
   - `SharedRoomExamBestFitStrategy`
 - strategy selection through `AllocationStrategyFactory` and `data/config.txt`
+- exam resource sharing:
+  - one exam can be split across multiple classrooms
+  - best-fit room selection can reduce unused capacity
+  - compatible exams can share the same room using remaining room capacity
 - `assignedParticipants` stored in each `Allocation`
 - minute-based `TimeSlot` support with backward compatibility for older hour-only data
+- committee meeting support:
+  - `RequestParticipant`
+  - `data/request_participants.csv`
+  - `UserBusySlot`
+  - `data/user_busy_slots.csv`
+  - `UserAvailabilityService`
+  - `ParticipantAvailabilityRule`
+  - `MeetingTimeSuggestion`
+  - `MeetingTimeSuggestionService`
+  - least-change ranked alternative meeting time suggestions
+- centralized CSV loading and exporting through `DataController`
+- data-loading robustness:
+  - duplicate user IDs are skipped with a warning
+  - duplicate space IDs are skipped with a warning
+  - auxiliary busy-slot and participant paths can be configured when loading data
+- CSV export of:
+  - allocations
+  - request results
 - Flask web dashboard for demo usage
-- web-based Add Request page
+- web-based request creation, including committee meeting participant selection
+- web-based `Submit and Run` workflow
+- web-based request detail pages
 - web-based Allocation Summary page
-- rejection reasons for failed requests
+- web-based Raw Data page
+- web-based Schedules page for user busy slots and room allocations
+- rejection reasons and backend-generated meeting suggestions displayed in the dashboard
 
 ## Implemented Rules
 
 The prototype currently evaluates requests using the following rules:
 
+- `RequestTypeRule`
+- `UserRoleRule`
+- `ParticipantAvailabilityRule`
 - `CapacityRule`
 - `FeatureRule`
 - `StatusRule`
 - `LocationRule`
-- `UserRoleRule`
-- `RequestTypeRule`
 - `AvailabilityRule`
 
-`UserRoleRule` checks whether a user can request the selected space type. `RequestTypeRule` checks whether a user can submit the selected request type, such as an exam request.
+`RequestTypeRule` checks whether a requester can submit the selected request type. `UserRoleRule` checks whether the requester can use the requested space type. `ParticipantAvailabilityRule` checks required human participants for `CommitteeMeetingRequest` objects. `AvailabilityRule` checks physical room time availability.
+
+The effective normal rule order is:
+
+```text
+RequestTypeRule
+-> UserRoleRule
+-> ParticipantAvailabilityRule
+-> CapacityRule
+-> FeatureRule
+-> StatusRule
+-> LocationRule
+-> AvailabilityRule
+```
 
 ## Repository Structure
 
 - `docs/srs/` : Software Requirements Specification
 - `docs/analysis/` : Initial domain analysis and domain model
-- `docs/iterations/` : Iteration reports
+- `docs/iterations/` : Iteration reports, including Iterations 33-37
+- `docs/class-diagrams/` : class diagram exports, including Iterations 33-37
+- `docs/testing/` : backend testing and verification reports
 - `src/` : C++ prototype implementation
-  - `src/models/` : domain models, including requests, factories, users, spaces, allocations, and time slots
+  - `src/models/` : domain models, requests, factories, users, spaces, allocations, time slots, participants, busy slots, and suggestions
   - `src/rules/` : rule engine, rule facade, and individual request rules
-  - `src/services/` : allocation service coordination
+  - `src/services/` : allocation service, user availability service, and meeting time suggestion service
   - `src/strategies/` : allocation strategy interface, greedy strategy, priority strategy, and multi-room exam strategies
   - `src/data/` : CSV loading and export components
   - `src/utils/` : console output helpers
-- `web/` : Flask dashboard for viewing data, adding requests, running the backend, and reviewing allocation summaries
+- `web/` : Flask dashboard for adding requests, running the backend, viewing summaries, viewing schedules, and inspecting raw CSV data
 - `data/` : CSV input/output files and configuration
-- `tests/` : unit testing files
-- `external/` : third-party single-header libraries
+- `tests/` : lightweight backend unit, integration, regression, and smoke tests
+- `external/` : third-party single-header libraries, if present locally
 
 ## Data Files
 
@@ -95,21 +136,40 @@ The prototype currently uses CSV files in the `data/` folder:
 - `users.csv`
 - `spaces.csv`
 - `requests.csv`
+- `request_participants.csv`
+- `user_busy_slots.csv`
 - `config.txt`
 - `allocations.csv` (generated output)
 - `request_results.csv` (generated output)
 
-The selected allocation strategy is configured in `data/config.txt`, for example:
+The selected allocation strategy is configured in `data/config.txt`. The current demo configuration is:
 
 ```text
 allocation_strategy=shared_room_exam_best_fit
 ```
 
-## Testing and Robustness Report
+## Testing and Verification
 
-A formal testing summary is available in [docs/testing_and_robustness_report.pdf](docs/testing_and_robustness_report.pdf).
+A formal backend testing report source is available under `docs/testing/`:
 
-The report covers normal workflow verification, malformed and adversarial input testing, regression results, bugs found and fixed, and the final robustness status of the allocation system.
+- [Backend_Testing_Report.tex](docs/testing/Backend_Testing_Report.tex)
+
+PDF exports are also stored in `docs/testing/` when generated.
+
+The current lightweight test suite is run with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tests\run_tests.ps1
+```
+
+The latest verified result is:
+
+```text
+Running 56 test(s)
+Result: 56 passed, 0 failed
+```
+
+The test runner compiles and runs the backend smoke executable, then compiles and runs the unit and integration tests.
 
 ## Iterative Development Summary
 
@@ -138,6 +198,12 @@ The report covers normal workflow verification, malformed and adversarial input 
 - Iteration 30: minute-based `TimeSlot` support
 - Iteration 31: extended user and organization model
 - Iteration 32: `SharedRoomExamBestFitStrategy` for exam-to-exam same-room capacity sharing
+- Iteration 33: `UserBusySlot`, `UserAvailabilityService`, and `user_busy_slots.csv`
+- Iteration 34: `CommitteeMeetingRequest`, `RequestParticipant`, and `request_participants.csv`
+- Iteration 35: `ParticipantAvailabilityRule` added to the rule pipeline
+- Iteration 36: common available time suggestions for rejected committee meetings
+- Iteration 37: least-change ranking for valid meeting time suggestions
+- Post-Iteration-37 cleanup: duplicate user/space ID handling and configurable auxiliary data paths
 
 ## How to Compile and Run Backend
 
@@ -149,12 +215,6 @@ g++ -std=c++17 $sources -o allocation_system
 ```
 
 Run:
-
-```bash
-./allocation_system
-```
-
-On Windows:
 
 ```powershell
 .\allocation_system.exe
@@ -170,7 +230,7 @@ Install Flask:
 pip install flask
 ```
 
-Run:
+Run from the project root:
 
 ```bash
 python web/app.py
@@ -182,7 +242,25 @@ Open:
 http://127.0.0.1:5000
 ```
 
-The web dashboard does not implement allocation logic. It reads and writes CSV files for demo usage and runs the compiled C++ backend. The C++ backend remains responsible for rules, strategies, and allocation.
+The web dashboard does not implement allocation logic. It reads and writes CSV files for demo usage and runs the compiled C++ backend. The C++ backend remains responsible for rules, strategies, participant availability, meeting suggestions, and allocation.
+
+## Web Dashboard Overview
+
+The current dashboard supports:
+
+- strategy selection on the Dashboard page
+- `Run Allocation`
+- `Add Request` for `OneTime`, `Recurring`, `Exam`, and `CommitteeMeeting`
+- `Submit and Run` for quickly adding a request and viewing its backend result
+- committee participant selection with participant roles
+- searchable Requests page
+- request detail pages at `/request/<requestId>`
+- Allocation Summary cards for approved, rejected, and pending requests
+- display of committee participants, rejection reasons, and least-change suggestions
+- Schedules page for user busy slots and space allocations
+- Raw Data page for direct CSV inspection
+
+Flask does not check participant availability and does not compute suggestions. Those behaviors belong to the C++ backend.
 
 ## Demo Workflow
 
@@ -190,13 +268,12 @@ The web dashboard does not implement allocation logic. It reads and writes CSV f
 2. Run the Flask dashboard.
 3. Select an allocation strategy.
 4. Add or review requests.
-5. Click `Run Allocation`.
-6. Open `Allocation Summary`.
+5. Use `Save Request Only` for batch entry, or `Submit and Run` for a focused one-request demo.
+6. Open `Allocation Summary` or the request detail page.
+7. Use `Schedules` to inspect user busy slots and room allocations after allocation has run.
 
 ## Notes
 
-This repository is an iterative academic prototype. The current implementation focuses on architecture, extensibility, and rule-driven evaluation rather than production-level persistence or user interface support.
+This repository is an iterative academic prototype. The current implementation focuses on architecture, extensibility, rule-driven evaluation, and demonstration workflows rather than production-level persistence.
 
-The allocation flow is now designed so that strategy-based algorithms can be extended in later iterations without redesigning the rest of the system.
-
-Future work can build on the current structure with a priority + best-fit strategy, global optimization across simultaneous exams, stronger database or API integration, and a richer web interface.
+Future work can build on the current structure with alternative-room meeting suggestions, future-only suggestion modes, participant-conflict-aware ranking, global optimization, database or API integration, and richer calendar integration.

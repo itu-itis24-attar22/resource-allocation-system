@@ -1,5 +1,6 @@
 #include "ResourceAllocationSession.h"
 #include "../data/SummaryWriter.h"
+#include <iostream>
 
 namespace {
     const std::vector<Allocation>& emptyAllocations() {
@@ -81,11 +82,11 @@ void ResourceAllocationSession::addExistingAllocation(const Allocation& allocati
     }
 }
 
-void ResourceAllocationSession::exportResults(
+bool ResourceAllocationSession::exportResults(
     const std::string& allocationsFile,
     const std::string& requestResultsFile
 ) const {
-    exportResults(
+    return exportResults(
         allocationsFile,
         requestResultsFile,
         "data/request_summaries.csv",
@@ -93,24 +94,38 @@ void ResourceAllocationSession::exportResults(
     );
 }
 
-void ResourceAllocationSession::exportResults(
+bool ResourceAllocationSession::exportResults(
     const std::string& allocationsFile,
     const std::string& requestResultsFile,
     const std::string& requestSummariesFile,
     const std::string& allocationSummariesFile
 ) const {
-    dataController.exportAllocations(allocationsFile, getAllocations());
-    dataController.exportRequestResults(requestResultsFile, systemData.requests);
-    SummaryWriter::writeRequestSummaries(
+    const bool allocationsExported =
+        dataController.exportAllocations(allocationsFile, getAllocations());
+    const bool requestResultsExported =
+        dataController.exportRequestResults(requestResultsFile, systemData.requests);
+    const bool requestSummariesExported = SummaryWriter::writeRequestSummaries(
         requestSummariesFile,
         systemData.requests,
         getAllocations()
     );
-    SummaryWriter::writeAllocationSummaries(
+    const bool allocationSummariesExported = SummaryWriter::writeAllocationSummaries(
         allocationSummariesFile,
         systemData.requests,
         getAllocations()
     );
+
+    const bool allExportsSucceeded =
+        allocationsExported &&
+        requestResultsExported &&
+        requestSummariesExported &&
+        allocationSummariesExported;
+
+    if (!allExportsSucceeded) {
+        std::cerr << "Error: One or more export files could not be written.\n";
+    }
+
+    return allExportsSucceeded;
 }
 
 void ResourceAllocationSession::printAllocations() const {
