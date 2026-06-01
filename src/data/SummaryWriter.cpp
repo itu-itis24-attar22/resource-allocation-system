@@ -43,11 +43,11 @@ namespace {
     }
 
     std::string requesterName(const Request* request) {
-        return request->getRequester() ? request->getRequester()->getName() : "";
+        return request && request->getRequester() ? request->getRequester()->getName() : "";
     }
 
     std::string requesterRole(const Request* request) {
-        return request->getRequester() ? request->getRequester()->getRoleName() : "";
+        return request && request->getRequester() ? request->getRequester()->getRoleName() : "";
     }
 
     std::string spaceName(const Allocation& allocation) {
