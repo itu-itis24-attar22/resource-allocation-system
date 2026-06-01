@@ -93,17 +93,22 @@ int main() {
 
     session.printAllocations();
 
-    session.exportResults(
+    const bool exportsSucceeded = session.exportResults(
         "data/allocations.csv",
         "data/request_results.csv",
         "data/request_summaries.csv",
         "data/allocation_summaries.csv"
     );
-    std::cout << "\nAllocations exported to data/allocations.csv\n";
-    std::cout << "Request results exported to data/request_results.csv\n";
-    std::cout << "Request summaries exported to data/request_summaries.csv\n";
-    std::cout << "Allocation summaries exported to data/allocation_summaries.csv\n";
+
+    if (exportsSucceeded) {
+        std::cout << "\nAllocations exported to data/allocations.csv\n";
+        std::cout << "Request results exported to data/request_results.csv\n";
+        std::cout << "Request summaries exported to data/request_summaries.csv\n";
+        std::cout << "Allocation summaries exported to data/allocation_summaries.csv\n";
+    } else {
+        std::cerr << "\nError: One or more output files could not be exported.\n";
+    }
 
     session.cleanup();
-    return 0;
+    return exportsSucceeded ? 0 : 1;
 }

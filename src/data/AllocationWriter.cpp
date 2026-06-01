@@ -43,13 +43,13 @@ namespace {
     }
 }
 
-void AllocationWriter::writeAllocations(const std::string& filename,
+bool AllocationWriter::writeAllocations(const std::string& filename,
                                         const std::vector<Allocation>& allocations) {
     std::ofstream file(filename);
 
     if (!file.is_open()) {
         std::cerr << "Error: Could not open allocation output file: " << filename << "\n";
-        return;
+        return false;
     }
 
     file << "allocationId,requestId,spaceId,spaceName,spaceType,building,day,startHour,endHour,assignedParticipants\n";
@@ -73,4 +73,11 @@ void AllocationWriter::writeAllocations(const std::string& filename,
     }
 
     file.close();
+    if (!file) {
+        std::cerr << "Error: Failed while writing allocation output file: "
+                  << filename << "\n";
+        return false;
+    }
+
+    return true;
 }

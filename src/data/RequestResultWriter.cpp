@@ -233,13 +233,13 @@ namespace {
     }
 }
 
-void RequestResultWriter::writeRequestResults(const std::string& filename,
+bool RequestResultWriter::writeRequestResults(const std::string& filename,
                                               const std::vector<Request*>& requests) {
     std::ofstream file(filename);
 
     if (!file.is_open()) {
         std::cerr << "Error: Could not open request results file: " << filename << "\n";
-        return;
+        return false;
     }
 
     file << "requestId,requestType,title,purpose,courseCode,courseName,examType,canSplitAcrossRooms,committeeParticipants,requesterName,requesterRole,priority,spaceName,spaceType,spaceBuilding,requiredBuilding,requiredFeature,participants,status,rejectionReason,timeInfo,lifecycleHistory\n";
@@ -278,4 +278,11 @@ void RequestResultWriter::writeRequestResults(const std::string& filename,
     }
 
     file.close();
+    if (!file) {
+        std::cerr << "Error: Failed while writing request results file: "
+                  << filename << "\n";
+        return false;
+    }
+
+    return true;
 }

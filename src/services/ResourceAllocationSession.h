@@ -35,9 +35,9 @@ public:
 
     bool runAllocation();
     void addExistingAllocation(const Allocation& allocation);
-    void exportResults(const std::string& allocationsFile,
+    bool exportResults(const std::string& allocationsFile,
                        const std::string& requestResultsFile) const;
-    void exportResults(const std::string& allocationsFile,
+    bool exportResults(const std::string& allocationsFile,
                        const std::string& requestResultsFile,
                        const std::string& requestSummariesFile,
                        const std::string& allocationSummariesFile) const;

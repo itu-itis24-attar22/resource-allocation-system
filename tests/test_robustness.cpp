@@ -36,10 +36,10 @@ TEST_CASE("Output writers tolerate null pointers without crashing") {
     std::vector<Allocation> allocations{missingSpaceAllocation};
     std::vector<Request*> requests{nullptr};
 
-    AllocationWriter::writeAllocations(allocationsPath, allocations);
-    RequestResultWriter::writeRequestResults(resultsPath, requests);
-    SummaryWriter::writeRequestSummaries(requestSummariesPath, requests, allocations);
-    SummaryWriter::writeAllocationSummaries(allocationSummariesPath, requests, allocations);
+    CHECK(AllocationWriter::writeAllocations(allocationsPath, allocations));
+    CHECK(RequestResultWriter::writeRequestResults(resultsPath, requests));
+    CHECK(SummaryWriter::writeRequestSummaries(requestSummariesPath, requests, allocations));
+    CHECK(SummaryWriter::writeAllocationSummaries(allocationSummariesPath, requests, allocations));
 
     CHECK(fileExistsAndNotEmpty(allocationsPath));
     CHECK(fileExistsAndNotEmpty(resultsPath));
@@ -60,18 +60,24 @@ TEST_CASE("Output writers fail safely when export files cannot be opened") {
     std::vector<Allocation> allocations{allocation};
     std::vector<Request*> requests{nullptr};
 
-    AllocationWriter::writeAllocations("tests/missing_export_dir/allocations.csv", allocations);
-    RequestResultWriter::writeRequestResults("tests/missing_export_dir/results.csv", requests);
-    SummaryWriter::writeRequestSummaries(
+    CHECK(!AllocationWriter::writeAllocations(
+        "tests/missing_export_dir/allocations.csv",
+        allocations
+    ));
+    CHECK(!RequestResultWriter::writeRequestResults(
+        "tests/missing_export_dir/results.csv",
+        requests
+    ));
+    CHECK(!SummaryWriter::writeRequestSummaries(
         "tests/missing_export_dir/request_summaries.csv",
         requests,
         allocations
-    );
-    SummaryWriter::writeAllocationSummaries(
+    ));
+    CHECK(!SummaryWriter::writeAllocationSummaries(
         "tests/missing_export_dir/allocation_summaries.csv",
         requests,
         allocations
-    );
+    ));
 
     CHECK(!fileExistsAndNotEmpty("tests/missing_export_dir/allocations.csv"));
     CHECK(!fileExistsAndNotEmpty("tests/missing_export_dir/results.csv"));

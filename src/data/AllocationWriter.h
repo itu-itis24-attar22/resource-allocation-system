@@ -7,7 +7,7 @@
 
 class AllocationWriter {
 public:
-    static void writeAllocations(const std::string& filename,
+    static bool writeAllocations(const std::string& filename,
                                  const std::vector<Allocation>& allocations);
 };
 

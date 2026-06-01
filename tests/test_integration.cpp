@@ -53,8 +53,8 @@ TEST_CASE("DataController loads temp CSVs, processes requests, and exports resul
 
     AllocationService service("priority", data.users, data.userBusySlots);
     service.processRequests(data.requests, data.spaces);
-    controller.exportAllocations(allocationsPath, service.getAllocations());
-    controller.exportRequestResults(resultsPath, data.requests);
+    CHECK(controller.exportAllocations(allocationsPath, service.getAllocations()));
+    CHECK(controller.exportRequestResults(resultsPath, data.requests));
 
     CHECK(data.requests[0]->getStatus() == RequestStatus::Rejected);
     CHECK(data.requests[1]->getStatus() == RequestStatus::Approved);

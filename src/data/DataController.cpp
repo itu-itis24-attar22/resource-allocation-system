@@ -475,9 +475,9 @@ SystemData DataController::loadAllData(const std::string& usersFile,
     return data;
 }
 
-void DataController::exportAllocations(const std::string& allocationsFile,
+bool DataController::exportAllocations(const std::string& allocationsFile,
                                        const std::vector<Allocation>& allocations) const {
-    AllocationWriter::writeAllocations(allocationsFile, allocations);
+    return AllocationWriter::writeAllocations(allocationsFile, allocations);
 }
 
 void DataController::cleanupData(SystemData& data) const {
@@ -497,7 +497,7 @@ void DataController::cleanupData(SystemData& data) const {
     data.users.clear();
 }
 
-void DataController::exportRequestResults(const std::string& resultsFile,
+bool DataController::exportRequestResults(const std::string& resultsFile,
                                           const std::vector<Request*>& requests) const {
-    RequestResultWriter::writeRequestResults(resultsFile, requests);
+    return RequestResultWriter::writeRequestResults(resultsFile, requests);
 }

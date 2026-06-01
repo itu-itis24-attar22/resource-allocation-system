@@ -28,10 +28,10 @@ public:
                            const std::string& userBusySlotsFile = "data/user_busy_slots.csv",
                            const std::string& requestParticipantsFile = "data/request_participants.csv") const;
 
-    void exportAllocations(const std::string& allocationsFile,
+    bool exportAllocations(const std::string& allocationsFile,
                            const std::vector<Allocation>& allocations) const;
 
-    void exportRequestResults(const std::string& resultsFile,
+    bool exportRequestResults(const std::string& resultsFile,
                               const std::vector<Request*>& requests) const;
 
     void cleanupData(SystemData& data) const;
