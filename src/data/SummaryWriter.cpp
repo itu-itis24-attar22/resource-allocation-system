@@ -43,11 +43,11 @@ namespace {
     }
 
     std::string requesterName(const Request* request) {
-        return request->getRequester() ? request->getRequester()->getName() : "";
+        return request && request->getRequester() ? request->getRequester()->getName() : "";
     }
 
     std::string requesterRole(const Request* request) {
-        return request->getRequester() ? request->getRequester()->getRoleName() : "";
+        return request && request->getRequester() ? request->getRequester()->getRoleName() : "";
     }
 
     std::string spaceName(const Allocation& allocation) {
@@ -159,7 +159,7 @@ namespace {
     }
 }
 
-void SummaryWriter::writeRequestSummaries(
+bool SummaryWriter::writeRequestSummaries(
     const std::string& filename,
     const std::vector<Request*>& requests,
     const std::vector<Allocation>& allocations
@@ -168,7 +168,7 @@ void SummaryWriter::writeRequestSummaries(
 
     if (!file.is_open()) {
         std::cerr << "Error: Could not open request summary file: " << filename << "\n";
-        return;
+        return false;
     }
 
     const auto allocationsByRequest = groupAllocationsByRequest(allocations);
@@ -204,9 +204,18 @@ void SummaryWriter::writeRequestSummaries(
              << escapeCsv(requestSummaryText(request, requestAllocations))
              << "\n";
     }
+
+    file.close();
+    if (!file) {
+        std::cerr << "Error: Failed while writing request summary file: "
+                  << filename << "\n";
+        return false;
+    }
+
+    return true;
 }
 
-void SummaryWriter::writeAllocationSummaries(
+bool SummaryWriter::writeAllocationSummaries(
     const std::string& filename,
     const std::vector<Request*>& requests,
     const std::vector<Allocation>& allocations
@@ -215,7 +224,7 @@ void SummaryWriter::writeAllocationSummaries(
 
     if (!file.is_open()) {
         std::cerr << "Error: Could not open allocation summary file: " << filename << "\n";
-        return;
+        return false;
     }
 
     file << "allocationId,requestId,requestTitle,requestPurpose,requestType,spaceName,spaceType,building,day,startTime,endTime,assignedParticipants,spaceCapacity\n";
@@ -238,4 +247,13 @@ void SummaryWriter::writeAllocationSummaries(
              << spaceCapacity(allocation)
              << "\n";
     }
+
+    file.close();
+    if (!file) {
+        std::cerr << "Error: Failed while writing allocation summary file: "
+                  << filename << "\n";
+        return false;
+    }
+
+    return true;
 }

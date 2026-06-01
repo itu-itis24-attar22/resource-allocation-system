@@ -154,10 +154,16 @@ void AllocationService::printAllocations() const {
     std::cout << "-----------------------------------\n";
 
     for (const Allocation& allocation : allocations) {
+        const Space* space = allocation.getSpace();
         std::cout << "Allocation ID: " << allocation.getId() << "\n";
-        std::cout << "Space: " << allocation.getSpace()->getName()
-                  << " (" << allocation.getSpace()->getType() << ")\n";
-        std::cout << "Building: " << allocation.getSpace()->getBuilding() << "\n";
+        if (space) {
+            std::cout << "Space: " << space->getName()
+                      << " (" << space->getType() << ")\n";
+            std::cout << "Building: " << space->getBuilding() << "\n";
+        } else {
+            std::cout << "Space: Missing\n";
+            std::cout << "Building: Unknown\n";
+        }
         std::cout << "Request ID: " << allocation.getRequestId() << "\n";
         std::cout << "Assigned participants: " << allocation.getAssignedParticipants() << "\n";
         std::cout << "Time: "

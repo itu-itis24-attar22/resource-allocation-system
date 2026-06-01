@@ -32,6 +32,10 @@ namespace {
     }
 
     std::string buildHistoryInfo(const Request* request) {
+        if (!request) {
+            return "";
+        }
+
         std::string result;
         const std::vector<std::string>& history = request->getLifecycleHistory();
 
@@ -68,6 +72,10 @@ namespace {
     }
 
     std::string buildTimeInfo(const Request* request) {
+        if (!request) {
+            return "";
+        }
+
         if (const OneTimeRequest* oneTime = dynamic_cast<const OneTimeRequest*>(request)) {
             TimeSlot slot = oneTime->getRequestedTimeSlot();
             return dayToString(slot.getDay()) + " " +
@@ -113,6 +121,10 @@ namespace {
     }
 
     std::string requestTypeToString(const Request* request) {
+        if (!request) {
+            return "Unknown";
+        }
+
         if (dynamic_cast<const OneTimeRequest*>(request)) return "OneTime";
         if (dynamic_cast<const RecurringRequest*>(request)) return "Recurring";
         if (dynamic_cast<const ExamRequest*>(request)) return "Exam";
@@ -124,6 +136,10 @@ namespace {
     }
 
     std::string examCourseCodeToString(const Request* request) {
+        if (!request) {
+            return "None";
+        }
+
         if (const ExamRequest* exam = dynamic_cast<const ExamRequest*>(request)) {
             return exam->getCourseCode();
         }
@@ -131,6 +147,10 @@ namespace {
     }
 
     std::string examCourseNameToString(const Request* request) {
+        if (!request) {
+            return "None";
+        }
+
         if (const ExamRequest* exam = dynamic_cast<const ExamRequest*>(request)) {
             return exam->getCourseName();
         }
@@ -138,6 +158,10 @@ namespace {
     }
 
     std::string examTypeToString(const Request* request) {
+        if (!request) {
+            return "None";
+        }
+
         if (const ExamRequest* exam = dynamic_cast<const ExamRequest*>(request)) {
             return exam->getExamType();
         }
@@ -145,6 +169,10 @@ namespace {
     }
 
     std::string canSplitAcrossRoomsToString(const Request* request) {
+        if (!request) {
+            return "None";
+        }
+
         if (const ExamRequest* exam = dynamic_cast<const ExamRequest*>(request)) {
             return exam->getCanSplitAcrossRooms() ? "true" : "false";
         }
@@ -152,6 +180,10 @@ namespace {
     }
 
     std::string committeeParticipantsToString(const Request* request) {
+        if (!request) {
+            return "None";
+        }
+
         const CommitteeMeetingRequest* committee =
             dynamic_cast<const CommitteeMeetingRequest*>(request);
 
@@ -179,20 +211,45 @@ namespace {
 
         return result;
     }
+
+    std::string requesterNameToString(const Request* request) {
+        return request && request->getRequester() ? request->getRequester()->getName() : "";
+    }
+
+    std::string requesterRoleToString(const Request* request) {
+        return request && request->getRequester() ? request->getRequester()->getRoleName() : "";
+    }
+
+    std::string spaceNameToString(const Request* request) {
+        return request && request->getRequestedSpace() ? request->getRequestedSpace()->getName() : "";
+    }
+
+    std::string spaceTypeToString(const Request* request) {
+        return request && request->getRequestedSpace() ? request->getRequestedSpace()->getType() : "";
+    }
+
+    std::string spaceBuildingToString(const Request* request) {
+        return request && request->getRequestedSpace() ? request->getRequestedSpace()->getBuilding() : "";
+    }
 }
 
-void RequestResultWriter::writeRequestResults(const std::string& filename,
+bool RequestResultWriter::writeRequestResults(const std::string& filename,
                                               const std::vector<Request*>& requests) {
     std::ofstream file(filename);
 
     if (!file.is_open()) {
         std::cerr << "Error: Could not open request results file: " << filename << "\n";
-        return;
+        return false;
     }
 
     file << "requestId,requestType,title,purpose,courseCode,courseName,examType,canSplitAcrossRooms,committeeParticipants,requesterName,requesterRole,priority,spaceName,spaceType,spaceBuilding,requiredBuilding,requiredFeature,participants,status,rejectionReason,timeInfo,lifecycleHistory\n";
 
     for (Request* request : requests) {
+        if (!request) {
+            std::cerr << "Warning: Skipping null request while writing request results.\n";
+            continue;
+        }
+
         request->addHistoryEvent("exported");
 
         file << request->getId() << ","
@@ -204,12 +261,12 @@ void RequestResultWriter::writeRequestResults(const std::string& filename,
              << escapeCsv(examTypeToString(request)) << ","
              << escapeCsv(canSplitAcrossRoomsToString(request)) << ","
              << escapeCsv(committeeParticipantsToString(request)) << ","
-             << escapeCsv(request->getRequester()->getName()) << ","
-             << escapeCsv(request->getRequester()->getRoleName()) << ","
+             << escapeCsv(requesterNameToString(request)) << ","
+             << escapeCsv(requesterRoleToString(request)) << ","
              << request->getPriority() << ","
-             << escapeCsv(request->getRequestedSpace()->getName()) << ","
-             << escapeCsv(request->getRequestedSpace()->getType()) << ","
-             << escapeCsv(request->getRequestedSpace()->getBuilding()) << ","
+             << escapeCsv(spaceNameToString(request)) << ","
+             << escapeCsv(spaceTypeToString(request)) << ","
+             << escapeCsv(spaceBuildingToString(request)) << ","
              << escapeCsv(request->getRequiredBuilding().empty() ? "None" : request->getRequiredBuilding()) << ","
              << escapeCsv(request->getRequiredFeature().empty() ? "None" : request->getRequiredFeature()) << ","
              << request->getParticipantCount() << ","
@@ -221,4 +278,11 @@ void RequestResultWriter::writeRequestResults(const std::string& filename,
     }
 
     file.close();
+    if (!file) {
+        std::cerr << "Error: Failed while writing request results file: "
+                  << filename << "\n";
+        return false;
+    }
+
+    return true;
 }

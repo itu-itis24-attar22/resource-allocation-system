@@ -1,8 +1,17 @@
 #include "AvailabilityRule.h"
 
 bool AvailabilityRule::isSpaceAvailable(const Space* space, const TimeSlot& timeSlot, const std::vector<Allocation>& existingAllocations) const {
+    if (!space) {
+        return false;
+    }
+
     for (const auto& allocation : existingAllocations) {
-        bool sameSpace = allocation.getSpace()->getId() == space->getId();
+        const Space* allocatedSpace = allocation.getSpace();
+        if (!allocatedSpace) {
+            continue;
+        }
+
+        bool sameSpace = allocatedSpace->getId() == space->getId();
         bool overlapping = allocation.getTimeSlot().overlapsWith(timeSlot);
 
         if (sameSpace && overlapping) {

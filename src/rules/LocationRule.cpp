@@ -5,7 +5,12 @@ RuleEvaluationResult LocationRule::evaluate(Request& request) const {
         return RuleEvaluationResult(true, "");
     }
 
-    if (request.getRequestedSpace()->getBuilding() == request.getRequiredBuilding()) {
+    const Space* requestedSpace = request.getRequestedSpace();
+    if (!requestedSpace) {
+        return RuleEvaluationResult(false, "Requested space missing");
+    }
+
+    if (requestedSpace->getBuilding() == request.getRequiredBuilding()) {
         return RuleEvaluationResult(true, "");
     }
 
