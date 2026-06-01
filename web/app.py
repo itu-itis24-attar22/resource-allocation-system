@@ -84,6 +84,7 @@ USER_ROLE_OPTIONS = [
 ]
 
 SCHEDULE_USER_ROLES = {
+    "Student",
     "Instructor",
     "TeachingAssistant",
     "Staff",
@@ -1063,6 +1064,34 @@ def build_assigned_room(allocation, spaces_by_id):
     }
 
 
+def request_status_from_results(request_id, results_by_request):
+    result_row = results_by_request.get(request_id, {})
+    return (result_row.get("status") or "").strip()
+
+
+def request_title_for_schedule(request_id, requests_by_id, results_by_request):
+    request_row = requests_by_id.get(request_id, {})
+    result_row = results_by_request.get(request_id, {})
+    return display_value(
+        request_row.get("title") or result_row.get("title"),
+        f"Request {request_id}",
+    )
+
+
+def allocation_time_parts(allocation):
+    day = safe_int(allocation.get("day"))
+    start_minutes = parse_time_to_minutes(allocation.get("startHour"))
+    end_minutes = parse_time_to_minutes(allocation.get("endHour"))
+
+    if day not in DAY_NAMES or start_minutes is None or end_minutes is None:
+        return None
+
+    if start_minutes >= end_minutes:
+        return None
+
+    return day, start_minutes, end_minutes
+
+
 def build_allocation_summary():
     requests_table = read_csv_table("requests.csv")
     results_table = read_csv_table("request_results.csv")
@@ -1113,6 +1142,15 @@ def build_allocation_summary():
         waste = None
         if total_capacity is not None and participant_count is not None:
             waste = total_capacity - participant_count
+
+        if request_type == "Recurring" and participant_count is not None and assigned_rooms:
+            assignment_display = f"{participant_count} per occurrence ({total_assigned} total)"
+        else:
+            assignment_display = (
+                f"{total_assigned} / {participant_count}"
+                if participant_count is not None
+                else str(total_assigned)
+            )
 
         summaries.append(
             {
@@ -1171,11 +1209,7 @@ def build_allocation_summary():
                 ),
                 "assigned_rooms": assigned_rooms,
                 "total_assigned": total_assigned,
-                "assignment_display": (
-                    f"{total_assigned} / {participant_count}"
-                    if participant_count is not None
-                    else str(total_assigned)
-                ),
+                "assignment_display": assignment_display,
                 "total_capacity": (
                     total_capacity if total_capacity is not None else "N/A"
                 ),
@@ -1281,8 +1315,15 @@ def build_schedule_resource_options(rows, id_field, label_fields, role_filter=No
     return options
 
 
-def build_user_schedule_events(user_id, busy_slots):
+def build_user_schedule_events(user_id,
+                               busy_slots,
+                               allocations,
+                               requests_by_id,
+                               results_by_request,
+                               participants_by_request,
+                               spaces_by_id):
     events = []
+    seen_allocation_events = set()
 
     for slot in busy_slots:
         if (slot.get("userId") or "").strip() != user_id:
@@ -1306,41 +1347,130 @@ def build_user_schedule_events(user_id, busy_slots):
                 "time": f"{format_minutes(start_minutes)}-{format_minutes(end_minutes)}",
                 "label": "Busy",
                 "detail": display_value(slot.get("reason"), "Busy"),
+                "class_name": "busy",
+                "request_id": "",
+                "request_linkable": False,
+            }
+        )
+
+    for allocation in allocations:
+        request_id = (allocation.get("requestId") or "").strip()
+        request_row = requests_by_id.get(request_id)
+
+        if not request_id or not request_row:
+            continue
+
+        if request_status_from_results(request_id, results_by_request).lower() != "approved":
+            continue
+
+        time_parts = allocation_time_parts(allocation)
+        if time_parts is None:
+            continue
+
+        relationship_labels = []
+        if (request_row.get("userId") or "").strip() == user_id:
+            relationship_labels.append("Requester")
+
+        if is_committee_request(request_row):
+            for participant in participants_by_request.get(request_id, []):
+                if (participant.get("userId") or "").strip() != user_id:
+                    continue
+
+                participant_role = display_value(
+                    participant.get("participantRole"),
+                    "Participant",
+                )
+                if participant_role not in relationship_labels:
+                    relationship_labels.append(participant_role)
+
+        if not relationship_labels:
+            continue
+
+        allocation_key = (
+            allocation.get("allocationId") or "",
+            request_id,
+            allocation.get("spaceId") or "",
+            allocation.get("day") or "",
+            allocation.get("startHour") or "",
+            allocation.get("endHour") or "",
+        )
+        if allocation_key in seen_allocation_events:
+            continue
+        seen_allocation_events.add(allocation_key)
+
+        day, start_minutes, end_minutes = time_parts
+        space_id = (allocation.get("spaceId") or "").strip()
+        space = spaces_by_id.get(space_id, {})
+        space_name = display_value(
+            allocation.get("spaceName") or space.get("name"),
+            f"Space {space_id}" if space_id else "Allocated space",
+        )
+        title = request_title_for_schedule(
+            request_id,
+            requests_by_id,
+            results_by_request,
+        )
+
+        events.append(
+            {
+                "day": day,
+                "start": start_minutes,
+                "end": end_minutes,
+                "time": f"{format_minutes(start_minutes)}-{format_minutes(end_minutes)}",
+                "label": f"Request {request_id}: {title}",
+                "detail": (
+                    f"{', '.join(relationship_labels)}; "
+                    f"{space_name}; Approved"
+                ),
+                "class_name": "allocated",
+                "request_id": request_id,
+                "request_linkable": True,
             }
         )
 
     return events
 
 
-def build_space_schedule_events(space_id, allocations):
+def build_space_schedule_events(space_id, allocations, requests_by_id, results_by_request):
     events = []
 
     for allocation in allocations:
         if (allocation.get("spaceId") or "").strip() != space_id:
             continue
 
-        day = safe_int(allocation.get("day"))
-        start_minutes = parse_time_to_minutes(allocation.get("startHour"))
-        end_minutes = parse_time_to_minutes(allocation.get("endHour"))
-
-        if day not in DAY_NAMES or start_minutes is None or end_minutes is None:
+        time_parts = allocation_time_parts(allocation)
+        if time_parts is None:
             continue
 
-        if start_minutes >= end_minutes:
-            continue
-
+        day, start_minutes, end_minutes = time_parts
         request_id = display_value(allocation.get("requestId"))
         assigned = display_value(allocation.get("assignedParticipants"))
+        has_request = request_id in requests_by_id or request_id in results_by_request
+        title = request_title_for_schedule(
+            request_id,
+            requests_by_id,
+            results_by_request,
+        ) if has_request else "External booking"
 
         events.append(
             {
                 "request_id": request_id,
+                "request_linkable": has_request,
                 "day": day,
                 "start": start_minutes,
                 "end": end_minutes,
                 "time": f"{format_minutes(start_minutes)}-{format_minutes(end_minutes)}",
-                "label": f"Request {request_id}",
-                "detail": f"Assigned participants: {assigned}",
+                "label": (
+                    f"Request {request_id}"
+                    if has_request
+                    else f"Existing allocation {request_id}"
+                ),
+                "detail": (
+                    f"{title}; assigned participants: {assigned}"
+                    if has_request
+                    else f"External booking; assigned participants: {assigned}"
+                ),
+                "class_name": "allocated",
             }
         )
 
@@ -1365,10 +1495,18 @@ def build_weekly_schedule_grid(events, occupied_class):
                 )
             ]
 
+            class_name = "free"
+            if overlapping_events:
+                event_classes = {
+                    event.get("class_name", occupied_class)
+                    for event in overlapping_events
+                }
+                class_name = "busy" if "busy" in event_classes else occupied_class
+
             day_cells.append(
                 {
                     "events": overlapping_events,
-                    "class_name": occupied_class if overlapping_events else "free",
+                    "class_name": class_name,
                     "label": "Free" if not overlapping_events else "",
                 }
             )
@@ -1390,6 +1528,10 @@ def build_schedule_context():
 
     users_table = read_csv_table("users.csv")
     spaces_table = read_csv_table("spaces.csv")
+    requests_table = read_csv_table("requests.csv")
+    results_table = read_csv_table("request_results.csv")
+    allocations_table = read_csv_table("allocations.csv")
+    participants_table = read_csv_table("request_participants.csv")
     user_options = build_schedule_resource_options(
         users_table["rows"],
         "userId",
@@ -1401,6 +1543,10 @@ def build_schedule_context():
         "spaceId",
         ["name", "type", "building"],
     )
+    requests_by_id = index_by_field(requests_table["rows"], "requestId")
+    results_by_request = index_by_field(results_table["rows"], "requestId")
+    participants_by_request = group_by_field(participants_table["rows"], "requestId")
+    spaces_by_id = index_by_field(spaces_table["rows"], "spaceId")
 
     selected_id = request.args.get("id", "").strip()
     selected_resource = None
@@ -1417,12 +1563,20 @@ def build_schedule_context():
             None,
         )
         busy_table = read_csv_table("user_busy_slots.csv")
-        event_file_available = busy_table["exists"]
+        event_file_available = busy_table["exists"] or allocations_table["exists"]
 
         if not event_file_available:
-            event_message = "No user busy-slot data available."
+            event_message = "No user busy-slot or allocation data available."
 
-        events = build_user_schedule_events(selected_id, busy_table["rows"])
+        events = build_user_schedule_events(
+            selected_id,
+            busy_table["rows"],
+            allocations_table["rows"],
+            requests_by_id,
+            results_by_request,
+            participants_by_request,
+            spaces_by_id,
+        )
         schedule_rows = build_weekly_schedule_grid(events, "busy")
     else:
         if not selected_id and space_options:
@@ -1432,13 +1586,17 @@ def build_schedule_context():
             (option["row"] for option in space_options if option["id"] == selected_id),
             None,
         )
-        allocations_table = read_csv_table("allocations.csv")
         event_file_available = allocations_table["exists"]
 
         if not event_file_available:
             event_message = "No allocation data available yet. Run allocation first."
 
-        events = build_space_schedule_events(selected_id, allocations_table["rows"])
+        events = build_space_schedule_events(
+            selected_id,
+            allocations_table["rows"],
+            requests_by_id,
+            results_by_request,
+        )
         schedule_rows = build_weekly_schedule_grid(events, "allocated")
 
     return {

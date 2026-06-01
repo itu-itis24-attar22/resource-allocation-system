@@ -8,9 +8,9 @@
     <p class="eyebrow">Availability View</p>
     <h2>Weekly schedules</h2>
     <p>
-        This page visualizes existing CSV data only. User schedules read
-        <code>user_busy_slots.csv</code>, while space schedules read
-        <code>allocations.csv</code> after the backend has run.
+        This page visualizes existing CSV data only. User schedules combine
+        <code>user_busy_slots.csv</code> with approved allocation rows, while
+        space schedules read <code>allocations.csv</code> after the backend has run.
     </p>
 
     <div class="schedule-switch">
@@ -67,7 +67,7 @@
     {% elif schedule_type == "user" and user_options|length == 0 %}
         <div class="empty-state">
             <h2>No schedulable users found</h2>
-            <p>Add Instructor, TeachingAssistant, Staff, or Administrator rows to <code>users.csv</code>.</p>
+            <p>Add Student, Instructor, TeachingAssistant, Staff, or Administrator rows to <code>users.csv</code>.</p>
         </div>
     {% elif schedule_type == "space" and space_options|length == 0 %}
         <div class="empty-state">
@@ -120,9 +120,10 @@
 
         <div class="schedule-note">
             <p>
-                Working-hour view: Monday to Friday, 09:00-17:00. User schedules read
-                busy slots. Space schedules update after <strong>Run Allocation</strong>
-                and link allocated request IDs to their detail pages.
+                Working-hour view: Monday to Friday, 09:00-17:00. User schedules show
+                busy slots plus approved requester/committee-participant allocations.
+                Space schedules update after <strong>Run Allocation</strong>. External
+                bookings remain visible but are not linked as normal requests.
             </p>
         </div>
 
@@ -145,7 +146,7 @@
                             {% if cell.events %}
                                 {% for event in cell.events %}
                                 <div class="schedule-event">
-                                    {% if schedule_type == "space" and event.request_id %}
+                                    {% if event.request_linkable and event.request_id %}
                                     <strong><a href="{{ url_for('request_detail', request_id=event.request_id) }}">{{ event.label }}</a></strong>
                                     {% else %}
                                     <strong>{{ event.label }}</strong>
