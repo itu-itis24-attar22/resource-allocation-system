@@ -8,6 +8,8 @@
 #include "../src/models/OneTimeRequest.h"
 #include "../src/models/Student.h"
 #include "../src/models/UserBusySlot.h"
+#include "../src/models/Allocation.h"
+#include "../src/rules/AvailabilityRule.h"
 #include "../src/rules/CapacityRule.h"
 #include "../src/rules/FeatureRule.h"
 #include "../src/rules/LocationRule.h"
@@ -44,6 +46,20 @@ TEST_CASE("Physical room rules evaluate current Request API") {
     CHECK(!LocationRule().evaluate(wrongBuilding).isPassed());
 }
 
+TEST_CASE("Physical room rules cover exact capacity and empty preferences") {
+    Student student(1, "Student");
+    Classroom room(101, "B201", 40, true, true, false, true, "Engineering");
+    OneTimeRequest exactCapacity(1, &student, &room, TimeSlot(1, 10, 12),
+                                 40, "Exact", "Meeting", "", "");
+    OneTimeRequest overCapacity(2, &student, &room, TimeSlot(1, 10, 12),
+                                41, "Too Large", "Meeting", "", "");
+
+    CHECK(CapacityRule().evaluate(exactCapacity).isPassed());
+    CHECK(!CapacityRule().evaluate(overCapacity).isPassed());
+    CHECK(FeatureRule().evaluate(exactCapacity).isPassed());
+    CHECK(LocationRule().evaluate(exactCapacity).isPassed());
+}
+
 TEST_CASE("RequestTypeRule and UserRoleRule enforce requester permissions") {
     Student student(1, "Student");
     Instructor instructor(2, "Dr. Instructor");
@@ -61,6 +77,39 @@ TEST_CASE("RequestTypeRule and UserRoleRule enforce requester permissions") {
     CHECK(!UserRoleRule().evaluate(studentLab).isPassed());
     CHECK(UserRoleRule().evaluate(instructorLab).isPassed());
     CHECK(!RequestTypeRule().evaluate(studentExam).isPassed());
+}
+
+TEST_CASE("AvailabilityRule rejects one-time and recurring external conflicts") {
+    Student student(1, "Student");
+    MeetingRoom room(301, "M301", 10, true, false, false, true, "AdminBuilding");
+    MeetingRoom otherRoom(302, "M302", 10, true, false, false, true, "AdminBuilding");
+    std::vector<Allocation> allocations{
+        Allocation(1, 99, &room, TimeSlot(1, 10, 12), 5)
+    };
+    AvailabilityRule rule;
+
+    OneTimeRequest conflicting(1, &student, &room, TimeSlot(1, 11, 13),
+                               5, "Conflict", "Meeting", "Projector", "AdminBuilding");
+    OneTimeRequest adjacent(2, &student, &room, TimeSlot(1, 12, 13),
+                            5, "Adjacent", "Meeting", "Projector", "AdminBuilding");
+    OneTimeRequest differentRoom(3, &student, &otherRoom, TimeSlot(1, 11, 13),
+                                 5, "Different", "Meeting", "Projector", "AdminBuilding");
+    RecurringRequest recurringConflict(
+        4,
+        &student,
+        &room,
+        {TimeSlot(2, 9, 10), TimeSlot(1, 11, 12)},
+        5,
+        "Recurring",
+        "Meeting",
+        "Projector",
+        "AdminBuilding"
+    );
+
+    CHECK(!rule.check(conflicting, allocations));
+    CHECK(rule.check(adjacent, allocations));
+    CHECK(rule.check(differentRoom, allocations));
+    CHECK(!rule.check(recurringConflict, allocations));
 }
 
 TEST_CASE("ParticipantAvailabilityRule passes non-committee requests immediately") {

@@ -24,8 +24,17 @@ namespace {
     bool isSpaceAvailableAt(const Space* space,
                             const TimeSlot& timeSlot,
                             const std::vector<Allocation>& allocations) {
+        if (!space) {
+            return false;
+        }
+
         for (const Allocation& allocation : allocations) {
-            const bool sameSpace = allocation.getSpace()->getId() == space->getId();
+            const Space* allocatedSpace = allocation.getSpace();
+            if (!allocatedSpace) {
+                continue;
+            }
+
+            const bool sameSpace = allocatedSpace->getId() == space->getId();
             const bool overlaps = allocation.getTimeSlot().overlapsWith(timeSlot);
 
             if (sameSpace && overlaps) {

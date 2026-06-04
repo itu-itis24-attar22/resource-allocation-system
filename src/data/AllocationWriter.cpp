@@ -25,26 +25,47 @@ namespace {
 
         return "\"" + escaped + "\"";
     }
+
+    int spaceIdOrDefault(const Allocation& allocation) {
+        return allocation.getSpace() ? allocation.getSpace()->getId() : 0;
+    }
+
+    std::string spaceNameOrDefault(const Allocation& allocation) {
+        return allocation.getSpace() ? allocation.getSpace()->getName() : "";
+    }
+
+    std::string spaceTypeOrDefault(const Allocation& allocation) {
+        return allocation.getSpace() ? allocation.getSpace()->getType() : "";
+    }
+
+    std::string buildingOrDefault(const Allocation& allocation) {
+        return allocation.getSpace() ? allocation.getSpace()->getBuilding() : "";
+    }
 }
 
-void AllocationWriter::writeAllocations(const std::string& filename,
+bool AllocationWriter::writeAllocations(const std::string& filename,
                                         const std::vector<Allocation>& allocations) {
     std::ofstream file(filename);
 
     if (!file.is_open()) {
         std::cerr << "Error: Could not open allocation output file: " << filename << "\n";
-        return;
+        return false;
     }
 
     file << "allocationId,requestId,spaceId,spaceName,spaceType,building,day,startHour,endHour,assignedParticipants\n";
 
     for (const Allocation& allocation : allocations) {
+        if (!allocation.getSpace()) {
+            std::cerr << "Warning: Allocation " << allocation.getId()
+                      << " has no space. Writing empty space fields.\n";
+        }
+
         file << allocation.getId() << ","
              << allocation.getRequestId() << ","
-             << allocation.getSpace()->getId() << ","
-             << escapeCsv(allocation.getSpace()->getName()) << ","
-             << escapeCsv(allocation.getSpace()->getType()) << ","
-             << escapeCsv(allocation.getSpace()->getBuilding()) << ","
+             << spaceIdOrDefault(allocation) << ","
+             << escapeCsv(spaceNameOrDefault(allocation)) << ","
+             << escapeCsv(spaceTypeOrDefault(allocation)) << ","
+             << escapeCsv(buildingOrDefault(allocation)) << ","
              << allocation.getTimeSlot().getDay() << ","
              << allocation.getTimeSlot().getStartTimeString() << ","
              << allocation.getTimeSlot().getEndTimeString() << ","
@@ -52,4 +73,11 @@ void AllocationWriter::writeAllocations(const std::string& filename,
     }
 
     file.close();
+    if (!file) {
+        std::cerr << "Error: Failed while writing allocation output file: "
+                  << filename << "\n";
+        return false;
+    }
+
+    return true;
 }

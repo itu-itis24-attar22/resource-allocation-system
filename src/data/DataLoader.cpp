@@ -3,9 +3,8 @@
 #include <sstream>
 #include <iostream>
 #include <unordered_map>
-#include "../models/Classroom.h"
-#include "../models/Laboratory.h"
-#include "../models/MeetingRoom.h"
+#include <unordered_set>
+#include "../models/SpaceFactory.h"
 #include "../models/UserFactory.h"
 
 namespace {
@@ -181,6 +180,7 @@ namespace {
 
 std::vector<User*> DataLoader::loadUsers(const std::string& filename) {
     std::vector<User*> users;
+    std::unordered_set<int> acceptedUserIds;
     std::ifstream file(filename);
 
     if (!file.is_open()) {
@@ -211,8 +211,15 @@ std::vector<User*> DataLoader::loadUsers(const std::string& filename) {
         std::string roleString = columns[2];
         int id = 0;
 
-        if (!tryParseInt(idToken, id)) {
+        if (!tryParseInt(idToken, id) || id < 0) {
             std::cerr << "Warning: Skipping malformed user row " << lineNumber << ".\n";
+            continue;
+        }
+
+        if (acceptedUserIds.find(id) != acceptedUserIds.end()) {
+            std::cerr << "Warning: Duplicate user ID " << id
+                      << " on row " << lineNumber
+                      << ". Keeping first user and skipping duplicate row.\n";
             continue;
         }
 
@@ -241,6 +248,7 @@ std::vector<User*> DataLoader::loadUsers(const std::string& filename) {
             continue;
         }
 
+        acceptedUserIds.insert(id);
         users.push_back(user);
     }
 
@@ -249,6 +257,7 @@ std::vector<User*> DataLoader::loadUsers(const std::string& filename) {
 
 std::vector<Space*> DataLoader::loadSpaces(const std::string& filename) {
     std::vector<Space*> spaces;
+    std::unordered_set<int> acceptedSpaceIds;
     std::ifstream file(filename);
 
     if (!file.is_open()) {
@@ -298,26 +307,30 @@ std::vector<Space*> DataLoader::loadSpaces(const std::string& filename) {
             !tryParseFlag(projectorToken, hasProjector) ||
             !tryParseFlag(whiteboardToken, hasWhiteboard) ||
             !tryParseFlag(computersToken, hasComputers) ||
-            !tryParseFlag(availableToken, isAvailable)) {
+            !tryParseFlag(availableToken, isAvailable) ||
+            id < 0) {
             std::cerr << "Warning: Skipping malformed space row " << lineNumber << ".\n";
             continue;
         }
 
-        if (type == "Classroom") {
-            spaces.push_back(new Classroom(id, name, capacity,
-                                           hasProjector, hasWhiteboard, hasComputers,
-                                           isAvailable, building));
-        } else if (type == "Laboratory") {
-            spaces.push_back(new Laboratory(id, name, capacity,
-                                            hasProjector, hasWhiteboard, hasComputers,
-                                            isAvailable, building));
-        } else if (type == "MeetingRoom") {
-            spaces.push_back(new MeetingRoom(id, name, capacity,
-                                             hasProjector, hasWhiteboard, hasComputers,
-                                             isAvailable, building));
-        } else {
-            std::cerr << "Warning: Skipping malformed space row " << lineNumber << ".\n";
+        if (acceptedSpaceIds.find(id) != acceptedSpaceIds.end()) {
+            std::cerr << "Warning: Duplicate space ID " << id
+                      << " on row " << lineNumber
+                      << ". Keeping first space and skipping duplicate row.\n";
+            continue;
         }
+
+        Space* space = SpaceFactory::createSpace(id, name, type, capacity,
+                                                 hasProjector, hasWhiteboard,
+                                                 hasComputers, isAvailable,
+                                                 building);
+        if (!space) {
+            std::cerr << "Warning: Skipping malformed space row " << lineNumber << ".\n";
+            continue;
+        }
+
+        acceptedSpaceIds.insert(id);
+        spaces.push_back(space);
     }
 
     return spaces;
@@ -356,7 +369,8 @@ std::vector<UserBusySlot> DataLoader::loadUserBusySlots(const std::string& filen
         if (!tryParseInt(columns[0], userId) ||
             !tryParseInt(columns[1], day) ||
             !tryParseTimeOfDay(columns[2], startMinutes) ||
-            !tryParseTimeOfDay(columns[3], endMinutes)) {
+            !tryParseTimeOfDay(columns[3], endMinutes) ||
+            userId < 0) {
             std::cerr << "Warning: Skipping malformed user busy slot row "
                       << lineNumber << ".\n";
             continue;
@@ -404,7 +418,9 @@ std::vector<RequestParticipant> DataLoader::loadRequestParticipants(const std::s
 
         if (!tryParseInt(columns[0], requestId) ||
             !tryParseInt(columns[1], userId) ||
-            columns[2].empty()) {
+            columns[2].empty() ||
+            requestId < 0 ||
+            userId < 0) {
             std::cerr << "Warning: Skipping malformed request participant row "
                       << lineNumber << ".\n";
             continue;

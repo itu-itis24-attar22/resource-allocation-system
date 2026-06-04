@@ -93,6 +93,34 @@ TEST_CASE("RequestFactory creates InvalidRequest for bad request types and malfo
     delete malformedRecurring;
 }
 
+TEST_CASE("RequestFactory rejects zero-length, negative, and reversed time data") {
+    Student student(1, "Student");
+    Classroom room(101, "B201", 40, true, true, false, true, "Engineering");
+
+    Request* zeroLength = RequestFactory::createRequest(
+        9, "OneTime", &student, &room, 10,
+        "Zero", "Test", "", "", "1-10:00-10:00"
+    );
+    Request* negativeStart = RequestFactory::createRequest(
+        10, "OneTime", &student, &room, 10,
+        "Negative", "Test", "", "", "1--1-10"
+    );
+    Request* reversed = RequestFactory::createRequest(
+        11, "OneTime", &student, &room, 10,
+        "Reversed", "Test", "", "", "1-12-10"
+    );
+
+    CHECK(dynamic_cast<InvalidRequest*>(zeroLength) != nullptr);
+    CHECK(dynamic_cast<InvalidRequest*>(negativeStart) != nullptr);
+    CHECK(dynamic_cast<InvalidRequest*>(reversed) != nullptr);
+    CHECK_EQ(zeroLength->getRejectionReason(), std::string("Invalid time slot"));
+    CHECK_EQ(reversed->getRejectionReason(), std::string("Invalid time slot"));
+
+    delete zeroLength;
+    delete negativeStart;
+    delete reversed;
+}
+
 TEST_CASE("Request stores default metadata and lifecycle history") {
     Student student(1, "Student");
     Classroom room(101, "B201", 40, true, true, false, true, "Engineering");

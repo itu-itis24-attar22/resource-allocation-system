@@ -29,11 +29,19 @@ void PriorityAllocationStrategy::processRequests(const std::vector<Request*>& re
 
     std::stable_sort(sortedRequests.begin(), sortedRequests.end(),
         [](const Request* left, const Request* right) {
+            if (!left || !right) {
+                return left != nullptr;
+            }
+
             return left->getPriority() > right->getPriority();
         }
     );
 
     for (Request* request : sortedRequests) {
+        if (!request) {
+            continue;
+        }
+
         if (OneTimeRequest* oneTime = dynamic_cast<OneTimeRequest*>(request)) {
             oneTime->addHistoryEvent("Priority strategy started batch processing");
             oneTime->addHistoryEvent("Priority strategy processing request with priority "
