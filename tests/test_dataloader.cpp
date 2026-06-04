@@ -128,6 +128,32 @@ TEST_CASE("DataLoader skips unknown user roles and unknown space types") {
     std::remove(spacesPath.c_str());
 }
 
+TEST_CASE("DataLoader delegates all supported space types to SpaceFactory") {
+    const std::string spacesPath = "tests/tmp_supported_spaces.csv";
+    writeFile(
+        spacesPath,
+        "spaceId,type,name,capacity,hasProjector,hasWhiteboard,hasComputers,isAvailable,building\n"
+        "101,Classroom,B201,40,1,1,0,1,Engineering\n"
+        "201,Laboratory,L101,25,0,0,1,1,LabBuilding\n"
+        "301,MeetingRoom,M301,10,1,0,0,1,AdminBuilding\n"
+    );
+
+    std::vector<Space*> spaces = DataLoader::loadSpaces(spacesPath);
+
+    CHECK_EQ(spaces.size(), static_cast<size_t>(3));
+    CHECK_EQ(spaces[0]->getType(), std::string("Classroom"));
+    CHECK_EQ(spaces[1]->getType(), std::string("Laboratory"));
+    CHECK_EQ(spaces[2]->getType(), std::string("MeetingRoom"));
+    CHECK_EQ(spaces[0]->getName(), std::string("B201"));
+    CHECK_EQ(spaces[1]->getName(), std::string("L101"));
+    CHECK_EQ(spaces[2]->getName(), std::string("M301"));
+
+    for (Space* space : spaces) {
+        delete space;
+    }
+    std::remove(spacesPath.c_str());
+}
+
 TEST_CASE("DataLoader skips duplicate user and space IDs while preserving first valid row") {
     const std::string usersPath = "tests/tmp_duplicate_users.csv";
     const std::string spacesPath = "tests/tmp_duplicate_spaces.csv";

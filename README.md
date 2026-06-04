@@ -4,7 +4,7 @@ This repository contains an iterative C++ prototype for a university resource al
 
 The project focuses on gradually developing a flexible allocation system for resources such as classrooms, laboratories, meeting rooms, exams, and committee meetings. The implementation follows an iterative software design approach, where each iteration introduces one or more new concepts into the prototype.
 
-The latest implemented iteration is Iteration 37, with a small post-Iteration-37 cleanup for data-loading robustness.
+The latest implemented iteration is Iteration 40, with SpaceFactory and BackendResultAdapter refinements.
 
 ## Current Prototype Features
 
@@ -29,6 +29,7 @@ The current prototype supports:
   - `Classroom`
   - `Laboratory`
   - `MeetingRoom`
+- space creation through `SpaceFactory`
 - user polymorphism through `UserFactory`:
   - `Student`
   - `TeachingAssistant`
@@ -66,14 +67,23 @@ The current prototype supports:
   - `MeetingTimeSuggestionService`
   - least-change ranked alternative meeting time suggestions
 - centralized CSV loading and exporting through `DataController`
+- backend workflow coordination through `ResourceAllocationSession`
 - data-loading robustness:
   - duplicate user IDs are skipped with a warning
   - duplicate space IDs are skipped with a warning
   - auxiliary busy-slot and participant paths can be configured when loading data
+- structured backend summary exports through `SummaryWriter`
+- explicit export success/failure handling:
+  - `AllocationWriter`, `RequestResultWriter`, and `SummaryWriter` return `bool`
+  - `DataController` export methods return success/failure
+  - `ResourceAllocationSession::exportResults(...)` returns `true` only when all exports succeed
 - CSV export of:
   - allocations
   - request results
+  - request summaries
+  - allocation summaries
 - Flask web dashboard for demo usage
+- backend-result adaptation for Flask views through `BackendResultAdapter`
 - web-based request creation, including committee meeting participant selection
 - web-based `Submit and Run` workflow
 - web-based request detail pages
@@ -114,15 +124,15 @@ RequestTypeRule
 
 - `docs/srs/` : Software Requirements Specification
 - `docs/analysis/` : Initial domain analysis and domain model
-- `docs/iterations/` : Iteration reports, including Iterations 33-37
-- `docs/class-diagrams/` : class diagram exports, including Iterations 33-37
+- `docs/iterations/` : Iteration reports, including Iterations 33-40
+- `docs/class-diagrams/` : class diagram exports, including Iterations 33-40
 - `docs/testing/` : backend testing and verification reports
 - `src/` : C++ prototype implementation
   - `src/models/` : domain models, requests, factories, users, spaces, allocations, time slots, participants, busy slots, and suggestions
   - `src/rules/` : rule engine, rule facade, and individual request rules
-  - `src/services/` : allocation service, user availability service, and meeting time suggestion service
+  - `src/services/` : backend workflow session, allocation service, user availability service, and meeting time suggestion service
   - `src/strategies/` : allocation strategy interface, greedy strategy, priority strategy, and multi-room exam strategies
-  - `src/data/` : CSV loading and export components
+  - `src/data/` : CSV loading, export, and structured summary writer components
   - `src/utils/` : console output helpers
 - `web/` : Flask dashboard for adding requests, running the backend, viewing summaries, viewing schedules, and inspecting raw CSV data
 - `data/` : CSV input/output files and configuration
@@ -141,6 +151,8 @@ The prototype currently uses CSV files in the `data/` folder:
 - `config.txt`
 - `allocations.csv` (generated output)
 - `request_results.csv` (generated output)
+- `request_summaries.csv` (generated output)
+- `allocation_summaries.csv` (generated output)
 
 The selected allocation strategy is configured in `data/config.txt`. The current demo configuration is:
 
@@ -165,8 +177,8 @@ powershell -ExecutionPolicy Bypass -File tests\run_tests.ps1
 The latest verified result is:
 
 ```text
-Running 56 test(s)
-Result: 56 passed, 0 failed
+Running 79 test(s)
+Result: 79 passed, 0 failed
 ```
 
 The test runner compiles and runs the backend smoke executable, then compiles and runs the unit and integration tests.
@@ -204,6 +216,10 @@ The test runner compiles and runs the backend smoke executable, then compiles an
 - Iteration 36: common available time suggestions for rejected committee meetings
 - Iteration 37: least-change ranking for valid meeting time suggestions
 - Post-Iteration-37 cleanup: duplicate user/space ID handling and configurable auxiliary data paths
+- Iteration 38: `ResourceAllocationSession` added as a backend workflow facade/session
+- Iteration 39: structured backend summary exports through `SummaryWriter`
+- Iteration 39 robustness improvement: explicit export success/failure handling across writers, `DataController`, `ResourceAllocationSession`, and `main.cpp`
+- Iteration 40: `SpaceFactory` introduced for centralized space creation and `BackendResultAdapter` introduced to reduce duplicated Flask result parsing
 
 ## How to Compile and Run Backend
 
@@ -220,7 +236,7 @@ Run:
 .\allocation_system.exe
 ```
 
-The backend loads CSV files, reads `data/config.txt`, processes requests with the selected strategy, prints request outcomes, and exports `allocations.csv` and `request_results.csv`.
+The backend loads CSV files, reads `data/config.txt`, processes requests with the selected strategy, prints request outcomes, and exports `allocations.csv`, `request_results.csv`, `request_summaries.csv`, and `allocation_summaries.csv`.
 
 ## How to Run Web Dashboard
 
