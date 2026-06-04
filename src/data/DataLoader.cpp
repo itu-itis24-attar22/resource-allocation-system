@@ -4,9 +4,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <unordered_set>
-#include "../models/Classroom.h"
-#include "../models/Laboratory.h"
-#include "../models/MeetingRoom.h"
+#include "../models/SpaceFactory.h"
 #include "../models/UserFactory.h"
 
 namespace {
@@ -322,20 +320,11 @@ std::vector<Space*> DataLoader::loadSpaces(const std::string& filename) {
             continue;
         }
 
-        Space* space = nullptr;
-        if (type == "Classroom") {
-            space = new Classroom(id, name, capacity,
-                                  hasProjector, hasWhiteboard, hasComputers,
-                                  isAvailable, building);
-        } else if (type == "Laboratory") {
-            space = new Laboratory(id, name, capacity,
-                                   hasProjector, hasWhiteboard, hasComputers,
-                                   isAvailable, building);
-        } else if (type == "MeetingRoom") {
-            space = new MeetingRoom(id, name, capacity,
-                                    hasProjector, hasWhiteboard, hasComputers,
-                                    isAvailable, building);
-        } else {
+        Space* space = SpaceFactory::createSpace(id, name, type, capacity,
+                                                 hasProjector, hasWhiteboard,
+                                                 hasComputers, isAvailable,
+                                                 building);
+        if (!space) {
             std::cerr << "Warning: Skipping malformed space row " << lineNumber << ".\n";
             continue;
         }
