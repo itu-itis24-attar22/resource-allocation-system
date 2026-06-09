@@ -124,8 +124,8 @@ RequestTypeRule
 
 - `docs/srs/` : Software Requirements Specification
 - `docs/analysis/` : Initial domain analysis and domain model
-- `docs/iterations/` : Iteration reports, including Iterations 33-40
-- `docs/class-diagrams/` : class diagram exports, including Iterations 33-40
+- `docs/iteration-reports/` : Iteration reports, including Iterations 33-40
+- `docs/design/class-diagrams/` : class diagram exports, including Iterations 33-40
 - `docs/testing/` : backend testing and verification reports
 - `src/` : C++ prototype implementation
   - `src/models/` : domain models, requests, factories, users, spaces, allocations, time slots, participants, busy slots, and suggestions
@@ -141,8 +141,8 @@ RequestTypeRule
 
 ### Design Documentation
 
-- [Design Patterns and Principles Report](docs/design/Design_Patterns_and_Principles_Report.pdf)
-- [LaTeX Source](docs/design/Design_Patterns_and_Principles_Report.tex)
+- [Design Patterns and Principles Report](docs/design/design-patterns-and-principles/Design_Patterns_and_Principles_Report.pdf)
+- [LaTeX Source](docs/design/design-patterns-and-principles/Design_Patterns_and_Principles_Report.tex)
 
 ## Data Files
 
