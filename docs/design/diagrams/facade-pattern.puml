@@ -1,0 +1,50 @@
+@startuml
+left to right direction
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+title Facade Pattern - Backend Workflow and Rule Evaluation
+
+class ResourceAllocationSession {
+  + loadStrategyName(...)
+  + loadSystemData(...)
+  + runAllocation()
+  + exportResults(...)
+  + cleanup()
+}
+
+class DataController
+class AllocationService
+class SummaryWriter
+class SystemData
+
+ResourceAllocationSession --> DataController : loads/exports data
+ResourceAllocationSession --> AllocationService : runs allocation
+ResourceAllocationSession --> SummaryWriter : writes summaries
+ResourceAllocationSession --> SystemData : owns loaded data
+
+class RuleEngineFacade {
+  + evaluateRequest(...)
+}
+
+class RuleEngine
+interface IRequestRule
+
+RuleEngineFacade --> RuleEngine : hides rule pipeline
+RuleEngineFacade --> IRequestRule : owns rule objects
+AllocationService --> RuleEngineFacade : uses validation gateway
+
+note bottom of ResourceAllocationSession
+  Application-level facade:
+  one backend workflow interface.
+end note
+
+note bottom of RuleEngineFacade
+  Subsystem facade:
+  one rule evaluation gateway.
+end note
+
+@enduml

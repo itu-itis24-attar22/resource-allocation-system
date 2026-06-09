@@ -1,0 +1,48 @@
+@startuml
+left to right direction
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+title Rule Polymorphism - Request Validation
+
+interface IRequestRule {
+  + evaluate(request : Request) : RuleEvaluationResult
+}
+
+class CapacityRule
+class FeatureRule
+class StatusRule
+class LocationRule
+class UserRoleRule
+class RequestTypeRule
+class ParticipantAvailabilityRule
+
+class RuleEngine {
+  - requestRules : vector<IRequestRule*>
+  + evaluate(...)
+}
+
+class RuleEngineFacade {
+  + evaluateRequest(...)
+}
+
+IRequestRule <|.. CapacityRule
+IRequestRule <|.. FeatureRule
+IRequestRule <|.. StatusRule
+IRequestRule <|.. LocationRule
+IRequestRule <|.. UserRoleRule
+IRequestRule <|.. RequestTypeRule
+IRequestRule <|.. ParticipantAvailabilityRule
+
+RuleEngine --> IRequestRule : evaluates through interface
+RuleEngineFacade --> RuleEngine : facade to rule pipeline
+
+note bottom of IRequestRule
+  Each rule has the same interface,
+  but checks a different validation concern.
+end note
+
+@enduml

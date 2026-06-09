@@ -139,6 +139,11 @@ RequestTypeRule
 - `tests/` : lightweight backend unit, integration, regression, and smoke tests
 - `external/` : third-party single-header libraries, if present locally
 
+### Design Documentation
+
+- [Design Patterns and Principles Report](docs/design/Design_Patterns_and_Principles_Report.pdf)
+- [LaTeX Source](docs/design/Design_Patterns_and_Principles_Report.tex)
+
 ## Data Files
 
 The prototype currently uses CSV files in the `data/` folder:

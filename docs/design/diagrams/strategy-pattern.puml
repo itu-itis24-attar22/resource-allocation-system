@@ -1,0 +1,48 @@
+@startuml
+left to right direction
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+title Strategy Pattern - Allocation Algorithms
+
+interface IAllocationStrategy {
+  + processRequests(...)
+  + processRequest(...)
+}
+
+class AllocationService {
+  - allocationStrategy : IAllocationStrategy*
+  + processRequests(...)
+  + processRequest(...)
+}
+
+class AllocationStrategyFactory {
+  + getInstance() : AllocationStrategyFactory
+  + getStrategy(strategyName : String) : IAllocationStrategy*
+}
+
+class GreedyAllocationStrategy
+class PriorityAllocationStrategy
+class MultiRoomExamGreedyStrategy
+class MultiRoomExamBestFitStrategy
+class SharedRoomExamBestFitStrategy
+
+IAllocationStrategy <|.. GreedyAllocationStrategy
+IAllocationStrategy <|.. PriorityAllocationStrategy
+IAllocationStrategy <|.. MultiRoomExamGreedyStrategy
+IAllocationStrategy <|.. MultiRoomExamBestFitStrategy
+IAllocationStrategy <|.. SharedRoomExamBestFitStrategy
+
+AllocationService --> IAllocationStrategy : delegates allocation
+AllocationStrategyFactory --> IAllocationStrategy : returns selected strategy
+AllocationService --> AllocationStrategyFactory : gets strategy by config name
+
+note bottom of IAllocationStrategy
+  Shared interface protects AllocationService
+  from concrete algorithm changes.
+end note
+
+@enduml

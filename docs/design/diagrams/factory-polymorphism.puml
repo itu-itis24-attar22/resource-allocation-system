@@ -1,0 +1,70 @@
+@startuml
+left to right direction
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+title Factory-Style Creation and Polymorphism
+
+package "Users" {
+  abstract class User
+  class Student
+  class TeachingAssistant
+  class Staff
+  class Instructor
+  class Administrator
+  class UserFactory {
+    + createUser(...) : User*
+  }
+
+  User <|-- Student
+  User <|-- TeachingAssistant
+  User <|-- Staff
+  User <|-- Instructor
+  User <|-- Administrator
+  UserFactory ..> User : creates subclass from role
+}
+
+package "Requests" {
+  abstract class Request
+  class OneTimeRequest
+  class RecurringRequest
+  class ExamRequest
+  class CommitteeMeetingRequest
+  class InvalidRequest
+  class RequestFactory {
+    + createRequest(...) : Request*
+    + createInvalidRequest(...) : Request*
+  }
+
+  Request <|-- OneTimeRequest
+  Request <|-- RecurringRequest
+  Request <|-- ExamRequest
+  Request <|-- CommitteeMeetingRequest
+  Request <|-- InvalidRequest
+  RequestFactory ..> Request : creates subclass from request type
+}
+
+package "Spaces" {
+  abstract class Space
+  class Classroom
+  class Laboratory
+  class MeetingRoom
+  class SpaceFactory {
+    + createSpace(...) : Space*
+  }
+
+  Space <|-- Classroom
+  Space <|-- Laboratory
+  Space <|-- MeetingRoom
+  SpaceFactory ..> Space : creates subclass from space type
+}
+
+class DataLoader
+DataLoader --> UserFactory : delegates user creation
+DataLoader --> RequestFactory : delegates request creation
+DataLoader --> SpaceFactory : delegates space creation
+
+@enduml
