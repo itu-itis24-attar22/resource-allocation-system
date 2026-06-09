@@ -1,0 +1,39 @@
+@startuml
+left to right direction
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+title Adapter Pattern - Flask Result Access
+
+class "Flask routes\nweb/app.py" as FlaskRoutes {
+  + allocation_summary()
+  + request_detail()
+  + schedules()
+  + raw_data()
+}
+
+class BackendResultAdapter {
+  + get_allocation_summary()
+  + get_request_summary()
+  + get_schedule_context()
+  + get_raw_data()
+}
+
+database "Backend CSV Outputs" as CsvOutputs {
+  allocations.csv
+  request_results.csv
+  request_summaries.csv
+  allocation_summaries.csv
+}
+
+FlaskRoutes --> BackendResultAdapter : asks for UI-ready context
+BackendResultAdapter --> CsvOutputs : reads and adapts result files
+
+note bottom of BackendResultAdapter
+  Keeps backend-result parsing out of Flask routes.
+end note
+
+@enduml
